@@ -1,0 +1,39 @@
+# Firebase related files and directories
+functions/
+.firebase/
+firebase.json
+.firebaserc
+firebase-debug.log
+firestore.rules
+firestore.indexes.json
+storage.rules
+
+# Firebase emulator files
+ui-debug.log
+firebase-debug.*.log
+
+# Firebase hosting files (if you're not using Vercel for hosting)
+.firebase/
+firebase-hosting-*.cache
+
+# Node modules in functions directory
+functions/node_modules/
+functions/package-lock.json
+functions/yarn.lock
+
+# Firebase local emulator suite
+.runtimeconfig.json
+
+# Other common ignores that might be useful
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
