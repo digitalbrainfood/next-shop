@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Store, Search, UserCircle, Star, ArrowLeft, LogIn, PlusCircle, ImageIcon, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical } from 'lucide-react';
+import { Store, Search, UserCircle, Star, ArrowLeft, LogIn, PlusCircle, ImageIcon, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { 
     getAuth,
@@ -51,7 +51,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const functions = getFunctions(app); // Initialize Cloud Functions
+// Explicitly connect to the correct Cloud Functions region
+const functions = getFunctions(app, 'us-central1'); 
+
 
 // --- SUPER ADMIN CONFIGURATION ---
 // IMPORTANT: Replace with the actual UID of your designated admin user from Firebase Authentication
@@ -171,11 +173,82 @@ const ReviewFormComponent = ({ productId, user }) => {
 };
 
 const ProductPage = ({ product, setView, user }) => {
-    const [mainImage, setMainImage] = useState((product.images && product.images[0]) || product.imageUrl || 'https://placehold.co/600x400/e2e8f0/4a5568?text=Image');
+    const initialMedia = (product.imageUrls && product.imageUrls.length > 0)
+        ? { type: 'image', src: product.imageUrls[0] }
+        : (product.videoUrls && product.videoUrls.length > 0)
+            ? { type: 'video', src: product.videoUrls[0] }
+            : { type: 'image', src: 'https://placehold.co/1280x720/e2e8f0/4a5568?text=Image' };
+
+    const [activeMedia, setActiveMedia] = useState(initialMedia);
     const [reviews, setReviews] = useState([]);
-    useEffect(() => { const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => { setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); }, [product.id]);
-    return (<main className="container mx-auto px-4 py-8"><button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6"><ArrowLeft className="mr-2 h-4 w-4" /> Back to products</button><div className="grid grid-cols-1 md:grid-cols-2 gap-8"><div><img src={mainImage} alt={product.name} className="w-full rounded-lg shadow-md border" /><div className="flex space-x-2 mt-4">{(product.images || []).map(img => <img key={img} src={img} onClick={() => setMainImage(img)} className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 ${mainImage === img ? 'border-blue-500' : 'border-transparent'}`} />)}</div>{product.videoUrl && (<div className="mt-6"><h3 className="text-lg font-bold text-gray-800 mb-2">Product Video</h3><video src={product.videoUrl} controls className="w-full rounded-lg shadow-md border"></video></div>)}</div><div><span className="text-sm font-semibold text-gray-500">{product.vendor}</span><h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1><p className="text-lg text-gray-600 mt-2">{product.subtitle}</p><div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div><p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p><div className="mt-6"><h3 className="text-lg font-bold text-gray-800">About this item</h3><p className="text-gray-600 mt-2">{product.longDescription}</p></div><div className="mt-4">{(product.tags || []).map(tag => <span key={tag} className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">#{tag}</span>)}</div></div></div><div className="mt-12"><h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>{reviews.length > 0 ? (<div className="space-y-6">{reviews.map(review => (<div key={review.id} className="bg-white p-4 rounded-lg shadow-sm border"><div className="flex items-center mb-2"><StarRating rating={review.overallRating} /><span className="ml-4 font-bold text-gray-800">{review.username}</span></div><p className="text-gray-600">{review.text}</p></div>))}</div>) : (<p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>)}{user && <ReviewFormComponent productId={product.id} user={user} />}</div></main>);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => {
+            setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+    }, [product.id]);
+
+    const allMedia = [
+        ...(product.imageUrls || []).map(src => ({ type: 'image', src })),
+        ...(product.videoUrls || []).map(src => ({ type: 'video', src }))
+    ];
+
+    return (
+        <main className="container mx-auto px-4 py-8">
+            <button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6"><ArrowLeft className="mr-2 h-4 w-4" /> Back to products</button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Media Column */}
+                <div>
+                    <div className="mb-4 aspect-video bg-black rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
+                        {activeMedia.type === 'image' ? (
+                            <img src={activeMedia.src} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <video key={activeMedia.src} src={activeMedia.src} controls autoPlay muted className="w-full h-full object-cover"></video>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {allMedia.map((media, index) => (
+                            <button key={index} onClick={() => setActiveMedia(media)} className={`w-20 h-20 rounded-md overflow-hidden border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${activeMedia.src === media.src ? 'border-blue-500' : 'border-transparent'}`}>
+                                {media.type === 'image' ? (
+                                    <img src={media.src} alt={`thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full bg-black flex items-center justify-center relative"><div className="absolute inset-0 bg-black opacity-50"></div><Video className="h-8 w-8 text-white z-10" /></div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Details Column */}
+                <div>
+                    <span className="text-sm font-semibold text-gray-500">{product.vendor}</span>
+                    <h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1>
+                    <p className="text-lg text-gray-600 mt-2">{product.subtitle}</p>
+                    <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
+                    <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
+                    <div className="mt-6 border-t pt-4">
+                        <h3 className="text-lg font-bold text-gray-800">Summary</h3>
+                        <p className="text-gray-600 mt-2">{product.shortDescription}</p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                        {(product.highlights || []).map((highlight, index) => (
+                            <div key={index} className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                <p className="font-bold text-blue-800">{highlight.title}</p>
+                                <p className="text-sm text-blue-700">{highlight.text}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-12 max-w-[1100px] mx-auto"><div className="border-t"><button onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="w-full flex justify-between items-center py-4 text-left"><div><h2 className="text-2xl font-bold text-gray-800">About this item</h2><p className="text-sm text-gray-500">Product Details</p></div>{isDetailsOpen ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}</button>{isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none"><p>{product.longDescription}</p></div>)}</div></div>
+            <div className="mt-12 max-w-[1100px] mx-auto"><h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>{reviews.length > 0 ? (<div className="space-y-6">{reviews.map(review => (<div key={review.id} className="bg-white p-4 rounded-lg shadow-sm border"><div className="flex items-center mb-2"><StarRating rating={review.overallRating} /><span className="ml-4 font-bold text-gray-800">{review.username}</span></div><p className="text-gray-600">{review.text}</p></div>))}</div>) : (<p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>)}{user && <ReviewFormComponent productId={product.id} user={user} />}</div>
+        </main>
+    );
 };
+
 
 const VendorLogin = () => {
     const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState('');
@@ -186,22 +259,63 @@ const VendorLogin = () => {
 };
 
 const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
-    const [product, setProduct] = useState({ name: '', subtitle: '', longDescription: '', price: '', category: '', tags: '' });
-    const [imageUploadProgress, setImageUploadProgress] = useState(0); const [videoUploadProgress, setVideoUploadProgress] = useState(0); const [imageUrl, setImageUrl] = useState(''); const [videoUrl, setVideoUrl] = useState(''); const [isUploading, setIsUploading] = useState(false); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
-    const imageInputRef = useRef(null); const videoInputRef = useRef(null);
-    useEffect(() => { if (editingProduct) { setProduct({ name: editingProduct.name || '', subtitle: editingProduct.subtitle || '', longDescription: editingProduct.longDescription || '', price: editingProduct.price || '', category: editingProduct.category || '', tags: (editingProduct.tags || []).join(', ') }); setImageUrl(editingProduct.imageUrl || ''); setVideoUrl(editingProduct.videoUrl || ''); } else { setProduct({ name: '', subtitle: '', longDescription: '', price: '', category: '', tags: '' }); setImageUrl(''); setVideoUrl(''); } }, [editingProduct]);
-    const handleFileChange = (e, fileType) => { if (e.target.files[0]) { handleFileUpload(e.target.files[0], fileType); } };
-    const handleFileUpload = (file, fileType) => { if (!file) return; setIsUploading(true); const folder = fileType === 'image' ? 'products' : 'product-videos'; const fileRef = storageRef(storage, `${folder}/${Date.now()}_${file.name}`); const uploadTask = uploadBytesResumable(fileRef, file); uploadTask.on('state_changed', (snapshot) => { const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100; if (fileType === 'image') setImageUploadProgress(progress); else setVideoUploadProgress(progress); }, (error) => { setError(`Upload failed: ${error.message}`); setIsUploading(false); }, () => { getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => { if (fileType === 'image') setImageUrl(downloadURL); else setVideoUrl(downloadURL); setIsUploading(false); }); }); };
+    const [product, setProduct] = useState({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
+    const [tags, setTags] = useState([]);
+    const [tagInput, setTagInput] = useState('');
+    const [highlights, setHighlights] = useState([{ title: '', text: '' }]);
+    const [imageUrls, setImageUrls] = useState([]);
+    const [videoUrls, setVideoUrls] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        if (editingProduct) {
+            setProduct({ name: editingProduct.name || '', subtitle: editingProduct.subtitle || '', shortDescription: editingProduct.shortDescription || '', longDescription: editingProduct.longDescription || '', price: editingProduct.price || '', category: editingProduct.category || '' });
+            setTags(editingProduct.tags || []);
+            setHighlights(editingProduct.highlights && editingProduct.highlights.length > 0 ? editingProduct.highlights : [{ title: '', text: '' }]);
+            setImageUrls(editingProduct.imageUrls || []);
+            setVideoUrls(editingProduct.videoUrls || []);
+        } else {
+            setProduct({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
+            setTags([]);
+            setHighlights([{ title: '', text: '' }]);
+            setImageUrls([]);
+            setVideoUrls([]);
+        }
+    }, [editingProduct]);
+
+    const handleFileChange = (e) => { const files = Array.from(e.target.files); files.forEach(file => { const fileType = file.type.startsWith('image/') ? 'image' : 'video'; if (fileType === 'image' && imageUrls.length >= 5) { setError('You can upload a maximum of 5 photos.'); return; } if (fileType === 'video' && videoUrls.length >= 2) { setError('You can upload a maximum of 2 videos.'); return; } handleFileUpload(file, fileType); }); };
+    const handleFileUpload = (file, fileType) => { if (!file) return; setIsUploading(true); const folder = fileType === 'image' ? 'products' : 'product-videos'; const fileRef = storageRef(storage, `${folder}/${Date.now()}_${file.name}`); const uploadTask = uploadBytesResumable(fileRef, file); uploadTask.on('state_changed', (snapshot) => {}, (error) => { setError(`Upload failed for ${file.name}: ${error.message}`); setIsUploading(false); }, () => { getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => { if (fileType === 'image') setImageUrls(prev => [...prev, downloadURL]); else setVideoUrls(prev => [...prev, downloadURL]); setIsUploading(false); }); }); };
     const handleChange = (e) => { const { name, value } = e.target; setProduct(prev => ({ ...prev, [name]: value })); };
-    const handleSaveProduct = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (!product.name || !product.price || !product.category) { setError('Product Name, Price, and Category are required.'); return; } try { const commonData = { ...product, price: parseFloat(product.price), tags: product.tags.split(',').map(tag => tag.trim()).filter(t => t), imageUrl: imageUrl, videoUrl: videoUrl, images: imageUrl ? [imageUrl] : [] }; if (editingProduct) { await updateDoc(doc(db, "products", editingProduct.id), { ...commonData, featuredOrder: editingProduct.featuredOrder !== undefined ? editingProduct.featuredOrder : 999 }); setSuccess('Product updated successfully!'); } else { await addDoc(collection(db, "products"), { ...commonData, vendorId: user.uid, vendor: user.email.split('@')[0], createdAt: serverTimestamp(), rating: 0, reviewCount: 0, featuredOrder: Date.now() }); setSuccess('Product saved successfully!'); } setTimeout(() => { setVendorView('dashboard'); }, 1500); } catch (err) { setError('Failed to save product. ' + err.message); } };
-    return (<div className="bg-white p-8 rounded-lg shadow-md border max-w-2xl mx-auto"><h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3><form onSubmit={handleSaveProduct} className="space-y-6"><div><label className="block text-sm font-medium text-gray-700">Product Name</label><input name="name" value={product.name} onChange={handleChange} type="text" className="mt-1 block w-full border rounded-md p-2"/></div><div><label className="block text-sm font-medium text-gray-700">Subtitle</label><input name="subtitle" value={product.subtitle} onChange={handleChange} type="text" className="mt-1 block w-full border rounded-md p-2"/></div><div><label className="block text-sm font-medium text-gray-700">Long Description</label><textarea name="longDescription" value={product.longDescription} onChange={handleChange} rows="3" className="mt-1 block w-full border rounded-md p-2"></textarea></div><div className="grid grid-cols-2 gap-4"><div><label>Price</label><input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="mt-1 block w-full border rounded-md p-2"/></div><div><label>Category</label><input name="category" value={product.category} onChange={handleChange} type="text" className="mt-1 block w-full border rounded-md p-2"/></div></div><div><label>Tags</label><input name="tags" value={product.tags} onChange={handleChange} type="text" className="mt-1 block w-full border rounded-md p-2"/></div><div><p className="block text-sm font-medium text-gray-700 mb-2">Product Media</p><div className="flex space-x-4"><input type="file" ref={imageInputRef} onChange={(e) => handleFileChange(e, 'image')} className="hidden" accept="image/*" /><button type="button" onClick={() => imageInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"> <ImageIcon className="h-5 w-5 mr-2"/>Upload Photo</button><input type="file" ref={videoInputRef} onChange={(e) => handleFileChange(e, 'video')} className="hidden" accept="video/*" /><button type="button" onClick={() => videoInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"><Video className="h-5 w-5 mr-2"/>Upload Video</button></div>{imageUploadProgress > 0 && <div className="mt-2"><div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${imageUploadProgress}%` }}></div></div></div>}{videoUploadProgress > 0 && <div className="mt-2"><div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-green-600 h-2.5 rounded-full" style={{ width: `${videoUploadProgress}%` }}></div></div></div>}<div className="flex space-x-4">{imageUrl && <img src={imageUrl} className="mt-4 w-32 h-32 object-cover rounded-md"/>}{videoUrl && <video src={videoUrl} controls className="mt-4 w-48 object-cover rounded-md"/>}</div></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<div className="flex justify-end space-x-4"><button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full">Cancel</button><button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full">{isUploading ? 'Uploading...' : 'Save Product'}</button></div></form></div>);
+    
+    const handleTagInput = (e) => {
+        if ((e.key === ',' || e.key === 'Enter') && tagInput.trim() !== '') {
+            e.preventDefault();
+            if (!tags.includes(tagInput.trim())) {
+                setTags([...tags, tagInput.trim()]);
+            }
+            setTagInput('');
+        }
+    };
+    const removeTag = (tagToRemove) => { setTags(tags.filter(tag => tag !== tagToRemove)); };
+
+    const handleHighlightChange = (index, field, value) => { const newHighlights = [...highlights]; newHighlights[index][field] = value; setHighlights(newHighlights); };
+    const addHighlight = () => { if (highlights.length < 6) setHighlights([...highlights, { title: '', text: '' }]); };
+    const removeHighlight = (index) => { if (highlights.length > 1) setHighlights(highlights.filter((_, i) => i !== index)); };
+
+    const handleSaveProduct = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (!product.name || !product.price) { setError('Product Name and Price are required.'); return; } try { const commonData = { ...product, price: parseFloat(product.price), tags, highlights: highlights.filter(h => h.title && h.text), imageUrls, videoUrls, imageUrl: imageUrls.length > 0 ? imageUrls[0] : '' }; if (editingProduct) { await updateDoc(doc(db, "products", editingProduct.id), { ...commonData, featuredOrder: editingProduct.featuredOrder !== undefined ? editingProduct.featuredOrder : 999 }); setSuccess('Product updated successfully!'); } else { await addDoc(collection(db, "products"), { ...commonData, vendorId: user.uid, vendor: user.email.split('@')[0], createdAt: serverTimestamp(), rating: 0, reviewCount: 0, featuredOrder: Date.now() }); setSuccess('Product saved successfully!'); } setTimeout(() => { setVendorView('dashboard'); }, 1500); } catch (err) { setError('Failed to save product. ' + err.message); } };
+    
+    return (<div className="bg-white p-8 rounded-lg shadow-md border max-w-3xl mx-auto"><h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3><form onSubmit={handleSaveProduct} className="space-y-6"><div><label>Product Name</label><input name="name" value={product.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Subtitle</label><input name="subtitle" value={product.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Short Description</label><textarea name="shortDescription" value={product.shortDescription} onChange={handleChange} rows="2" className="w-full mt-1 p-2 border rounded-md"></textarea></div><div><label>Product Highlights (Up to 6)</label>{highlights.map((h, i) => (<div key={i} className="flex items-center gap-2 mt-2"><input value={h.title} onChange={(e) => handleHighlightChange(i, 'title', e.target.value)} placeholder="Bold Title" className="p-2 border rounded-md w-1/3"/><input value={h.text} onChange={(e) => handleHighlightChange(i, 'text', e.target.value)} placeholder="Sub-headline" className="p-2 border rounded-md flex-grow"/><button type="button" onClick={() => removeHighlight(i)} className="p-2 text-red-500 hover:bg-red-100 rounded-full"><X size={16}/></button></div>))}{highlights.length < 6 && <button type="button" onClick={addHighlight} className="text-sm text-blue-600 mt-2">Add Highlight</button>}</div><div><label>Long Description</label><textarea name="longDescription" value={product.longDescription} onChange={handleChange} rows="5" className="w-full mt-1 p-2 border rounded-md"></textarea></div><div className="grid grid-cols-2 gap-4"><div><label>Price</label><input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Category</label><input name="category" value={product.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div></div><div><label>Tags</label><div className="flex flex-wrap gap-2 p-2 border rounded-md mt-1">{tags.map(tag => (<span key={tag} className="flex items-center bg-gray-200 rounded-full px-3 py-1 text-sm">{tag}<button type="button" onClick={() => removeTag(tag)} className="ml-2 text-gray-500 hover:text-gray-800"><X size={14}/></button></span>))}<input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInput} placeholder="Add a tag..." className="flex-grow p-1 focus:outline-none"/></div></div><div><p className="block text-sm font-medium text-gray-700 mb-2">Product Media (5 photos, 2 videos max)</p><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" multiple /><button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"> <PlusCircle className="h-5 w-5 mr-2"/>Add Media</button><div className="mt-4 flex flex-wrap gap-4">{imageUrls.map(url => <img key={url} src={url} className="w-24 h-24 object-cover rounded-md"/>)}{videoUrls.map(url => <div key={url} className="w-24 h-24 bg-black rounded-md flex items-center justify-center"><Video className="h-8 w-8 text-white"/></div>)}</div></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<div className="flex justify-end space-x-4"><button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full">Cancel</button><button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full">{isUploading ? 'Uploading...' : 'Save Product'}</button></div></form></div>);
 };
+
 
 const VendorDashboard = ({ setVendorView, user, onEditProduct }) => {
     const [vendorProducts, setVendorProducts] = useState([]);
     useEffect(() => { if (user) { const q = query(collection(db, "products"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user]);
-    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); if (product.imageUrl) await deleteObject(storageRef(storage, product.imageUrl)); if (product.videoUrl) await deleteObject(storageRef(storage, product.videoUrl)); } catch (error) { console.error("Error deleting product: ", error); } }};
-    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Products ({vendorProducts.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.email.split('@')[0]}</p></div><div className="flex items-center"><button onClick={() => { onEditProduct(null); setVendorView('create');}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4"><PlusCircle className="h-5 w-5 mr-2" />Add New Product</button></div></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorProducts.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
+    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
+    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Products ({vendorProducts.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.email.split('@')[0]}</p></div><div className="flex items-center"><button onClick={() => { onEditProduct(null); setVendorView('create');}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4"><PlusCircle className="h-5 w-5 mr-2" />Add New Product</button></div></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorProducts.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
 };
 
 const SuperAdminDashboard = ({ user, onEditProduct }) => {
@@ -220,27 +334,13 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
         return () => unsubscribe();
     }, []);
 
-    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); if (product.imageUrl) await deleteObject(storageRef(storage, product.imageUrl)); if (product.videoUrl) await deleteObject(storageRef(storage, product.videoUrl)); } catch (error) { console.error("Error deleting product: ", error); } }};
+    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
     
     const handleDragStart = (e, index) => { setDraggedItem(allProducts[index]); e.dataTransfer.effectAllowed = 'move'; };
     const handleDragOver = (e, index) => { e.preventDefault(); const draggedOverItem = allProducts[index]; if (draggedItem === draggedOverItem) { return; } let items = allProducts.filter(item => item !== draggedItem); items.splice(index, 0, draggedItem); setAllProducts(items); };
     const handleDragEnd = async () => { setDraggedItem(null); const batch = writeBatch(db); allProducts.forEach((product, index) => { const productRef = doc(db, "products", product.id); batch.update(productRef, { featuredOrder: index }); }); await batch.commit(); };
 
-    const handleCreateUser = async (e) => {
-        e.preventDefault();
-        setIsLoadingUserCreation(true);
-        setUserCreationMsg('');
-        
-        try {
-            const createNewVendor = httpsCallable(functions, 'createNewVendor');
-            const result = await createNewVendor({ username: newUser.username, password: newUser.password });
-            setUserCreationMsg(result.data.result);
-            setNewUser({ username: '', password: '' }); // Clear form
-        } catch (error) {
-            setUserCreationMsg(`Error: ${error.message}`);
-        }
-        setIsLoadingUserCreation(false);
-    };
+    const handleCreateUser = async (e) => { e.preventDefault(); if (newUser.username.length < 3) { setUserCreationMsg("Error: Username must be at least 3 characters long."); return; } if (newUser.password.length < 6) { setUserCreationMsg("Error: Password must be at least 6 characters long."); return; } setIsLoadingUserCreation(true); setUserCreationMsg(''); try { const createNewVendor = httpsCallable(functions, 'createNewVendor'); const result = await createNewVendor({ username: newUser.username, password: newUser.password }); setUserCreationMsg(result.data.result); setNewUser({ username: '', password: '' }); } catch (error) { setUserCreationMsg(`Error: ${error.message}`); } setIsLoadingUserCreation(false); };
 
     return (
         <div>
@@ -251,7 +351,7 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
                      <div className="bg-white rounded-lg shadow-md border overflow-hidden">
                         {allProducts.map((p, index) => (
                             <div key={p.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd} className="flex items-center justify-between p-4 border-b last:border-b-0 cursor-move">
-                                <div className="flex items-center"><GripVertical className="h-5 w-5 text-gray-400 mr-4" /><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl} alt={p.name} /><div><p className="font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-500">{p.vendor}</p></div></div>
+                                <div className="flex items-center"><GripVertical className="h-5 w-5 text-gray-400 mr-4" /><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><div><p className="font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-500">{p.vendor}</p></div></div>
                                 <div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div>
                             </div>
                         ))}
@@ -354,3 +454,4 @@ export default function App() {
     </div>
   );
 }
+
