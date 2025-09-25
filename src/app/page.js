@@ -1,42 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Store, Search, UserCircle, Star, ArrowLeft, LogIn, PlusCircle, ImageIcon, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Store, UserCircle, Star, ArrowLeft, LogIn, PlusCircle, ImageIcon, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { 
-    getAuth,
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged 
-} from "firebase/auth";
-import {
-    getFirestore,
-    collection,
-    addDoc,
-    doc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    onSnapshot,
-    serverTimestamp,
-    getDocs,
-    writeBatch,
-    orderBy
-} from "firebase/firestore";
-import {
-    getStorage,
-    ref as storageRef,
-    uploadBytesResumable,
-    getDownloadURL,
-    deleteObject
-} from "firebase/storage";
+import { getAuth, onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, getDocs, writeBatch, orderBy, setDoc } from "firebase/firestore";
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 
 // --- FIREBASE INITIALIZATION ---
-// IMPORTANT: Replace with your own Firebase configuration from your project settings
 const firebaseConfig = {
   apiKey: "AIzaSyDiCbTkbfn3LHAZnvlBxYZEDU1Ng_LftdA",
   authDomain: "nextshop-a17fe.firebaseapp.com",
@@ -51,12 +24,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-// Explicitly connect to the correct Cloud Functions region
-const functions = getFunctions(app, 'us-central1'); 
+const functions = getFunctions(app, 'us-central1');
 
 
 // --- SUPER ADMIN CONFIGURATION ---
-// IMPORTANT: Replace with the actual UID of your designated admin user from Firebase Authentication
 const SUPER_ADMIN_UID = "RnBej9HSStVJXA0rtIB02W0R1yv2";
 
 
@@ -69,33 +40,21 @@ const StarRating = ({ rating, reviewCount }) => (
     </div>
 );
 
-const Header = ({ setView, searchTerm, setSearchTerm, user, onSignOut }) => {
-    const goHome = () => {
-        setSearchTerm('');
-        setView({ page: 'home' });
-    }
-    const isSuperAdmin = user && user.uid === SUPER_ADMIN_UID;
+const Header = ({ setView, user, onSignOut }) => {
+    const isSuperAdmin = (user && user.customClaims && user.customClaims.superAdmin === true) || (user && user.uid === SUPER_ADMIN_UID);
     return (
         <header className="bg-white shadow-md sticky top-0 z-50">
             <nav className="container mx-auto px-4 py-3 flex justify-between items-center">
-                <button onClick={goHome} className="flex items-center space-x-2"><Store className="h-8 w-8 text-blue-600" /><span className="text-2xl font-bold text-gray-800">ShopNext</span></button>
-                <div className="flex-1 max-w-xl mx-4">
-                    <form onSubmit={(e) => e.preventDefault()} className="relative">
-                        <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search for products, brands, and more" className="w-full py-2 pl-4 pr-12 text-gray-700 bg-gray-100 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        <div className="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-gray-500"><Search className="h-5 w-5" /></div>
-                    </form>
-                </div>
-                <div className="flex items-center space-x-4">
-                    <button onClick={() => setView({ page: 'vendor' })} className={`flex items-center space-x-2 text-white px-4 py-2 rounded-full transition-colors bg-blue-600 hover:bg-blue-700`}>
-                        {isSuperAdmin ? <ShieldCheck className="h-5 w-5" /> : <UserCircle className="h-5 w-5" />}
-                        <span>{user ? 'My Dashboard' : 'Sign In'}</span>
-                    </button>
-                    {user && (
-                         <button onClick={onSignOut} title="Sign Out" className="text-gray-500 hover:text-red-600 transition-colors">
-                            <LogOut className="h-6 w-6" />
+                <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setView({ page: 'home' })}><Store className="h-8 w-8 text-blue-600" /><span className="text-2xl font-bold text-gray-800">ShopNext</span></div>
+                {user && (
+                    <div className="flex items-center space-x-4">
+                        <button onClick={() => setView({ page: 'dashboard' })} className={`flex items-center space-x-2 text-white px-4 py-2 rounded-full transition-colors bg-blue-600 hover:bg-blue-700`}>
+                            {isSuperAdmin ? <ShieldCheck className="h-5 w-5" /> : <UserCircle className="h-5 w-5" />}
+                            <span>My Dashboard</span>
                         </button>
-                    )}
-                </div>
+                        <button onClick={onSignOut} title="Sign Out" className="text-gray-500 hover:text-red-600 transition-colors"><LogOut className="h-6 w-6" /></button>
+                    </div>
+                )}
             </nav>
         </header>
     );
@@ -112,9 +71,7 @@ const ProductCard = ({ product, setView }) => (
             <h3 className="text-lg font-bold text-gray-800 truncate">{product.name}</h3>
             <p className="text-sm text-gray-500 mb-2 truncate">{product.subtitle}</p>
             <div className="flex-grow">
-                 <div className="flex flex-wrap gap-1 mb-2">
-                    {(product.tags || []).slice(0, 3).map(tag => <span key={tag} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs font-semibold">#{tag}</span>)}
-                </div>
+                 <div className="flex flex-wrap gap-1 mb-2">{(product.tags || []).slice(0, 3).map(tag => <span key={tag} className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs font-semibold">#{tag}</span>)}</div>
             </div>
             <div className="flex justify-between items-center mt-2"><p className="text-xl font-extrabold text-blue-600">${parseFloat(product.price).toFixed(2)}</p><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
             <button onClick={() => setView({ page: 'product', id: product.id })} className="mt-4 w-full bg-blue-500 text-white py-2 rounded-full font-semibold hover:bg-blue-600 transition-colors">View Details</button>
@@ -122,42 +79,11 @@ const ProductCard = ({ product, setView }) => (
     </div>
 );
 
-const HomePage = ({ products, setView }) => {
-    const [sortedProducts, setSortedProducts] = useState([]);
-    const [sortOption, setSortOption] = useState('featured');
-
-    useEffect(() => {
-        let tempProducts = [...products];
-        switch(sortOption) {
-            case 'price-asc':
-                tempProducts.sort((a, b) => a.price - b.price);
-                break;
-            case 'price-desc':
-                tempProducts.sort((a, b) => b.price - a.price);
-                break;
-            case 'rating-desc':
-                tempProducts.sort((a, b) => b.rating - a.rating);
-                break;
-            case 'featured':
-            default:
-                 tempProducts.sort((a,b) => (a.featuredOrder || 999) - (b.featuredOrder || 999));
-                 break;
-        }
-        setSortedProducts(tempProducts);
-    }, [products, sortOption]);
-
+const ProductGrid = ({ products, setView }) => {
     return (
-        <main className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-extrabold text-gray-900">Featured Products</h2>
-                <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                    <option value="featured">Sort: Featured</option>
-                    <option value="price-asc">Sort: Price Low to High</option>
-                    <option value="price-desc">Sort: Price High to Low</option>
-                    <option value="rating-desc">Sort: Top Rated</option>
-                </select>
-            </div>
-            {sortedProducts.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{sortedProducts.map(product => (<ProductCard key={product.id} product={product} setView={setView} />))}</div>) : (<div className="text-center py-16"><p className="text-gray-500 text-lg">No products found. Try a different search or filter.</p></div>)}
+        <main className="container mx-auto px-4 pt-8 pb-2">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-6">Products</h2>
+            {products.length > 0 ? (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{products.map(product => (<ProductCard key={product.id} product={product} setView={setView} />))}</div>) : (<div className="text-center py-16"><p className="text-gray-500 text-lg">No products found. Super admins, please select a class to view.</p></div>)}
         </main>
     );
 };
@@ -168,106 +94,33 @@ const ReviewFormComponent = ({ productId, user }) => {
     const criteria = ['attention', 'persuasion', 'brandedRecall', 'liking'];
     const handleRatingChange = (criterion, value) => { setRatings(prev => ({ ...prev, [criterion]: value })); };
     const updateProductRatingAfterSubmission = async () => { const reviewsRef = collection(db, "products", productId, "reviews"); const reviewsSnapshot = await getDocs(reviewsRef); const newReviewCount = reviewsSnapshot.size; let totalRating = 0; reviewsSnapshot.forEach(doc => { totalRating += doc.data().overallRating; }); const newAverageRating = newReviewCount > 0 ? totalRating / newReviewCount : 0; await updateDoc(doc(db, "products", productId), { rating: newAverageRating, reviewCount: newReviewCount }); };
-    const handleReviewSubmit = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (Object.values(ratings).some(r => r === 0) || !text) { setError('Please provide a rating for all criteria and write a review.'); return; } const overallRating = Object.values(ratings).reduce((a, b) => a + b, 0) / criteria.length; try { await addDoc(collection(db, "products", productId, "reviews"), { userId: user.uid, username: user.email.split('@')[0], ...ratings, overallRating, text, createdAt: serverTimestamp() }); await updateProductRatingAfterSubmission(); setSuccess('Thank you for your review!'); setRatings({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 }); setText(''); } catch (err) { setError('Failed to submit review. ' + err.message); } };
+    const handleReviewSubmit = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (Object.values(ratings).some(r => r === 0) || !text) { setError('Please provide a rating for all criteria and write a review.'); return; } const overallRating = Object.values(ratings).reduce((a, b) => a + b, 0) / criteria.length; try { await addDoc(collection(db, "products", productId, "reviews"), { userId: user.uid, username: user.displayName, ...ratings, overallRating, text, createdAt: serverTimestamp() }); await updateProductRatingAfterSubmission(); setSuccess('Thank you for your review!'); setRatings({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 }); setText(''); } catch (err) { setError('Failed to submit review. ' + err.message); } };
     return (<div className="bg-white p-6 rounded-lg shadow-md border mt-8"><h3 className="text-xl font-bold text-gray-800 mb-4">Leave a Review</h3><form onSubmit={handleReviewSubmit} className="space-y-4">{criteria.map(criterion => (<div key={criterion} className="flex flex-col sm:flex-row justify-between sm:items-center"><span className="capitalize text-gray-700 mb-2 sm:mb-0">{criterion.replace(/([A-Z])/g, ' $1')}</span><div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-6 w-6 cursor-pointer ${i < ratings[criterion] ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} onClick={() => handleRatingChange(criterion, i + 1)} />))}</div></div>))}<div><textarea value={text} onChange={(e) => setText(e.target.value)} rows="4" placeholder="Share your thoughts..." className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700">Submit Review</button></form></div>);
 };
 
 const ProductPage = ({ product, setView, user }) => {
-    const initialMedia = (product.imageUrls && product.imageUrls.length > 0)
-        ? { type: 'image', src: product.imageUrls[0] }
-        : (product.videoUrls && product.videoUrls.length > 0)
-            ? { type: 'video', src: product.videoUrls[0] }
-            : { type: 'image', src: 'https://placehold.co/1280x720/e2e8f0/4a5568?text=Image' };
-
+    const initialMedia = (product.imageUrls && product.imageUrls.length > 0) ? { type: 'image', src: product.imageUrls[0] } : { type: 'image', src: 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image' };
     const [activeMedia, setActiveMedia] = useState(initialMedia);
     const [reviews, setReviews] = useState([]);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
-    useEffect(() => {
-        const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => {
-            setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
-        return () => unsubscribe();
-    }, [product.id]);
-
-    const allMedia = [
-        ...(product.imageUrls || []).map(src => ({ type: 'image', src })),
-        ...(product.videoUrls || []).map(src => ({ type: 'video', src }))
-    ];
-
-    return (
-        <main className="container mx-auto px-4 py-8">
-            <button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6"><ArrowLeft className="mr-2 h-4 w-4" /> Back to products</button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Media Column */}
-                <div>
-                    <div className="mb-4 aspect-video bg-black rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
-                        {activeMedia.type === 'image' ? (
-                            <img src={activeMedia.src} alt={product.name} className="w-full h-full object-cover" />
-                        ) : (
-                            <video key={activeMedia.src} src={activeMedia.src} controls autoPlay muted className="w-full h-full object-cover"></video>
-                        )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {allMedia.map((media, index) => (
-                            <button key={index} onClick={() => setActiveMedia(media)} className={`w-20 h-20 rounded-md overflow-hidden border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${activeMedia.src === media.src ? 'border-blue-500' : 'border-transparent'}`}>
-                                {media.type === 'image' ? (
-                                    <img src={media.src} alt={`thumbnail ${index + 1}`} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full bg-black flex items-center justify-center relative"><div className="absolute inset-0 bg-black opacity-50"></div><Video className="h-8 w-8 text-white z-10" /></div>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Details Column */}
-                <div>
-                    <span className="text-sm font-semibold text-gray-500">{product.vendor}</span>
-                    <h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1>
-                    <p className="text-lg text-gray-600 mt-2">{product.subtitle}</p>
-                    <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
-                    <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
-                    <div className="mt-6 border-t pt-4">
-                        <h3 className="text-lg font-bold text-gray-800">Summary</h3>
-                        <p className="text-gray-600 mt-2">{product.shortDescription}</p>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                        {(product.highlights || []).map((highlight, index) => (
-                            <div key={index} className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                <p className="font-bold text-blue-800">{highlight.title}</p>
-                                <p className="text-sm text-blue-700">{highlight.text}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="mt-12 max-w-[1100px] mx-auto"><div className="border-t"><button onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="w-full flex justify-between items-center py-4 text-left"><div><h2 className="text-2xl font-bold text-gray-800">About this item</h2><p className="text-sm text-gray-500">Product Details</p></div>{isDetailsOpen ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}</button>{isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none"><p>{product.longDescription}</p></div>)}</div></div>
-            <div className="mt-12 max-w-[1100px] mx-auto"><h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>{reviews.length > 0 ? (<div className="space-y-6">{reviews.map(review => (<div key={review.id} className="bg-white p-4 rounded-lg shadow-sm border"><div className="flex items-center mb-2"><StarRating rating={review.overallRating} /><span className="ml-4 font-bold text-gray-800">{review.username}</span></div><p className="text-gray-600">{review.text}</p></div>))}</div>) : (<p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>)}{user && <ReviewFormComponent productId={product.id} user={user} />}</div>
-        </main>
-    );
+    useEffect(() => { const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => { setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); }, [product.id]);
+    const allMedia = [...(product.imageUrls || []).map(src => ({ type: 'image', src })), ...(product.videoUrls || []).map(src => ({ type: 'video', src }))];
+    return (<main className="container mx-auto px-4 py-8"><button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6"><ArrowLeft className="mr-2 h-4 w-4" /> Back to products</button><div className="grid grid-cols-1 md:grid-cols-2 gap-12"><div><div className="mb-4 w-full h-[600px] bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center"><div className="w-full h-full aspect-square">{activeMedia.type === 'image' ? (<img src={activeMedia.src} alt={product.name} className="w-full h-full object-cover" />) : (<video key={activeMedia.src} src={activeMedia.src} controls autoPlay muted className="w-full h-full object-cover"></video>)}</div></div><div className="flex flex-wrap gap-2">{allMedia.map((media, index) => (<button key={index} onClick={() => setActiveMedia(media)} className={`w-20 h-20 rounded-md overflow-hidden border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${activeMedia.src === media.src ? 'border-blue-500' : 'border-transparent'}`}>{media.type === 'image' ? (<img src={media.src} alt={`thumbnail ${index + 1}`} className="w-full h-full object-cover" />) : (<div className="w-full h-full bg-black flex items-center justify-center relative"><div className="absolute inset-0 bg-black opacity-50"></div><Video className="h-8 w-8 text-white z-10" /></div>)}</button>))}</div></div><div><h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1><p className="text-lg text-gray-600 mt-2">{product.subtitle}</p><div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div><p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p><div className="mt-6 border-t pt-4"><p className="text-gray-700">{product.shortDescription}</p></div><div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">{(product.highlights || []).map((highlight, index) => (<div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-100"><p className="font-bold text-blue-800">{highlight.title}</p><p className="text-sm text-blue-700 mt-1">{highlight.text}</p></div>))}</div></div></div><div className="mt-12 max-w-[1100px] mx-auto"><div className="border-t"><button onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="w-full flex justify-between items-center py-4 text-left"><div><h2 className="text-2xl font-bold text-gray-800">About this item</h2><p className="text-sm text-gray-500">Product Details</p></div>{isDetailsOpen ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}</button>{isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none"><p>{product.longDescription}</p></div>)}</div></div><div className="mt-12 max-w-[1100px] mx-auto"><h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>{reviews.length > 0 ? (<div className="space-y-6">{reviews.map(review => (<div key={review.id} className="bg-white p-4 rounded-lg shadow-sm border"><div className="flex items-center mb-2"><StarRating rating={review.overallRating} /><span className="ml-4 font-bold text-gray-800">{review.username}</span></div><p className="text-gray-600">{review.text}</p></div>))}</div>) : (<p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>)}{user && <ReviewFormComponent productId={product.id} user={user} />}</div></main>);
 };
 
-
-const VendorLogin = () => {
-    const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState('');
+const LoginScreen = () => {
+    const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [isLoading, setIsLoading] = useState(false);
     const formatEmail = (user) => `${user.trim()}@shopnext.dev`;
-    const handleSignUp = async (e) => { e.preventDefault(); setError(''); if (!username || !password) { setError("Username and password cannot be empty."); return; } try { await createUserWithEmailAndPassword(auth, formatEmail(username), password); } catch (err) { setError(err.message); } };
-    const handleSignIn = async (e) => { e.preventDefault(); setError(''); if (!username || !password) { setError("Username and password cannot be empty."); return; } try { await signInWithEmailAndPassword(auth, formatEmail(username), password); } catch (err) { setError(err.message); } };
-    return (<div className="flex items-center justify-center min-h-[60vh]"><div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md border"><h2 className="text-2xl font-bold text-center text-gray-800">Vendor Login</h2><form className="space-y-4"><div><label className="text-sm font-medium text-gray-700">Username</label><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g., ElectroGadgets" className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div><div><label className="text-sm font-medium text-gray-700">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}<div className="flex space-x-2"><button onClick={handleSignIn} className="w-full py-3 font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center"><LogIn className="h-5 w-5 mr-2"/>Sign In</button><button onClick={handleSignUp} className="w-full py-3 font-semibold text-blue-600 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors">Sign Up</button></div></form><p className="text-xs text-center text-gray-500">For this demo, you can Sign Up to create an account.</p></div></div>);
+    const handleSignIn = async (e) => { e.preventDefault(); setError(''); setIsLoading(true); try { await signInWithEmailAndPassword(auth, formatEmail(username), password); } catch (err) { setError(err.message); } setIsLoading(false); };
+    return (<div className="flex items-center justify-center min-h-[80vh] bg-gray-50"><div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-xl border"><div className="flex justify-center"><Store className="h-12 w-12 text-blue-600" /></div><h2 className="text-2xl font-bold text-center text-gray-800">Welcome to ShopNext</h2><p className="text-center text-gray-500">Please sign in to view products.</p><form onSubmit={handleSignIn} className="space-y-4"><div><label className="text-sm font-medium text-gray-700">Username</label><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div><div><label className="text-sm font-medium text-gray-700">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}<button type="submit" disabled={isLoading} className="w-full py-3 font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-blue-300">{isLoading ? 'Signing In...' : 'Sign In'}</button></form></div></div>);
 };
 
 const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     const [product, setProduct] = useState({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
-    const [tags, setTags] = useState([]);
-    const [tagInput, setTagInput] = useState('');
+    const [tags, setTags] = useState([]); const [tagInput, setTagInput] = useState('');
     const [highlights, setHighlights] = useState([{ title: '', text: '' }]);
-    const [imageUrls, setImageUrls] = useState([]);
-    const [videoUrls, setVideoUrls] = useState([]);
-    const [isUploading, setIsUploading] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const [imageUrls, setImageUrls] = useState([]); const [videoUrls, setVideoUrls] = useState([]);
+    const [isUploading, setIsUploading] = useState(false); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -277,85 +130,112 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
             setHighlights(editingProduct.highlights && editingProduct.highlights.length > 0 ? editingProduct.highlights : [{ title: '', text: '' }]);
             setImageUrls(editingProduct.imageUrls || []);
             setVideoUrls(editingProduct.videoUrls || []);
-        } else {
-            setProduct({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
-            setTags([]);
-            setHighlights([{ title: '', text: '' }]);
-            setImageUrls([]);
-            setVideoUrls([]);
-        }
+        } else { setProduct({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' }); setTags([]); setHighlights([{ title: '', text: '' }]); setImageUrls([]); setVideoUrls([]); }
     }, [editingProduct]);
 
     const handleFileChange = (e) => { const files = Array.from(e.target.files); files.forEach(file => { const fileType = file.type.startsWith('image/') ? 'image' : 'video'; if (fileType === 'image' && imageUrls.length >= 5) { setError('You can upload a maximum of 5 photos.'); return; } if (fileType === 'video' && videoUrls.length >= 2) { setError('You can upload a maximum of 2 videos.'); return; } handleFileUpload(file, fileType); }); };
     const handleFileUpload = (file, fileType) => { if (!file) return; setIsUploading(true); const folder = fileType === 'image' ? 'products' : 'product-videos'; const fileRef = storageRef(storage, `${folder}/${Date.now()}_${file.name}`); const uploadTask = uploadBytesResumable(fileRef, file); uploadTask.on('state_changed', (snapshot) => {}, (error) => { setError(`Upload failed for ${file.name}: ${error.message}`); setIsUploading(false); }, () => { getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => { if (fileType === 'image') setImageUrls(prev => [...prev, downloadURL]); else setVideoUrls(prev => [...prev, downloadURL]); setIsUploading(false); }); }); };
     const handleChange = (e) => { const { name, value } = e.target; setProduct(prev => ({ ...prev, [name]: value })); };
-    
-    const handleTagInput = (e) => {
-        if ((e.key === ',' || e.key === 'Enter') && tagInput.trim() !== '') {
-            e.preventDefault();
-            if (!tags.includes(tagInput.trim())) {
-                setTags([...tags, tagInput.trim()]);
-            }
-            setTagInput('');
-        }
-    };
+    const handleTagInput = (e) => { if ((e.key === ',' || e.key === 'Enter') && tagInput.trim() !== '') { e.preventDefault(); if (!tags.includes(tagInput.trim())) { setTags([...tags, tagInput.trim()]); } setTagInput(''); } };
     const removeTag = (tagToRemove) => { setTags(tags.filter(tag => tag !== tagToRemove)); };
-
     const handleHighlightChange = (index, field, value) => { const newHighlights = [...highlights]; newHighlights[index][field] = value; setHighlights(newHighlights); };
     const addHighlight = () => { if (highlights.length < 6) setHighlights([...highlights, { title: '', text: '' }]); };
-    const removeHighlight = (index) => { if (highlights.length > 1) setHighlights(highlights.filter((_, i) => i !== index)); };
-
-    const handleSaveProduct = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (!product.name || !product.price) { setError('Product Name and Price are required.'); return; } try { const commonData = { ...product, price: parseFloat(product.price), tags, highlights: highlights.filter(h => h.title && h.text), imageUrls, videoUrls, imageUrl: imageUrls.length > 0 ? imageUrls[0] : '' }; if (editingProduct) { await updateDoc(doc(db, "products", editingProduct.id), { ...commonData, featuredOrder: editingProduct.featuredOrder !== undefined ? editingProduct.featuredOrder : 999 }); setSuccess('Product updated successfully!'); } else { await addDoc(collection(db, "products"), { ...commonData, vendorId: user.uid, vendor: user.email.split('@')[0], createdAt: serverTimestamp(), rating: 0, reviewCount: 0, featuredOrder: Date.now() }); setSuccess('Product saved successfully!'); } setTimeout(() => { setVendorView('dashboard'); }, 1500); } catch (err) { setError('Failed to save product. ' + err.message); } };
+    const removeHighlight = (index) => { if (highlights.length > 1 || (highlights.length === 1 && (highlights[0].title || highlights[0].text))) { setHighlights(highlights.filter((_, i) => i !== index)); } };
+    const handleSaveProduct = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (!product.name || !product.price) { setError('Product Name and Price are required.'); return; } try { const commonData = { ...product, price: parseFloat(product.price), tags, highlights: highlights.filter(h => h.title && h.text), imageUrls, videoUrls, imageUrl: imageUrls.length > 0 ? imageUrls[0] : '', class: user.customClaims.class }; if (editingProduct) { await updateDoc(doc(db, "products", editingProduct.id), { ...commonData, featuredOrder: editingProduct.featuredOrder !== undefined ? editingProduct.featuredOrder : 999 }); setSuccess('Product updated successfully!'); } else { await addDoc(collection(db, "products"), { ...commonData, vendorId: user.uid, vendor: user.displayName, createdAt: serverTimestamp(), rating: 0, reviewCount: 0, featuredOrder: Date.now() }); setSuccess('Product saved successfully!'); } setTimeout(() => { setVendorView('dashboard'); }, 1500); } catch (err) { setError('Failed to save product. ' + err.message); } };
     
-    return (<div className="bg-white p-8 rounded-lg shadow-md border max-w-3xl mx-auto"><h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3><form onSubmit={handleSaveProduct} className="space-y-6"><div><label>Product Name</label><input name="name" value={product.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Subtitle</label><input name="subtitle" value={product.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Short Description</label><textarea name="shortDescription" value={product.shortDescription} onChange={handleChange} rows="2" className="w-full mt-1 p-2 border rounded-md"></textarea></div><div><label>Product Highlights (Up to 6)</label>{highlights.map((h, i) => (<div key={i} className="flex items-center gap-2 mt-2"><input value={h.title} onChange={(e) => handleHighlightChange(i, 'title', e.target.value)} placeholder="Bold Title" className="p-2 border rounded-md w-1/3"/><input value={h.text} onChange={(e) => handleHighlightChange(i, 'text', e.target.value)} placeholder="Sub-headline" className="p-2 border rounded-md flex-grow"/><button type="button" onClick={() => removeHighlight(i)} className="p-2 text-red-500 hover:bg-red-100 rounded-full"><X size={16}/></button></div>))}{highlights.length < 6 && <button type="button" onClick={addHighlight} className="text-sm text-blue-600 mt-2">Add Highlight</button>}</div><div><label>Long Description</label><textarea name="longDescription" value={product.longDescription} onChange={handleChange} rows="5" className="w-full mt-1 p-2 border rounded-md"></textarea></div><div className="grid grid-cols-2 gap-4"><div><label>Price</label><input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Category</label><input name="category" value={product.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div></div><div><label>Tags</label><div className="flex flex-wrap gap-2 p-2 border rounded-md mt-1">{tags.map(tag => (<span key={tag} className="flex items-center bg-gray-200 rounded-full px-3 py-1 text-sm">{tag}<button type="button" onClick={() => removeTag(tag)} className="ml-2 text-gray-500 hover:text-gray-800"><X size={14}/></button></span>))}<input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInput} placeholder="Add a tag..." className="flex-grow p-1 focus:outline-none"/></div></div><div><p className="block text-sm font-medium text-gray-700 mb-2">Product Media (5 photos, 2 videos max)</p><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" multiple /><button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"> <PlusCircle className="h-5 w-5 mr-2"/>Add Media</button><div className="mt-4 flex flex-wrap gap-4">{imageUrls.map(url => <img key={url} src={url} className="w-24 h-24 object-cover rounded-md"/>)}{videoUrls.map(url => <div key={url} className="w-24 h-24 bg-black rounded-md flex items-center justify-center"><Video className="h-8 w-8 text-white"/></div>)}</div></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<div className="flex justify-end space-x-4"><button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full">Cancel</button><button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full">{isUploading ? 'Uploading...' : 'Save Product'}</button></div></form></div>);
+    return (<div className="bg-white p-8 rounded-lg shadow-md border max-w-3xl mx-auto"><h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3><form onSubmit={handleSaveProduct} className="space-y-6"><div><label>Product Name</label><input name="name" value={product.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Subtitle</label><input name="subtitle" value={product.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Short Description</label><textarea name="shortDescription" value={product.shortDescription} onChange={handleChange} rows="3" maxLength="150" className="w-full mt-1 p-2 border rounded-md"></textarea><p className="text-right text-sm text-gray-500">{product.shortDescription.length} / 150</p></div><div><label>Product Highlights (Up to 6)</label>{highlights.map((h, i) => (<div key={i} className="flex items-center gap-2 mt-2"><input value={h.title} onChange={(e) => handleHighlightChange(i, 'title', e.target.value)} placeholder="Bold Title" className="p-2 border rounded-md w-1/3"/><input value={h.text} onChange={(e) => handleHighlightChange(i, 'text', e.target.value)} placeholder="Sub-headline" className="p-2 border rounded-md flex-grow"/><button type="button" onClick={() => removeHighlight(i)} className="p-2 text-red-500 hover:bg-red-100 rounded-full"><X size={16}/></button></div>))}{highlights.length < 6 && <button type="button" onClick={addHighlight} className="text-sm text-blue-600 mt-2 font-semibold">Add Highlight</button>}</div><div><label>Long Description</label><textarea name="longDescription" value={product.longDescription} onChange={handleChange} rows="5" className="w-full mt-1 p-2 border rounded-md"></textarea></div><div className="grid grid-cols-2 gap-4"><div><label>Price</label><input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Category</label><input name="category" value={product.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div></div><div><label>Tags</label><div className="flex flex-wrap gap-2 p-2 border rounded-md mt-1">{tags.map(tag => (<span key={tag} className="flex items-center bg-gray-200 rounded-full px-3 py-1 text-sm">{tag}<button type="button" onClick={() => removeTag(tag)} className="ml-2 text-gray-500 hover:text-gray-800"><X size={14}/></button></span>))}<input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInput} placeholder="Add tag..." className="flex-grow p-1 focus:outline-none"/></div><p className="text-xs text-gray-500 mt-1">Press Enter or comma to add a tag.</p></div><div><p className="block text-sm font-medium text-gray-700 mb-2">Product Media (5 photos, 2 videos max)</p><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" multiple /><button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"> <PlusCircle className="h-5 w-5 mr-2"/>Add Media</button><div className="mt-4 flex flex-wrap gap-4">{imageUrls.map(url => <img key={url} src={url} className="w-24 h-24 object-cover rounded-md"/>)}{videoUrls.map(url => <div key={url} className="w-24 h-24 bg-black rounded-md flex items-center justify-center"><Video className="h-8 w-8 text-white"/></div>)}</div></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<div className="flex justify-end space-x-4"><button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full">Cancel</button><button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full">{isUploading ? 'Uploading...' : 'Save Product'}</button></div></form></div>);
 };
 
-
-const VendorDashboard = ({ setVendorView, user, onEditProduct }) => {
+const VendorDashboard = ({ user, setView, onEditProduct }) => {
     const [vendorProducts, setVendorProducts] = useState([]);
     useEffect(() => { if (user) { const q = query(collection(db, "products"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user]);
     const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
-    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Products ({vendorProducts.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.email.split('@')[0]}</p></div><div className="flex items-center"><button onClick={() => { onEditProduct(null); setVendorView('create');}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4"><PlusCircle className="h-5 w-5 mr-2" />Add New Product</button></div></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorProducts.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
+    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Products ({vendorProducts.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Class: {user?.customClaims.class})</p></div><button onClick={() => { onEditProduct(null); setView({ page: 'create_product' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4"><PlusCircle className="h-5 w-5 mr-2" />Add New Product</button></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorProducts.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
 };
 
 const SuperAdminDashboard = ({ user, onEditProduct }) => {
     const [allProducts, setAllProducts] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState('');
     const [draggedItem, setDraggedItem] = useState(null);
-    const [newUser, setNewUser] = useState({username: '', password: ''});
+    const [newUser, setNewUser] = useState({username: '', password: '', class: ''});
     const [userCreationMsg, setUserCreationMsg] = useState('');
     const [isLoadingUserCreation, setIsLoadingUserCreation] = useState(false);
 
     useEffect(() => {
-        const q = query(collection(db, "products"), orderBy("featuredOrder", "asc"));
+        const q = query(collection(db, "classes"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const classList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setClasses(classList);
+            if (classList.length > 0 && !selectedClass) {
+                setSelectedClass(classList[0].id);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (!selectedClass) {
+            setAllProducts([]);
+            return;
+        };
+        const q = query(collection(db, "products"), where("class", "==", selectedClass), orderBy("featuredOrder", "asc"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setAllProducts(prods);
         });
         return () => unsubscribe();
-    }, []);
+    }, [selectedClass]);
 
     const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
-    
-    const handleDragStart = (e, index) => { setDraggedItem(allProducts[index]); e.dataTransfer.effectAllowed = 'move'; };
+    const handleDragStart = (e, index) => { setDraggedItem(allProducts[index]); };
     const handleDragOver = (e, index) => { e.preventDefault(); const draggedOverItem = allProducts[index]; if (draggedItem === draggedOverItem) { return; } let items = allProducts.filter(item => item !== draggedItem); items.splice(index, 0, draggedItem); setAllProducts(items); };
     const handleDragEnd = async () => { setDraggedItem(null); const batch = writeBatch(db); allProducts.forEach((product, index) => { const productRef = doc(db, "products", product.id); batch.update(productRef, { featuredOrder: index }); }); await batch.commit(); };
 
-    const handleCreateUser = async (e) => { e.preventDefault(); if (newUser.username.length < 3) { setUserCreationMsg("Error: Username must be at least 3 characters long."); return; } if (newUser.password.length < 6) { setUserCreationMsg("Error: Password must be at least 6 characters long."); return; } setIsLoadingUserCreation(true); setUserCreationMsg(''); try { const createNewVendor = httpsCallable(functions, 'createNewVendor'); const result = await createNewVendor({ username: newUser.username, password: newUser.password }); setUserCreationMsg(result.data.result); setNewUser({ username: '', password: '' }); } catch (error) { setUserCreationMsg(`Error: ${error.message}`); } setIsLoadingUserCreation(false); };
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+        if (newUser.username.length < 3 || newUser.password.length < 6 || !newUser.class) {
+            setUserCreationMsg("Error: Please fill all fields correctly.");
+            return;
+        }
+        setIsLoadingUserCreation(true);
+        setUserCreationMsg('');
+        try {
+            const createNewVendor = httpsCallable(functions, 'createNewVendor');
+            const result = await createNewVendor({
+                username: newUser.username,
+                password: newUser.password,
+                class: newUser.class
+            });
+            
+            const className = newUser.class.trim().toLowerCase();
+            const classRef = doc(db, "classes", className);
+            const displayName = className.charAt(0).toUpperCase() + className.slice(1).replace(/-/g, ' ');
+            await setDoc(classRef, { name: displayName });
 
+            setUserCreationMsg(result.data.result);
+            setNewUser({ username: '', password: '', class: '' });
+        } catch (error) {
+            setUserCreationMsg(`Error: ${error.message}`);
+        }
+        setIsLoadingUserCreation(false);
+    };
+    
     return (
         <div>
-            <div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">Super Admin Dashboard</h2><p className="text-sm text-gray-500">Welcome, {user?.email.split('@')[0]}</p></div></div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Super Admin Dashboard</h2>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                     <h3 className="text-xl font-bold text-gray-800 mb-4">Manage Product Order (Drag to Reorder)</h3>
-                     <div className="bg-white rounded-lg shadow-md border overflow-hidden">
-                        {allProducts.map((p, index) => (
-                            <div key={p.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd} className="flex items-center justify-between p-4 border-b last:border-b-0 cursor-move">
-                                <div className="flex items-center"><GripVertical className="h-5 w-5 text-gray-400 mr-4" /><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><div><p className="font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-500">{p.vendor}</p></div></div>
-                                <div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div>
-                            </div>
-                        ))}
+                     <div className="flex items-center mb-4">
+                        <label htmlFor="class-select" className="mr-2 font-bold">Manage Class:</label>
+                        {classes.length > 0 ? (
+                           <select id="class-select" value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="p-2 border rounded-md">{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+                        ) : (
+                           <p className="text-gray-500">No classes created yet.</p>
+                        )}
                      </div>
+                     <h3 className="text-xl font-bold text-gray-800 mb-4">Product Order (Drag to Reorder)</h3>
+                     <div className="bg-white rounded-lg shadow-md border overflow-hidden">{allProducts.map((p, index) => (<div key={p.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd} className="flex items-center justify-between p-4 border-b last:border-b-0 cursor-move"><div className="flex items-center"><GripVertical className="h-5 w-5 text-gray-400 mr-4" /><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><div><p className="font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-500">{p.vendor}</p></div></div><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800"><Trash2 className="h-5 w-5" /></button></div></div>))}</div>
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-gray-800 mb-4">Create New Vendor</h3>
@@ -363,9 +243,8 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
                         <form onSubmit={handleCreateUser} className="space-y-4">
                             <div><label className="text-sm font-medium">Username</label><input type="text" value={newUser.username} onChange={(e) => setNewUser({...newUser, username: e.target.value})} className="w-full mt-1 p-2 border rounded-md" required/></div>
                             <div><label className="text-sm font-medium">Password</label><input type="password" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} className="w-full mt-1 p-2 border rounded-md" required/></div>
-                            <button type="submit" disabled={isLoadingUserCreation} className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 disabled:bg-blue-300">
-                                {isLoadingUserCreation ? 'Creating...' : 'Create Vendor'}
-                            </button>
+                            <div><label className="text-sm font-medium">Assign to Class</label><input type="text" value={newUser.class} onChange={(e) => setNewUser({...newUser, class: e.target.value})} placeholder="e.g., morning-class" className="w-full mt-1 p-2 border rounded-md" required/></div>
+                            <button type="submit" disabled={isLoadingUserCreation} className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 disabled:bg-blue-300">{isLoadingUserCreation ? 'Creating...' : 'Create Vendor'}</button>
                             {userCreationMsg && <p className={`text-xs text-center mt-2 ${userCreationMsg.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`}>{userCreationMsg}</p>}
                         </form>
                     </div>
@@ -375,83 +254,128 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
     );
 };
 
-
-const VendorArea = ({ setView, user }) => {
-    const [vendorView, setVendorView] = useState('dashboard'); const [editingProduct, setEditingProduct] = useState(null);
-    const handleEditProduct = (product) => { setEditingProduct(product); setVendorView('create'); };
-    const handleFormClose = () => { setEditingProduct(null); setVendorView('dashboard'); };
-    const isSuperAdmin = user && user.uid === SUPER_ADMIN_UID;
-    
-    const renderContent = () => {
-        if (!user) return <VendorLogin />;
-        if (isSuperAdmin) {
-            return vendorView === 'create' 
-                ? <CreateProductForm setVendorView={handleFormClose} user={user} editingProduct={editingProduct} /> 
-                : <SuperAdminDashboard user={user} onEditProduct={handleEditProduct} />;
-        }
-        switch (vendorView) {
-            case 'create': return <CreateProductForm setVendorView={handleFormClose} user={user} editingProduct={editingProduct} />;
-            case 'dashboard': default: return <VendorDashboard setVendorView={setVendorView} user={user} onEditProduct={handleEditProduct} />;
-        }
-    };
-    return (<main className="container mx-auto px-4 py-8">{renderContent()}</main>);
-};
+// --- NEW COMPONENT FOR ADMINS ---
+const AdminClassSelector = ({ classes, adminViewingClass, setAdminViewingClass }) => (
+    <div className="container mx-auto px-4 pt-6 pb-2 bg-blue-50 border-b border-blue-200">
+        <div className="flex items-center space-x-3 bg-white p-4 rounded-lg shadow-sm border border-blue-200">
+            <Eye className="h-6 w-6 text-blue-600" />
+            <label htmlFor="admin-class-select" className="font-bold text-gray-700">Admin View:</label>
+            <select 
+                id="admin-class-select" 
+                value={adminViewingClass} 
+                onChange={(e) => setAdminViewingClass(e.target.value)} 
+                className="p-2 border rounded-md w-full max-w-xs"
+            >
+                <option value="">-- Select a Class to View --</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+        </div>
+    </div>
+);
 
 
 // --- MAIN APP COMPONENT ---
-
 export default function App() {
   const [view, setView] = useState({ page: 'home', id: null });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [allProducts, setAllProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [user, setUser] = useState(null); 
   const [loading, setLoading] = useState(true); 
+  const [classes, setClasses] = useState([]);
+  const [adminViewingClass, setAdminViewingClass] = useState('');
 
-  const handleSignOut = async () => {
-    await signOut(auth);
-    setView({ page: 'home' }); 
+  const handleSignOut = async () => { 
+      setAdminViewingClass(''); // Reset admin view on sign out
+      await signOut(auth); 
   };
 
-  useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => { setUser(currentUser); setLoading(false); }); return () => unsubscribe(); }, []);
-  
+  // Effect for user authentication
   useEffect(() => { 
-      const q = query(collection(db, "products")); 
-      const unsubscribe = onSnapshot(q, (snapshot) => { 
-          const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
-          setAllProducts(prods); 
-      }); 
+      const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+          if (currentUser) {
+              const tokenResult = await currentUser.getIdTokenResult();
+              currentUser.customClaims = tokenResult.claims;
+              setUser(currentUser);
+          } else {
+              setUser(null);
+          }
+          setLoading(false);
+      });
       return () => unsubscribe(); 
   }, []);
-  
-  useEffect(() => {
-      if (searchTerm.trim() === '') { setFilteredProducts(allProducts); } 
-      else { const lowercasedQuery = searchTerm.toLowerCase(); const results = allProducts.filter(p => p.name.toLowerCase().includes(lowercasedQuery) || (p.subtitle && p.subtitle.toLowerCase().includes(lowercasedQuery)) || (p.tags && p.tags.some(t => t.toLowerCase().includes(lowercasedQuery))) || (p.vendor && p.vendor.toLowerCase().includes(lowercasedQuery))); setFilteredProducts(results); }
-      if (searchTerm.trim() !== '') { setView({ page: 'home', id: null }); }
-  }, [searchTerm, allProducts]);
 
+  // Effect to fetch the list of classes for the admin selector
+  useEffect(() => {
+    const q = query(collection(db, "classes"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, []);
+  
+  // Effect for fetching products based on user role and selections
+  useEffect(() => { 
+      if (!user) {
+          setProducts([]);
+          return;
+      }
+      
+      const isSuperAdmin = (user.customClaims && user.customClaims.superAdmin === true) || user.uid === SUPER_ADMIN_UID;
+      let q;
+
+      if (isSuperAdmin) {
+          if (adminViewingClass) {
+            // Admin is viewing a specific class on the frontend
+            q = query(collection(db, "products"), where("class", "==", adminViewingClass), orderBy("featuredOrder", "asc"));
+          } else {
+            // Admin has not selected a class to view, show nothing.
+            setProducts([]);
+          }
+      } else if (user.customClaims.class) {
+          // Regular user, show products for their assigned class
+          q = query(collection(db, "products"), where("class", "==", user.customClaims.class), orderBy("featuredOrder", "asc"));
+      }
+
+      if (q) {
+        const unsubscribe = onSnapshot(q, (snapshot) => { 
+            const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setProducts(prods); 
+        }); 
+        return () => unsubscribe(); 
+      }
+  }, [user, adminViewingClass]); // Rerun when user changes or admin selects a new class
+  
   const renderView = () => {
+    if (loading) { return <div className="min-h-screen flex items-center justify-center text-lg">Loading Application...</div> }
+    if (!user) { return <LoginScreen/> }
+    
+    const isSuperAdmin = (user.customClaims && user.customClaims.superAdmin === true) || user.uid === SUPER_ADMIN_UID;
+
     switch (view.page) {
-      case 'product': const product = allProducts.find(p => p.id === view.id); return product ? <ProductPage product={product} setView={setView} user={user} /> : <HomePage products={filteredProducts} setView={setView} />;
-      case 'vendor': return <VendorArea setView={setView} user={user} />;
-      case 'home': default: return <HomePage products={filteredProducts} setView={setView} />;
+      case 'product': 
+        const product = products.find(p => p.id === view.id);
+        return product ? <ProductPage product={product} setView={setView} user={user} /> : <div className="text-center py-10">Product not found.</div>;
+      case 'dashboard':
+          return isSuperAdmin 
+            ? <main className="container mx-auto px-4 py-8"><SuperAdminDashboard user={user} onEditProduct={(p) => setView({ page: 'create_product', product: p })} /></main>
+            : <main className="container mx-auto px-4 py-8"><VendorDashboard user={user} setView={setView} onEditProduct={(p) => setView({ page: 'create_product', product: p })}/></main>;
+      case 'create_product':
+          return <main className="container mx-auto px-4 py-8"><CreateProductForm setVendorView={() => setView({ page: 'dashboard' })} user={user} editingProduct={view.product} /></main>;
+      case 'home':
+      default:
+        return (
+            <>
+                {isSuperAdmin && <AdminClassSelector classes={classes} adminViewingClass={adminViewingClass} setAdminViewingClass={setAdminViewingClass} />}
+                <ProductGrid products={products} setView={setView} />
+            </>
+        );
     }
   };
 
-  if (loading) { return <div className="min-h-screen flex items-center justify-center text-lg">Loading Application...</div> }
-
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
-        <Header 
-            setView={setView} 
-            searchTerm={searchTerm} 
-            setSearchTerm={setSearchTerm} 
-            user={user}
-            onSignOut={handleSignOut}
-        />
+        <Header setView={setView} user={user} onSignOut={handleSignOut} />
         {renderView()}
         <Footer />
     </div>
   );
 }
-

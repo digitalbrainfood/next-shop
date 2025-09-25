@@ -1,3 +1,5 @@
+// functions/index.js
+
 const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const {initializeApp} = require("firebase-admin/app");
 const {getAuth} = require("firebase-admin/auth");
@@ -12,12 +14,9 @@ setGlobalOptions({
 // Initialize the Firebase Admin SDK
 initializeApp();
 
-// --- SUPER ADMIN CONFIGURATION ---
-// IMPORTANT: Replace with the same Super Admin UID you used in your page.jsx file
-const SUPER_ADMIN_UID = "RnBej9HSStVJXA0rtIB02W0R1yv2";
-
 /**
- * A callable Cloud Function that allows a Super Admin to create a new vendor.
+ * A callable Cloud Function to create a new vendor user with custom claims.
+ * This function can only be called by an authenticated user who is a super admin.
  */
 exports.createNewVendor = onCall(
   {
@@ -30,56 +29,56 @@ exports.createNewVendor = onCall(
   async (request) => {
     const {auth, data} = request;
 
-    // 1. Authentication Check: Ensure the person calling this function is logged in.
+    // 1. Authentication Check: Ensure the user calling this function is authenticated.
     if (!auth) {
       throw new HttpsError(
         "unauthenticated",
-        "You must be logged in to perform this action."
+        "You must be logged in to create a new vendor."
       );
     }
 
-    // 2. Authorization Check: Ensure the authenticated user is the Super Admin.
-    if (auth.uid !== SUPER_ADMIN_UID) {
+    // 2. Authorization Check: Ensure the user is a super admin.
+    const isSuperAdmin = auth.token?.superAdmin === true;
+    // We also check the UID directly for the initial hardcoded super admin.
+    const isInitialAdmin = auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
+
+    if (!isSuperAdmin && !isInitialAdmin) {
       throw new HttpsError(
         "permission-denied",
-        "You must be a super admin to perform this action."
+        "You do not have permission to perform this action."
       );
     }
 
-    // 3. Validate Input: Get username and password from the client-side call.
-    const username = data?.username;
-    const password = data?.password;
-
-    if (!username || typeof username !== "string" || username.length < 3) {
+    // 3. Data Validation: Check if the required data was sent.
+    const { username, password, class: className } = data || {};
+    if (!username || !password || !className) {
       throw new HttpsError(
         "invalid-argument",
-        "Username must be a string with at least 3 characters."
+        "Please provide username, password, and class."
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Password must be a string with at least 6 characters."
-      );
-    }
-
-    // 4. Create the User: Use the powerful Admin SDK to create a new user in Firebase Authentication.
     try {
-      const auth = getAuth();
-      const userRecord = await auth.createUser({
-        email: `${username}@shopnext.dev`, // Formats the username into the required email format
+      // 4. Create the User in Firebase Authentication
+      const authService = getAuth();
+      const userRecord = await authService.createUser({
+        email: `${username.trim()}@shopnext.dev`,
         password: password,
-        displayName: username,
+        displayName: username.trim(),
+      });
+
+      // 5. Set Custom Claims for the new user. This gives them their 'class' role.
+      await authService.setCustomUserClaims(userRecord.uid, {
+        class: className.trim(),
       });
 
       console.log("Successfully created new vendor:", userRecord.uid);
-      
-      // 5. Send Success Response: Let the client know it worked.
-      return { 
+
+      // 6. Return a success message.
+      return {
         success: true,
-        result: `Successfully created vendor: ${username}`,
-        uid: userRecord.uid 
+        result: `Successfully created user ${username} in class ${className}.`,
+        uid: userRecord.uid
       };
     } catch (error) {
       console.error("Error creating new user:", error);
@@ -93,8 +92,8 @@ exports.createNewVendor = onCall(
         throw new HttpsError("invalid-argument", "Password is too weak.");
       }
       
-      // 6. Send Error Response: Let the client know something went wrong.
-      throw new HttpsError("internal", `Failed to create user: ${error.message}`);
+      // Handle potential errors, like if the email already exists.
+      throw new HttpsError("internal", error.message);
     }
   }
 );
