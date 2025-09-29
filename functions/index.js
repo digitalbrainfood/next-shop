@@ -69,7 +69,7 @@ exports.createNewVendor = onCall(
 
       // 5. Set Custom Claims for the new user. This gives them their 'class' role.
       await authService.setCustomUserClaims(userRecord.uid, {
-        class: className.trim(),
+        class: className.trim().toLowerCase(),  // Add .toLowerCase()
       });
 
       console.log("Successfully created new vendor:", userRecord.uid);
