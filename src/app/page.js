@@ -1,7 +1,7 @@
 "use client";
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Store, UserCircle, Star, ArrowLeft, LogIn, PlusCircle, ImageIcon, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search } from 'lucide-react';
+import { Editor } from '@tinymce/tinymce-react';
+import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, getDocs, writeBatch, orderBy, setDoc } from "firebase/firestore";
@@ -147,7 +147,15 @@ const ProductPage = ({ product, setView, user }) => {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     useEffect(() => { const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => { setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); }, [product.id]);
     const allMedia = [...(product.imageUrls || []).map(src => ({ type: 'image', src })), ...(product.videoUrls || []).map(src => ({ type: 'video', src }))];
-    return (<main className="container mx-auto px-4 py-8"><button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6"><ArrowLeft className="mr-2 h-4 w-4" /> Back to products</button><div className="grid grid-cols-1 md:grid-cols-2 gap-12"><div><div className="mb-4 w-full h-auto aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center"><div className="w-full h-full">{activeMedia.type === 'image' ? (<img src={activeMedia.src} alt={product.name} className="w-full h-full object-cover" />) : (<video key={activeMedia.src} src={activeMedia.src} controls autoPlay muted className="w-full h-full object-cover"></video>)}</div></div><div className="flex flex-wrap gap-2">{allMedia.map((media, index) => (<button key={index} onClick={() => setActiveMedia(media)} className={`w-20 h-20 rounded-md overflow-hidden border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${activeMedia.src === media.src ? 'border-blue-500' : 'border-transparent'}`}>{media.type === 'image' ? (<img src={media.src} alt={`thumbnail ${index + 1}`} className="w-full h-full object-cover" />) : (<div className="w-full h-full bg-black flex items-center justify-center relative"><div className="absolute inset-0 bg-black opacity-50"></div><Video className="h-8 w-8 text-white z-10" /></div>)}</button>))}</div></div><div><h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1><p className="text-lg text-gray-600 mt-2">{product.subtitle}</p><div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div><p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p><div className="mt-6 border-t pt-4"><p className="text-gray-700">{product.shortDescription}</p></div><div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">{(product.highlights || []).map((highlight, index) => (<div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-100"><p className="font-bold text-blue-800">{highlight.title}</p><p className="text-sm text-blue-700 mt-1">{highlight.text}</p></div>))}</div></div></div><div className="mt-12 max-w-[1100px] mx-auto"><div className="border-t"><button onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="w-full flex justify-between items-center py-4 text-left"><div><h2 className="text-2xl font-bold text-gray-800">About this item</h2><p className="text-sm text-gray-500">Product Details</p></div>{isDetailsOpen ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}</button>{isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none"><p>{product.longDescription}</p></div>)}</div></div><div className="mt-12 max-w-[1100px] mx-auto"><h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>{reviews.length > 0 ? (<div className="space-y-6">{reviews.map(review => (<div key={review.id} className="bg-white p-4 rounded-lg shadow-sm border"><div className="flex items-center mb-2"><StarRating rating={review.overallRating} /><span className="ml-4 font-bold text-gray-800">{review.username}</span></div><p className="text-gray-600">{review.text}</p></div>))}</div>) : (<p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>)}{user && <ReviewFormComponent productId={product.id} user={user} />}</div></main>);
+    return (<main className="container mx-auto px-4 py-8"><button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6"><ArrowLeft className="mr-2 h-4 w-4" /> Back to products</button><div className="grid grid-cols-1 md:grid-cols-2 gap-12"><div><div className="mb-4 w-full h-auto aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center"><div className="w-full h-full">{activeMedia.type === 'image' ? (<img src={activeMedia.src} alt={product.name} className="w-full h-full object-cover" />) : (<video key={activeMedia.src} src={activeMedia.src} controls autoPlay muted className="w-full h-full object-cover"></video>)}</div></div><div className="flex flex-wrap gap-2">{allMedia.map((media, index) => (<button key={index} onClick={() => setActiveMedia(media)} className={`w-20 h-20 rounded-md overflow-hidden border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${activeMedia.src === media.src ? 'border-blue-500' : 'border-transparent'}`}>{media.type === 'image' ? (<img src={media.src} alt={`thumbnail ${index + 1}`} className="w-full h-full object-cover" />) : (<div className="w-full h-full bg-black flex items-center justify-center relative"><div className="absolute inset-0 bg-black opacity-50"></div><Video className="h-8 w-8 text-white z-10" /></div>)}</button>))}</div></div><div><h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1><p className="text-lg text-gray-600 mt-2">{product.subtitle}</p><div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div><p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
+        {/* MODIFIED: Use dangerouslySetInnerHTML to render formatted short description */}
+        <div className="mt-6 border-t pt-4">
+            <div className="text-gray-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: product.shortDescription }} />
+        </div>
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">{(product.highlights || []).map((highlight, index) => (<div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-100"><p className="font-bold text-blue-800">{highlight.title}</p><p className="text-sm text-blue-700 mt-1">{highlight.text}</p></div>))}</div></div></div><div className="mt-12 max-w-[1100px] mx-auto"><div className="border-t"><button onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="w-full flex justify-between items-center py-4 text-left"><div><h2 className="text-2xl font-bold text-gray-800">About this item</h2><p className="text-sm text-gray-500">Product Details</p></div>{isDetailsOpen ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}</button>
+        {/* MODIFIED: Use dangerouslySetInnerHTML to render formatted long description */}
+        {isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none" dangerouslySetInnerHTML={{ __html: product.longDescription }}/>)}
+        </div></div><div className="mt-12 max-w-[1100px] mx-auto"><h2 className="text-2xl font-bold text-gray-800 mb-4">Customer Reviews</h2>{reviews.length > 0 ? (<div className="space-y-6">{reviews.map(review => (<div key={review.id} className="bg-white p-4 rounded-lg shadow-sm border"><div className="flex items-center mb-2"><StarRating rating={review.overallRating} /><span className="ml-4 font-bold text-gray-800">{review.username}</span></div><p className="text-gray-600">{review.text}</p></div>))}</div>) : (<p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>)}{user && <ReviewFormComponent productId={product.id} user={user} />}</div></main>);
 };
 
 const LoginScreen = () => {
@@ -159,13 +167,19 @@ const LoginScreen = () => {
 
 const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     const [product, setProduct] = useState({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
-    const [tags, setTags] = useState([]); const [tagInput, setTagInput] = useState('');
+    // This state is for handling TinyMCE's initialization
+    const [editorLoaded, setEditorLoaded] = useState(false);
+    const [tags, setTags] = useState([]);
+    const [tagInput, setTagInput] = useState('');
     const [highlights, setHighlights] = useState([{ title: '', text: '' }]);
-    const [media, setMedia] = useState([]); // Combined state for images and videos
+    const [media, setMedia] = useState([]);
     const [draggedMedia, setDraggedMedia] = useState(null);
-    const [isUploading, setIsUploading] = useState(false); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const fileInputRef = useRef(null);
 
+    // This makes sure the editor loads correctly with initial data
     useEffect(() => {
         if (editingProduct) {
             setProduct({ name: editingProduct.name || '', subtitle: editingProduct.subtitle || '', shortDescription: editingProduct.shortDescription || '', longDescription: editingProduct.longDescription || '', price: editingProduct.price || '', category: editingProduct.category || '' });
@@ -182,8 +196,11 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
             setHighlights([{ title: '', text: '' }]);
             setMedia([]);
         }
+        // Mark the editor as ready to load
+        setEditorLoaded(true);
     }, [editingProduct]);
 
+    // Handlers for file uploads and other form elements (no changes needed here)
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files);
         const imageCount = media.filter(m => m.type === 'image').length;
@@ -205,7 +222,6 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         if (localError) setError(localError);
         allowedFiles.forEach(item => handleFileUpload(item.file, item.type));
     };
-    
     const handleFileUpload = (file, fileType) => {
         if (!file) return;
         setIsUploading(true);
@@ -213,37 +229,20 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         const folder = fileType === 'image' ? 'products' : 'product-videos';
         const fileRef = storageRef(storage, `${folder}/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(fileRef, file);
-        uploadTask.on('state_changed', 
-            () => {}, 
-            (error) => { setError(`Upload failed for ${file.name}: ${error.message}`); setIsUploading(false); }, 
-            () => { getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                setMedia(prev => [...prev, { url: downloadURL, type: fileType }]);
-                setIsUploading(false);
-            });
-        });
+        uploadTask.on('state_changed', () => {}, (error) => { setError(`Upload failed for ${file.name}: ${error.message}`); setIsUploading(false); }, () => { getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => { setMedia(prev => [...prev, { url: downloadURL, type: fileType }]); setIsUploading(false); }); });
     };
-    
     const handleRemoveMedia = async (urlToRemove) => {
         if (window.confirm("Are you sure you want to remove this media?")) {
             try {
-                // Delete from Firebase Storage
                 const fileRef = storageRef(storage, urlToRemove);
                 await deleteObject(fileRef);
-                // Remove from local state
                 setMedia(prev => prev.filter(item => item.url !== urlToRemove));
             } catch (error) {
                 console.error("Failed to delete media: ", error);
-                // If deletion fails (e.g., file not found), still remove from UI
-                if (error.code === 'storage/object-not-found') {
-                    setMedia(prev => prev.filter(item => item.url !== urlToRemove));
-                } else {
-                    setError("Failed to remove media. Please try again.");
-                }
+                if (error.code === 'storage/object-not-found') { setMedia(prev => prev.filter(item => item.url !== urlToRemove)); } else { setError("Failed to remove media. Please try again."); }
             }
         }
     };
-    
-    // Drag and Drop Handlers for media reordering
     const handleDragStart = (e, item) => setDraggedMedia(item);
     const handleDragOver = (e) => e.preventDefault();
     const handleDrop = (e, targetItem) => {
@@ -257,38 +256,21 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         setMedia(newMedia);
         setDraggedMedia(null);
     };
-
     const handleChange = (e) => { const { name, value } = e.target; setProduct(prev => ({ ...prev, [name]: value })); };
     const handleTagInput = (e) => { if ((e.key === ',' || e.key === 'Enter') && tagInput.trim() !== '') { e.preventDefault(); if (!tags.includes(tagInput.trim())) { setTags([...tags, tagInput.trim()]); } setTagInput(''); } };
     const removeTag = (tagToRemove) => { setTags(tags.filter(tag => tag !== tagToRemove)); };
     const handleHighlightChange = (index, field, value) => { const newHighlights = [...highlights]; newHighlights[index][field] = value; setHighlights(newHighlights); };
     const addHighlight = () => { if (highlights.length < 6) setHighlights([...highlights, { title: '', text: '' }]); };
     const removeHighlight = (index) => { if (highlights.length > 1 || (highlights.length === 1 && (highlights[0].title || highlights[0].text))) { setHighlights(highlights.filter((_, i) => i !== index)); } };
-    
     const handleSaveProduct = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-        if (!product.name || !product.price) {
-            setError('Product Name and Price are required.');
-            return;
-        }
-
+        if (!product.name || !product.price) { setError('Product Name and Price are required.'); return; }
         const imageUrls = media.filter(m => m.type === 'image').map(m => m.url);
         const videoUrls = media.filter(m => m.type === 'video').map(m => m.url);
-        
         try {
-            const commonData = {
-                ...product,
-                price: parseFloat(product.price),
-                tags,
-                highlights: highlights.filter(h => h.title && h.text),
-                imageUrls,
-                videoUrls,
-                imageUrl: imageUrls.length > 0 ? imageUrls[0] : '', // First image is featured
-                class: editingProduct ? editingProduct.class : user.customClaims.class
-
-            };
+            const commonData = { ...product, price: parseFloat(product.price), tags, highlights: highlights.filter(h => h.title && h.text), imageUrls, videoUrls, imageUrl: imageUrls.length > 0 ? imageUrls[0] : '', class: editingProduct ? editingProduct.class : user.customClaims.class };
             if (editingProduct) {
                 await updateDoc(doc(db, "products", editingProduct.id), { ...commonData, featuredOrder: editingProduct.featuredOrder !== undefined ? editingProduct.featuredOrder : 999 });
                 setSuccess('Product updated successfully!');
@@ -302,26 +284,61 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         }
     };
     
-    return (<div className="bg-white p-8 rounded-lg shadow-md border max-w-3xl mx-auto"><h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3><form onSubmit={handleSaveProduct} className="space-y-6"><div><label>Product Name</label><input name="name" value={product.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Subtitle</label><input name="subtitle" value={product.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Short Description</label><textarea name="shortDescription" value={product.shortDescription} onChange={handleChange} rows="3" maxLength="150" className="w-full mt-1 p-2 border rounded-md"></textarea><p className="text-right text-sm text-gray-500">{product.shortDescription.length} / 150</p></div><div><label>Product Highlights (Up to 6)</label>{highlights.map((h, i) => (<div key={i} className="flex items-center gap-2 mt-2"><input value={h.title} onChange={(e) => handleHighlightChange(i, 'title', e.target.value)} placeholder="Bold Title" className="p-2 border rounded-md w-1/3"/><input value={h.text} onChange={(e) => handleHighlightChange(i, 'text', e.target.value)} placeholder="Sub-headline" className="p-2 border rounded-md flex-grow"/><button type="button" onClick={() => removeHighlight(i)} className="p-2 text-red-500 hover:bg-red-100 rounded-full"><X size={16}/></button></div>))}{highlights.length < 6 && <button type="button" onClick={addHighlight} className="text-sm text-blue-600 mt-2 font-semibold">Add Highlight</button>}</div><div><label>Long Description</label><textarea name="longDescription" value={product.longDescription} onChange={handleChange} rows="5" className="w-full mt-1 p-2 border rounded-md"></textarea></div><div className="grid grid-cols-2 gap-4"><div><label>Price</label><input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Category</label><input name="category" value={product.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div></div><div><label>Tags</label><div className="flex flex-wrap gap-2 p-2 border rounded-md mt-1">{tags.map(tag => (<span key={tag} className="flex items-center bg-gray-200 rounded-full px-3 py-1 text-sm">{tag}<button type="button" onClick={() => removeTag(tag)} className="ml-2 text-gray-500 hover:text-gray-800"><X size={14}/></button></span>))}<input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInput} placeholder="Add tag..." className="flex-grow p-1 focus:outline-none"/></div><p className="text-xs text-gray-500 mt-1">Press Enter or comma to add a tag.</p></div><div>
-    <p className="block text-sm font-medium text-gray-700 mb-2">Product Media</p>
-    <div className="text-xs text-gray-500 p-3 bg-gray-50 rounded-md border mb-3">
-        <ul className="list-none space-y-1">
-            <li>Up to <b>5 photos</b> (JPEG, PNG, WEBP) and <b>2 videos</b> (MP4).</li>
-            <li>For best results, use square <b>600x600</b> pixel images.</li>
-            <li><b>Drag and drop</b> media to reorder. The first image will be your featured image.</li>
-        </ul>
-    </div>
-    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/jpeg,image/png,image/webp,video/mp4" multiple /><button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"> <PlusCircle className="h-5 w-5 mr-2"/>Add Media</button>
-    <div className="mt-4 flex flex-wrap gap-4">
-        {media.map((item, index) => (
-            <div key={item.url} draggable onDragStart={(e) => handleDragStart(e, item)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, item)} className="relative w-24 h-24 rounded-md cursor-move group">
-                {item.type === 'image' ? <img src={item.url} className="w-full h-full object-cover rounded-md"/> : <div className="w-full h-full bg-black rounded-md flex items-center justify-center"><Video className="h-8 w-8 text-white"/></div>}
-                <button type="button" onClick={() => handleRemoveMedia(item.url)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14}/></button>
-                {index === 0 && media.find(m => m.type === 'image')?.url === item.url && <div className="absolute bottom-0 w-full bg-black bg-opacity-60 text-white text-center text-xs py-0.5 rounded-b-md">Featured</div>}
-            </div>
-        ))}
-    </div>
-</div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<div className="flex justify-end space-x-4"><button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full">Cancel</button><button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full">{isUploading ? 'Uploading...' : 'Save Product'}</button></div></form></div>);
+    // Only render the form once the editor is ready to prevent issues
+    if (!editorLoaded) {
+        return <div>Loading Editor...</div>;
+    }
+
+    return (
+        <div className="bg-white p-8 rounded-lg shadow-md border max-w-3xl mx-auto">
+            <h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+            <form onSubmit={handleSaveProduct} className="space-y-6">
+                <div><label>Product Name</label><input name="name" value={product.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div>
+                <div><label>Subtitle</label><input name="subtitle" value={product.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div>
+                
+                <div>
+                    <label>Short Description</label>
+                    <Editor
+                        apiKey="gl7xxa4bfui10kjofcwnkiuznxaxy3y2aabdso6929tltmkq" // <-- PASTE YOUR KEY HERE
+                        value={product.shortDescription}
+                        onEditorChange={(content) => setProduct(prev => ({ ...prev, shortDescription: content }))}
+                        init={{
+                            height: 250,
+                            menubar: false,
+                            plugins: 'lists link emoticons help wordcount',
+                            toolbar: 'undo redo | bold italic underline | bullist numlist | link emoticons | help',
+                            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                        }}
+                    />
+                </div>
+
+                <div><label>Product Highlights (Up to 6)</label>{highlights.map((h, i) => (<div key={i} className="flex items-center gap-2 mt-2"><input value={h.title} onChange={(e) => handleHighlightChange(i, 'title', e.target.value)} placeholder="Bold Title" className="p-2 border rounded-md w-1/3"/><input value={h.text} onChange={(e) => handleHighlightChange(i, 'text', e.target.value)} placeholder="Sub-headline" className="p-2 border rounded-md flex-grow"/><button type="button" onClick={() => removeHighlight(i)} className="p-2 text-red-500 hover:bg-red-100 rounded-full"><X size={16}/></button></div>))}{highlights.length < 6 && <button type="button" onClick={addHighlight} className="text-sm text-blue-600 mt-2 font-semibold">Add Highlight</button>}</div>
+                
+                <div>
+                    <label>Long Description</label>
+                     <Editor
+                        apiKey="gl7xxa4bfui10kjofcwnkiuznxaxy3y2aabdso6929tltmkq" // <-- PASTE YOUR KEY HERE
+                        value={product.longDescription}
+                        onEditorChange={(content) => setProduct(prev => ({ ...prev, longDescription: content }))}
+                        init={{
+                            height: 400,
+                            menubar: true,
+                            plugins: 'advlist lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+                            toolbar: 'undo redo | blocks | bold italic underline forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                            content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                        }}
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4"><div><label>Price</label><input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md"/></div><div><label>Category</label><input name="category" value={product.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md"/></div></div><div><label>Tags</label><div className="flex flex-wrap gap-2 p-2 border rounded-md mt-1">{tags.map(tag => (<span key={tag} className="flex items-center bg-gray-200 rounded-full px-3 py-1 text-sm">{tag}<button type="button" onClick={() => removeTag(tag)} className="ml-2 text-gray-500 hover:text-gray-800"><X size={14}/></button></span>))}<input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInput} placeholder="Add tag..." className="flex-grow p-1 focus:outline-none"/></div><p className="text-xs text-gray-500 mt-1">Press Enter or comma to add a tag.</p></div><div>
+                    <p className="block text-sm font-medium text-gray-700 mb-2">Product Media</p>
+                    <div className="text-xs text-gray-500 p-3 bg-gray-50 rounded-md border mb-3"><ul className="list-none space-y-1"><li>Up to <b>5 photos</b> (JPEG, PNG, WEBP) and <b>2 videos</b> (MP4).</li><li>For best results, use square <b>600x600</b> pixel images.</li><li><b>Drag and drop</b> media to reorder. The first image will be your featured image.</li></ul></div>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/jpeg,image/png,image/webp,video/mp4" multiple /><button type="button" onClick={() => fileInputRef.current.click()} disabled={isUploading} className="flex items-center justify-center w-full py-2 px-4 border border-dashed rounded-md"> <PlusCircle className="h-5 w-5 mr-2"/>Add Media</button>
+                    <div className="mt-4 flex flex-wrap gap-4">{media.map((item, index) => (<div key={item.url} draggable onDragStart={(e) => handleDragStart(e, item)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, item)} className="relative w-24 h-24 rounded-md cursor-move group">{item.type === 'image' ? <img src={item.url} className="w-full h-full object-cover rounded-md"/> : <div className="w-full h-full bg-black rounded-md flex items-center justify-center"><Video className="h-8 w-8 text-white"/></div>}<button type="button" onClick={() => handleRemoveMedia(item.url)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14}/></button>{index === 0 && media.find(m => m.type === 'image')?.url === item.url && <div className="absolute bottom-0 w-full bg-black bg-opacity-60 text-white text-center text-xs py-0.5 rounded-b-md">Featured</div>}</div>))}</div>
+                </div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<div className="flex justify-end space-x-4"><button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full">Cancel</button><button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full">{isUploading ? 'Uploading...' : 'Save Product'}</button></div>
+            </form>
+        </div>
+    );
 };
 
 const VendorDashboard = ({ user, setView, onEditProduct }) => {
@@ -481,6 +498,11 @@ export default function App() {
       });
       return () => unsubscribe(); 
   }, []);
+
+  // FIXED: Add useEffect to scroll to top on view change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
 
   useEffect(() => {
     const q = query(collection(db, "classes"));

@@ -8,6 +8,8 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tinymce$2f$tinymce$2d$react$2f$lib$2f$es2015$2f$main$2f$ts$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/@tinymce/tinymce-react/lib/es2015/main/ts/index.js [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tinymce$2f$tinymce$2d$react$2f$lib$2f$es2015$2f$main$2f$ts$2f$components$2f$Editor$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@tinymce/tinymce-react/lib/es2015/main/ts/components/Editor.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Store$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/store.js [app-client] (ecmascript) <export default as Store>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserCircle$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-user.js [app-client] (ecmascript) <export default as UserCircle>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/star.js [app-client] (ecmascript) <export default as Star>");
@@ -37,6 +39,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2
 ;
 var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature(), _s4 = __turbopack_context__.k.signature(), _s5 = __turbopack_context__.k.signature(), _s6 = __turbopack_context__.k.signature();
 "use client";
+;
 ;
 ;
 ;
@@ -901,18 +904,20 @@ const ProductPage = (param)=>{
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "mt-6 border-t pt-4",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                    className: "text-gray-700",
-                                    children: product.shortDescription
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "text-gray-700 prose max-w-none",
+                                    dangerouslySetInnerHTML: {
+                                        __html: product.shortDescription
+                                    }
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 150,
-                                    columnNumber: 1778
+                                    lineNumber: 153,
+                                    columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 150,
-                                columnNumber: 1742
+                                lineNumber: 152,
+                                columnNumber: 9
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4",
@@ -924,27 +929,27 @@ const ProductPage = (param)=>{
                                                 children: highlight.title
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 150,
-                                                columnNumber: 2036
+                                                lineNumber: 155,
+                                                columnNumber: 202
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                 className: "text-sm text-blue-700 mt-1",
                                                 children: highlight.text
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 150,
-                                                columnNumber: 2096
+                                                lineNumber: 155,
+                                                columnNumber: 262
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, index, true, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 150,
-                                        columnNumber: 1958
+                                        lineNumber: 155,
+                                        columnNumber: 124
                                     }, ("TURBOPACK compile-time value", void 0)))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 150,
-                                columnNumber: 1843
+                                lineNumber: 155,
+                                columnNumber: 9
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
@@ -974,66 +979,62 @@ const ProductPage = (param)=>{
                                             children: "About this item"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 150,
-                                            columnNumber: 2387
+                                            lineNumber: 155,
+                                            columnNumber: 553
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "text-sm text-gray-500",
                                             children: "Product Details"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 150,
-                                            columnNumber: 2456
+                                            lineNumber: 155,
+                                            columnNumber: 622
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 150,
-                                    columnNumber: 2382
+                                    lineNumber: 155,
+                                    columnNumber: 548
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 isDetailsOpen ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronUp$3e$__["ChevronUp"], {
                                     className: "h-6 w-6"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 150,
-                                    columnNumber: 2535
+                                    lineNumber: 155,
+                                    columnNumber: 701
                                 }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                     className: "h-6 w-6"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 150,
-                                    columnNumber: 2571
+                                    lineNumber: 155,
+                                    columnNumber: 737
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 150,
-                            columnNumber: 2257
+                            lineNumber: 155,
+                            columnNumber: 423
                         }, ("TURBOPACK compile-time value", void 0)),
                         isDetailsOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "pb-4 text-gray-600 prose max-w-none",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                children: product.longDescription
-                            }, void 0, false, {
-                                fileName: "[project]/src/app/page.js",
-                                lineNumber: 150,
-                                columnNumber: 2688
-                            }, ("TURBOPACK compile-time value", void 0))
+                            dangerouslySetInnerHTML: {
+                                __html: product.longDescription
+                            }
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 150,
-                            columnNumber: 2635
+                            lineNumber: 157,
+                            columnNumber: 28
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 150,
-                    columnNumber: 2231
+                    lineNumber: 155,
+                    columnNumber: 397
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 150,
-                columnNumber: 2185
+                lineNumber: 155,
+                columnNumber: 351
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "mt-12 max-w-[1100px] mx-auto",
@@ -1043,8 +1044,8 @@ const ProductPage = (param)=>{
                         children: "Customer Reviews"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 150,
-                        columnNumber: 2786
+                        lineNumber: 158,
+                        columnNumber: 67
                     }, ("TURBOPACK compile-time value", void 0)),
                     reviews.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "space-y-6",
@@ -1058,62 +1059,62 @@ const ProductPage = (param)=>{
                                                 rating: review.overallRating
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 150,
-                                                columnNumber: 3049
+                                                lineNumber: 158,
+                                                columnNumber: 330
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "ml-4 font-bold text-gray-800",
                                                 children: review.username
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 150,
-                                                columnNumber: 3093
+                                                lineNumber: 158,
+                                                columnNumber: 374
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 150,
-                                        columnNumber: 3009
+                                        lineNumber: 158,
+                                        columnNumber: 290
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-gray-600",
                                         children: review.text
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 150,
-                                        columnNumber: 3170
+                                        lineNumber: 158,
+                                        columnNumber: 451
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, review.id, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 150,
-                                columnNumber: 2935
+                                lineNumber: 158,
+                                columnNumber: 216
                             }, ("TURBOPACK compile-time value", void 0)))
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 150,
-                        columnNumber: 2884
+                        lineNumber: 158,
+                        columnNumber: 165
                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                         className: "text-gray-500",
                         children: "No reviews yet. Be the first to share your thoughts!"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 150,
-                        columnNumber: 3236
+                        lineNumber: 158,
+                        columnNumber: 517
                     }, ("TURBOPACK compile-time value", void 0)),
                     user && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ReviewFormComponent, {
                         productId: product.id,
                         user: user
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 150,
-                        columnNumber: 3332
+                        lineNumber: 158,
+                        columnNumber: 613
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 150,
-                columnNumber: 2740
+                lineNumber: 158,
+                columnNumber: 21
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
@@ -1153,12 +1154,12 @@ const LoginScreen = ()=>{
                         className: "h-12 w-12 text-blue-600"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 157,
+                        lineNumber: 165,
                         columnNumber: 208
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 157,
+                    lineNumber: 165,
                     columnNumber: 171
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1166,7 +1167,7 @@ const LoginScreen = ()=>{
                     children: "Welcome to ShopNext"
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 157,
+                    lineNumber: 165,
                     columnNumber: 259
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1174,7 +1175,7 @@ const LoginScreen = ()=>{
                     children: "Please sign in to view products."
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 157,
+                    lineNumber: 165,
                     columnNumber: 344
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -1188,7 +1189,7 @@ const LoginScreen = ()=>{
                                     children: "Username"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 157,
+                                    lineNumber: 165,
                                     columnNumber: 478
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1199,13 +1200,13 @@ const LoginScreen = ()=>{
                                     required: true
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 157,
+                                    lineNumber: 165,
                                     columnNumber: 547
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 157,
+                            lineNumber: 165,
                             columnNumber: 473
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1215,7 +1216,7 @@ const LoginScreen = ()=>{
                                     children: "Password"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 157,
+                                    lineNumber: 165,
                                     columnNumber: 754
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1226,13 +1227,13 @@ const LoginScreen = ()=>{
                                     required: true
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 157,
+                                    lineNumber: 165,
                                     columnNumber: 823
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 157,
+                            lineNumber: 165,
                             columnNumber: 749
                         }, ("TURBOPACK compile-time value", void 0)),
                         error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1240,7 +1241,7 @@ const LoginScreen = ()=>{
                             children: error
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 157,
+                            lineNumber: 165,
                             columnNumber: 1039
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1250,24 +1251,24 @@ const LoginScreen = ()=>{
                             children: isLoading ? 'Signing In...' : 'Sign In'
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 157,
+                            lineNumber: 165,
                             columnNumber: 1099
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 157,
+                    lineNumber: 165,
                     columnNumber: 421
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/page.js",
-            lineNumber: 157,
+            lineNumber: 165,
             columnNumber: 87
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/app/page.js",
-        lineNumber: 157,
+        lineNumber: 165,
         columnNumber: 13
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -1284,6 +1285,8 @@ const CreateProductForm = (param)=>{
         price: '',
         category: ''
     });
+    // This state is for handling TinyMCE's initialization
+    const [editorLoaded, setEditorLoaded] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [tags, setTags] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [tagInput, setTagInput] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [highlights, setHighlights] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([
@@ -1292,12 +1295,13 @@ const CreateProductForm = (param)=>{
             text: ''
         }
     ]);
-    const [media, setMedia] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]); // Combined state for images and videos
+    const [media, setMedia] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [draggedMedia, setDraggedMedia] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [isUploading, setIsUploading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [success, setSuccess] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const fileInputRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    // This makes sure the editor loads correctly with initial data
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "CreateProductForm.useEffect": ()=>{
             if (editingProduct) {
@@ -1349,10 +1353,13 @@ const CreateProductForm = (param)=>{
                 ]);
                 setMedia([]);
             }
+            // Mark the editor as ready to load
+            setEditorLoaded(true);
         }
     }["CreateProductForm.useEffect"], [
         editingProduct
     ]);
+    // Handlers for file uploads and other form elements (no changes needed here)
     const handleFileChange = (e)=>{
         const files = Array.from(e.target.files);
         const imageCount = media.filter((m)=>m.type === 'image').length;
@@ -1404,14 +1411,11 @@ const CreateProductForm = (param)=>{
     const handleRemoveMedia = async (urlToRemove)=>{
         if (window.confirm("Are you sure you want to remove this media?")) {
             try {
-                // Delete from Firebase Storage
                 const fileRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$storage$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ref"])(storage, urlToRemove);
                 await (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$storage$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["deleteObject"])(fileRef);
-                // Remove from local state
                 setMedia((prev)=>prev.filter((item)=>item.url !== urlToRemove));
             } catch (error) {
                 console.error("Failed to delete media: ", error);
-                // If deletion fails (e.g., file not found), still remove from UI
                 if (error.code === 'storage/object-not-found') {
                     setMedia((prev)=>prev.filter((item)=>item.url !== urlToRemove));
                 } else {
@@ -1420,7 +1424,6 @@ const CreateProductForm = (param)=>{
             }
         }
     };
-    // Drag and Drop Handlers for media reordering
     const handleDragStart = (e, item)=>setDraggedMedia(item);
     const handleDragOver = (e)=>e.preventDefault();
     const handleDrop = (e, targetItem)=>{
@@ -1525,6 +1528,16 @@ const CreateProductForm = (param)=>{
             setError('Failed to save product. ' + err.message);
         }
     };
+    // Only render the form once the editor is ready to prevent issues
+    if (!editorLoaded) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            children: "Loading Editor..."
+        }, void 0, false, {
+            fileName: "[project]/src/app/page.js",
+            lineNumber: 289,
+            columnNumber: 16
+        }, ("TURBOPACK compile-time value", void 0));
+    }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "bg-white p-8 rounded-lg shadow-md border max-w-3xl mx-auto",
         children: [
@@ -1533,8 +1546,8 @@ const CreateProductForm = (param)=>{
                 children: editingProduct ? 'Edit Product' : 'Add New Product'
             }, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 305,
-                columnNumber: 89
+                lineNumber: 294,
+                columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
                 onSubmit: handleSaveProduct,
@@ -1546,8 +1559,8 @@ const CreateProductForm = (param)=>{
                                 children: "Product Name"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 262
+                                lineNumber: 296,
+                                columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                 name: "name",
@@ -1556,14 +1569,14 @@ const CreateProductForm = (param)=>{
                                 className: "w-full mt-1 p-2 border rounded-md"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 289
+                                lineNumber: 296,
+                                columnNumber: 49
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 257
+                        lineNumber: 296,
+                        columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         children: [
@@ -1571,8 +1584,8 @@ const CreateProductForm = (param)=>{
                                 children: "Subtitle"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 411
+                                lineNumber: 297,
+                                columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                 name: "subtitle",
@@ -1581,14 +1594,14 @@ const CreateProductForm = (param)=>{
                                 className: "w-full mt-1 p-2 border rounded-md"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 434
+                                lineNumber: 297,
+                                columnNumber: 45
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 406
+                        lineNumber: 297,
+                        columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         children: [
@@ -1596,37 +1609,33 @@ const CreateProductForm = (param)=>{
                                 children: "Short Description"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 564
+                                lineNumber: 300,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
-                                name: "shortDescription",
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tinymce$2f$tinymce$2d$react$2f$lib$2f$es2015$2f$main$2f$ts$2f$components$2f$Editor$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Editor"], {
+                                apiKey: "gl7xxa4bfui10kjofcwnkiuznxaxy3y2aabdso6929tltmkq",
                                 value: product.shortDescription,
-                                onChange: handleChange,
-                                rows: "3",
-                                maxLength: "150",
-                                className: "w-full mt-1 p-2 border rounded-md"
+                                onEditorChange: (content)=>setProduct((prev)=>({
+                                            ...prev,
+                                            shortDescription: content
+                                        })),
+                                init: {
+                                    height: 250,
+                                    menubar: false,
+                                    plugins: 'lists link emoticons help wordcount',
+                                    toolbar: 'undo redo | bold italic underline | bullist numlist | link emoticons | help',
+                                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                                }
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 596
-                            }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-right text-sm text-gray-500",
-                                children: [
-                                    product.shortDescription.length,
-                                    " / 150"
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 769
+                                lineNumber: 301,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 559
+                        lineNumber: 299,
+                        columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         children: [
@@ -1634,8 +1643,8 @@ const CreateProductForm = (param)=>{
                                 children: "Product Highlights (Up to 6)"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 871
+                                lineNumber: 315,
+                                columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0)),
                             highlights.map((h, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex items-center gap-2 mt-2",
@@ -1647,8 +1656,8 @@ const CreateProductForm = (param)=>{
                                             className: "p-2 border rounded-md w-1/3"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 305,
-                                            columnNumber: 995
+                                            lineNumber: 315,
+                                            columnNumber: 146
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                             value: h.text,
@@ -1657,8 +1666,8 @@ const CreateProductForm = (param)=>{
                                             className: "p-2 border rounded-md flex-grow"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 305,
-                                            columnNumber: 1152
+                                            lineNumber: 315,
+                                            columnNumber: 303
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             type: "button",
@@ -1668,19 +1677,19 @@ const CreateProductForm = (param)=>{
                                                 size: 16
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 305,
-                                                columnNumber: 1429
+                                                lineNumber: 315,
+                                                columnNumber: 580
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 305,
-                                            columnNumber: 1313
+                                            lineNumber: 315,
+                                            columnNumber: 464
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, i, true, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 305,
-                                    columnNumber: 941
+                                    lineNumber: 315,
+                                    columnNumber: 92
                                 }, ("TURBOPACK compile-time value", void 0))),
                             highlights.length < 6 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 type: "button",
@@ -1689,14 +1698,14 @@ const CreateProductForm = (param)=>{
                                 children: "Add Highlight"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 1487
+                                lineNumber: 315,
+                                columnNumber: 638
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 866
+                        lineNumber: 315,
+                        columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         children: [
@@ -1704,25 +1713,33 @@ const CreateProductForm = (param)=>{
                                 children: "Long Description"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 1619
+                                lineNumber: 318,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
-                                name: "longDescription",
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$tinymce$2f$tinymce$2d$react$2f$lib$2f$es2015$2f$main$2f$ts$2f$components$2f$Editor$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Editor"], {
+                                apiKey: "gl7xxa4bfui10kjofcwnkiuznxaxy3y2aabdso6929tltmkq",
                                 value: product.longDescription,
-                                onChange: handleChange,
-                                rows: "5",
-                                className: "w-full mt-1 p-2 border rounded-md"
+                                onEditorChange: (content)=>setProduct((prev)=>({
+                                            ...prev,
+                                            longDescription: content
+                                        })),
+                                init: {
+                                    height: 400,
+                                    menubar: true,
+                                    plugins: 'advlist lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+                                    toolbar: 'undo redo | blocks | bold italic underline forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                                }
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 1650
+                                lineNumber: 319,
+                                columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 1614
+                        lineNumber: 317,
+                        columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "grid grid-cols-2 gap-4",
@@ -1733,8 +1750,8 @@ const CreateProductForm = (param)=>{
                                         children: "Price"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 305,
-                                        columnNumber: 1856
+                                        lineNumber: 333,
+                                        columnNumber: 62
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                         name: "price",
@@ -1745,14 +1762,14 @@ const CreateProductForm = (param)=>{
                                         className: "w-full mt-1 p-2 border rounded-md"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 305,
-                                        columnNumber: 1876
+                                        lineNumber: 333,
+                                        columnNumber: 82
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 1851
+                                lineNumber: 333,
+                                columnNumber: 57
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 children: [
@@ -1760,8 +1777,8 @@ const CreateProductForm = (param)=>{
                                         children: "Category"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 305,
-                                        columnNumber: 2026
+                                        lineNumber: 333,
+                                        columnNumber: 232
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                         name: "category",
@@ -1770,20 +1787,20 @@ const CreateProductForm = (param)=>{
                                         className: "w-full mt-1 p-2 border rounded-md"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 305,
-                                        columnNumber: 2049
+                                        lineNumber: 333,
+                                        columnNumber: 255
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 2021
+                                lineNumber: 333,
+                                columnNumber: 227
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 1811
+                        lineNumber: 333,
+                        columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         children: [
@@ -1791,8 +1808,8 @@ const CreateProductForm = (param)=>{
                                 children: "Tags"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 2185
+                                lineNumber: 333,
+                                columnNumber: 391
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "flex flex-wrap gap-2 p-2 border rounded-md mt-1",
@@ -1809,19 +1826,19 @@ const CreateProductForm = (param)=>{
                                                         size: 14
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 305,
-                                                        columnNumber: 2485
+                                                        lineNumber: 333,
+                                                        columnNumber: 691
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 305,
-                                                    columnNumber: 2381
+                                                    lineNumber: 333,
+                                                    columnNumber: 587
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, tag, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 305,
-                                            columnNumber: 2287
+                                            lineNumber: 333,
+                                            columnNumber: 493
                                         }, ("TURBOPACK compile-time value", void 0))),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                         value: tagInput,
@@ -1831,28 +1848,28 @@ const CreateProductForm = (param)=>{
                                         className: "flex-grow p-1 focus:outline-none"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 305,
-                                        columnNumber: 2518
+                                        lineNumber: 333,
+                                        columnNumber: 724
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 2204
+                                lineNumber: 333,
+                                columnNumber: 410
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-xs text-gray-500 mt-1",
                                 children: "Press Enter or comma to add a tag."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 305,
-                                columnNumber: 2692
+                                lineNumber: 333,
+                                columnNumber: 898
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 2180
+                        lineNumber: 333,
+                        columnNumber: 386
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         children: [
@@ -1861,8 +1878,8 @@ const CreateProductForm = (param)=>{
                                 children: "Product Media"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 306,
-                                columnNumber: 5
+                                lineNumber: 334,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "text-xs text-gray-500 p-3 bg-gray-50 rounded-md border mb-3",
@@ -1876,23 +1893,23 @@ const CreateProductForm = (param)=>{
                                                     children: "5 photos"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 309,
-                                                    columnNumber: 23
+                                                    lineNumber: 335,
+                                                    columnNumber: 144
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 " (JPEG, PNG, WEBP) and ",
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
                                                     children: "2 videos"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 309,
-                                                    columnNumber: 61
+                                                    lineNumber: 335,
+                                                    columnNumber: 182
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 " (MP4)."
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 309,
-                                            columnNumber: 13
+                                            lineNumber: 335,
+                                            columnNumber: 134
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                             children: [
@@ -1901,15 +1918,15 @@ const CreateProductForm = (param)=>{
                                                     children: "600x600"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 310,
-                                                    columnNumber: 46
+                                                    lineNumber: 335,
+                                                    columnNumber: 242
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 " pixel images."
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 310,
-                                            columnNumber: 13
+                                            lineNumber: 335,
+                                            columnNumber: 209
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                             children: [
@@ -1917,26 +1934,26 @@ const CreateProductForm = (param)=>{
                                                     children: "Drag and drop"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 311,
-                                                    columnNumber: 17
+                                                    lineNumber: 335,
+                                                    columnNumber: 279
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 " media to reorder. The first image will be your featured image."
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 311,
-                                            columnNumber: 13
+                                            lineNumber: 335,
+                                            columnNumber: 275
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 308,
-                                    columnNumber: 9
+                                    lineNumber: 335,
+                                    columnNumber: 98
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 307,
-                                columnNumber: 5
+                                lineNumber: 335,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                 type: "file",
@@ -1947,8 +1964,8 @@ const CreateProductForm = (param)=>{
                                 multiple: true
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 314,
-                                columnNumber: 5
+                                lineNumber: 336,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 type: "button",
@@ -1961,15 +1978,15 @@ const CreateProductForm = (param)=>{
                                         className: "h-5 w-5 mr-2"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 314,
-                                        columnNumber: 337
+                                        lineNumber: 336,
+                                        columnNumber: 353
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     "Add Media"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 314,
-                                columnNumber: 152
+                                lineNumber: 336,
+                                columnNumber: 168
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "mt-4 flex flex-wrap gap-4",
@@ -1987,21 +2004,21 @@ const CreateProductForm = (param)=>{
                                                 className: "w-full h-full object-cover rounded-md"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 318,
-                                                columnNumber: 42
+                                                lineNumber: 337,
+                                                columnNumber: 318
                                             }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "w-full h-full bg-black rounded-md flex items-center justify-center",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$video$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Video$3e$__["Video"], {
                                                     className: "h-8 w-8 text-white"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 318,
-                                                    columnNumber: 200
+                                                    lineNumber: 337,
+                                                    columnNumber: 476
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 318,
-                                                columnNumber: 116
+                                                lineNumber: 337,
+                                                columnNumber: 392
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                 type: "button",
@@ -2011,55 +2028,55 @@ const CreateProductForm = (param)=>{
                                                     size: 14
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 319,
-                                                    columnNumber: 212
+                                                    lineNumber: 337,
+                                                    columnNumber: 717
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 319,
-                                                columnNumber: 17
+                                                lineNumber: 337,
+                                                columnNumber: 522
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             index === 0 && ((_media_find = media.find((m)=>m.type === 'image')) === null || _media_find === void 0 ? void 0 : _media_find.url) === item.url && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "absolute bottom-0 w-full bg-black bg-opacity-60 text-white text-center text-xs py-0.5 rounded-b-md",
                                                 children: "Featured"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 320,
-                                                columnNumber: 90
+                                                lineNumber: 337,
+                                                columnNumber: 818
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, item.url, true, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 317,
-                                        columnNumber: 13
+                                        lineNumber: 337,
+                                        columnNumber: 93
                                     }, ("TURBOPACK compile-time value", void 0));
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 315,
-                                columnNumber: 5
+                                lineNumber: 337,
+                                columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 305,
-                        columnNumber: 2778
+                        lineNumber: 333,
+                        columnNumber: 984
                     }, ("TURBOPACK compile-time value", void 0)),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                         className: "text-sm text-red-500 text-center",
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 324,
-                        columnNumber: 17
+                        lineNumber: 338,
+                        columnNumber: 33
                     }, ("TURBOPACK compile-time value", void 0)),
                     success && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                         className: "text-sm text-green-500 text-center",
                         children: success
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 324,
-                        columnNumber: 89
+                        lineNumber: 338,
+                        columnNumber: 105
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex justify-end space-x-4",
@@ -2071,8 +2088,8 @@ const CreateProductForm = (param)=>{
                                 children: "Cancel"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 324,
-                                columnNumber: 197
+                                lineNumber: 338,
+                                columnNumber: 213
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 type: "submit",
@@ -2081,29 +2098,29 @@ const CreateProductForm = (param)=>{
                                 children: isUploading ? 'Uploading...' : 'Save Product'
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 324,
-                                columnNumber: 319
+                                lineNumber: 338,
+                                columnNumber: 335
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 324,
-                        columnNumber: 153
+                        lineNumber: 338,
+                        columnNumber: 169
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 305,
-                columnNumber: 200
+                lineNumber: 295,
+                columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.js",
-        lineNumber: 305,
-        columnNumber: 13
+        lineNumber: 293,
+        columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s3(CreateProductForm, "m74wpLUvv6adeibbJeXVHXx7ZuQ=");
+_s3(CreateProductForm, "O+SL0B48pOUSbBLZ21/YF035HJQ=");
 _c8 = CreateProductForm;
 const VendorDashboard = (param)=>{
     let { user, setView, onEditProduct } = param;
@@ -2158,7 +2175,7 @@ const VendorDashboard = (param)=>{
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 331,
+                                lineNumber: 348,
                                 columnNumber: 79
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2172,13 +2189,13 @@ const VendorDashboard = (param)=>{
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 331,
+                                lineNumber: 348,
                                 columnNumber: 170
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 331,
+                        lineNumber: 348,
                         columnNumber: 74
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2194,20 +2211,20 @@ const VendorDashboard = (param)=>{
                                 className: "h-5 w-5 mr-2"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 331,
+                                lineNumber: 348,
                                 columnNumber: 502
                             }, ("TURBOPACK compile-time value", void 0)),
                             "Add New Product"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 331,
+                        lineNumber: 348,
                         columnNumber: 286
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 331,
+                lineNumber: 348,
                 columnNumber: 18
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2224,7 +2241,7 @@ const VendorDashboard = (param)=>{
                                         children: "Product"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 331,
+                                        lineNumber: 348,
                                         columnNumber: 730
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2232,7 +2249,7 @@ const VendorDashboard = (param)=>{
                                         children: "Price"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 331,
+                                        lineNumber: 348,
                                         columnNumber: 822
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2240,7 +2257,7 @@ const VendorDashboard = (param)=>{
                                         children: "Rating"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 331,
+                                        lineNumber: 348,
                                         columnNumber: 912
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2248,18 +2265,18 @@ const VendorDashboard = (param)=>{
                                         children: "Actions"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 331,
+                                        lineNumber: 348,
                                         columnNumber: 1003
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 331,
+                                lineNumber: 348,
                                 columnNumber: 726
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 331,
+                            lineNumber: 348,
                             columnNumber: 696
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2279,7 +2296,7 @@ const VendorDashboard = (param)=>{
                                                         alt: p.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 331,
+                                                        lineNumber: 348,
                                                         columnNumber: 1263
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2287,18 +2304,18 @@ const VendorDashboard = (param)=>{
                                                         children: p.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 331,
+                                                        lineNumber: 348,
                                                         columnNumber: 1428
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 331,
+                                                lineNumber: 348,
                                                 columnNumber: 1228
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 331,
+                                            lineNumber: 348,
                                             columnNumber: 1202
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2309,7 +2326,7 @@ const VendorDashboard = (param)=>{
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 331,
+                                            lineNumber: 348,
                                             columnNumber: 1498
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2319,12 +2336,12 @@ const VendorDashboard = (param)=>{
                                                 reviewCount: p.reviewCount
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 331,
+                                                lineNumber: 348,
                                                 columnNumber: 1602
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 331,
+                                            lineNumber: 348,
                                             columnNumber: 1576
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2339,12 +2356,12 @@ const VendorDashboard = (param)=>{
                                                             className: "h-5 w-5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/page.js",
-                                                            lineNumber: 331,
+                                                            lineNumber: 348,
                                                             columnNumber: 1812
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 331,
+                                                        lineNumber: 348,
                                                         columnNumber: 1725
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2354,52 +2371,52 @@ const VendorDashboard = (param)=>{
                                                             className: "h-5 w-5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/page.js",
-                                                            lineNumber: 331,
+                                                            lineNumber: 348,
                                                             columnNumber: 1940
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 331,
+                                                        lineNumber: 348,
                                                         columnNumber: 1849
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 331,
+                                                lineNumber: 348,
                                                 columnNumber: 1693
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 331,
+                                            lineNumber: 348,
                                             columnNumber: 1667
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, p.id, true, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 331,
+                                    lineNumber: 348,
                                     columnNumber: 1187
                                 }, ("TURBOPACK compile-time value", void 0));
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 331,
+                            lineNumber: 348,
                             columnNumber: 1108
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 331,
+                    lineNumber: 348,
                     columnNumber: 641
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 331,
+                lineNumber: 348,
                 columnNumber: 571
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.js",
-        lineNumber: 331,
+        lineNumber: 348,
         columnNumber: 13
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -2541,7 +2558,7 @@ const SuperAdminDashboard = (param)=>{
                 children: "Super Admin Dashboard"
             }, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 404,
+                lineNumber: 421,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2559,7 +2576,7 @@ const SuperAdminDashboard = (param)=>{
                                         children: "Manage Class:"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 408,
+                                        lineNumber: 425,
                                         columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     classes.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2572,25 +2589,25 @@ const SuperAdminDashboard = (param)=>{
                                                 children: c.name
                                             }, c.id, false, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 410,
+                                                lineNumber: 427,
                                                 columnNumber: 179
                                             }, ("TURBOPACK compile-time value", void 0)))
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 410,
+                                        lineNumber: 427,
                                         columnNumber: 28
                                     }, ("TURBOPACK compile-time value", void 0)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-gray-500",
                                         children: "No classes created yet."
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 412,
+                                        lineNumber: 429,
                                         columnNumber: 28
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 407,
+                                lineNumber: 424,
                                 columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -2598,7 +2615,7 @@ const SuperAdminDashboard = (param)=>{
                                 children: "Product Order (Drag to Reorder)"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 415,
+                                lineNumber: 432,
                                 columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2619,7 +2636,7 @@ const SuperAdminDashboard = (param)=>{
                                                         className: "h-5 w-5 text-gray-400 mr-4"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 416,
+                                                        lineNumber: 433,
                                                         columnNumber: 390
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
@@ -2628,7 +2645,7 @@ const SuperAdminDashboard = (param)=>{
                                                         alt: p.name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 416,
+                                                        lineNumber: 433,
                                                         columnNumber: 445
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2638,7 +2655,7 @@ const SuperAdminDashboard = (param)=>{
                                                                 children: p.name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/page.js",
-                                                                lineNumber: 416,
+                                                                lineNumber: 433,
                                                                 columnNumber: 558
                                                             }, ("TURBOPACK compile-time value", void 0)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2646,19 +2663,19 @@ const SuperAdminDashboard = (param)=>{
                                                                 children: p.vendor
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/page.js",
-                                                                lineNumber: 416,
+                                                                lineNumber: 433,
                                                                 columnNumber: 611
                                                             }, ("TURBOPACK compile-time value", void 0))
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 416,
+                                                        lineNumber: 433,
                                                         columnNumber: 553
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 416,
+                                                lineNumber: 433,
                                                 columnNumber: 355
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2671,12 +2688,12 @@ const SuperAdminDashboard = (param)=>{
                                                             className: "h-5 w-5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/page.js",
-                                                            lineNumber: 416,
+                                                            lineNumber: 433,
                                                             columnNumber: 793
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 416,
+                                                        lineNumber: 433,
                                                         columnNumber: 706
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2686,36 +2703,36 @@ const SuperAdminDashboard = (param)=>{
                                                             className: "h-5 w-5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/page.js",
-                                                            lineNumber: 416,
+                                                            lineNumber: 433,
                                                             columnNumber: 921
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/page.js",
-                                                        lineNumber: 416,
+                                                        lineNumber: 433,
                                                         columnNumber: 830
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/page.js",
-                                                lineNumber: 416,
+                                                lineNumber: 433,
                                                 columnNumber: 674
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, p.id, true, {
                                         fileName: "[project]/src/app/page.js",
-                                        lineNumber: 416,
+                                        lineNumber: 433,
                                         columnNumber: 124
                                     }, ("TURBOPACK compile-time value", void 0));
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 416,
+                                lineNumber: 433,
                                 columnNumber: 22
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 406,
+                        lineNumber: 423,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2725,7 +2742,7 @@ const SuperAdminDashboard = (param)=>{
                                 children: "Create New Vendor"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 419,
+                                lineNumber: 436,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2741,7 +2758,7 @@ const SuperAdminDashboard = (param)=>{
                                                     children: "Username"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 422,
+                                                    lineNumber: 439,
                                                     columnNumber: 34
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2755,13 +2772,13 @@ const SuperAdminDashboard = (param)=>{
                                                     required: true
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 422,
+                                                    lineNumber: 439,
                                                     columnNumber: 89
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 422,
+                                            lineNumber: 439,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2771,7 +2788,7 @@ const SuperAdminDashboard = (param)=>{
                                                     children: "Password"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 423,
+                                                    lineNumber: 440,
                                                     columnNumber: 34
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2785,13 +2802,13 @@ const SuperAdminDashboard = (param)=>{
                                                     required: true
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 423,
+                                                    lineNumber: 440,
                                                     columnNumber: 89
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 423,
+                                            lineNumber: 440,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2801,7 +2818,7 @@ const SuperAdminDashboard = (param)=>{
                                                     children: "Assign to Class"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 424,
+                                                    lineNumber: 441,
                                                     columnNumber: 34
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2816,13 +2833,13 @@ const SuperAdminDashboard = (param)=>{
                                                     required: true
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/page.js",
-                                                    lineNumber: 424,
+                                                    lineNumber: 441,
                                                     columnNumber: 96
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 424,
+                                            lineNumber: 441,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2832,7 +2849,7 @@ const SuperAdminDashboard = (param)=>{
                                             children: isLoadingUserCreation ? 'Creating...' : 'Create Vendor'
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 425,
+                                            lineNumber: 442,
                                             columnNumber: 29
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         userCreationMsg && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2840,36 +2857,36 @@ const SuperAdminDashboard = (param)=>{
                                             children: userCreationMsg
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.js",
-                                            lineNumber: 426,
+                                            lineNumber: 443,
                                             columnNumber: 49
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/page.js",
-                                    lineNumber: 421,
+                                    lineNumber: 438,
                                     columnNumber: 25
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 420,
+                                lineNumber: 437,
                                 columnNumber: 21
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 418,
+                        lineNumber: 435,
                         columnNumber: 17
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 405,
+                lineNumber: 422,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.js",
-        lineNumber: 403,
+        lineNumber: 420,
         columnNumber: 9
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -2886,7 +2903,7 @@ const AdminClassSelector = (param)=>{
                     className: "h-6 w-6 text-blue-600"
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 438,
+                    lineNumber: 455,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -2895,7 +2912,7 @@ const AdminClassSelector = (param)=>{
                     children: "Admin View:"
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 439,
+                    lineNumber: 456,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2909,7 +2926,7 @@ const AdminClassSelector = (param)=>{
                             children: "-- Select a Class to View --"
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 446,
+                            lineNumber: 463,
                             columnNumber: 17
                         }, ("TURBOPACK compile-time value", void 0)),
                         classes.map((c)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2917,24 +2934,24 @@ const AdminClassSelector = (param)=>{
                                 children: c.name
                             }, c.id, false, {
                                 fileName: "[project]/src/app/page.js",
-                                lineNumber: 447,
+                                lineNumber: 464,
                                 columnNumber: 35
                             }, ("TURBOPACK compile-time value", void 0)))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 440,
+                    lineNumber: 457,
                     columnNumber: 13
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/page.js",
-            lineNumber: 437,
+            lineNumber: 454,
             columnNumber: 9
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/src/app/page.js",
-        lineNumber: 436,
+        lineNumber: 453,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -2975,6 +2992,14 @@ function App() {
             })["App.useEffect"];
         }
     }["App.useEffect"], []);
+    // FIXED: Add useEffect to scroll to top on view change
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "App.useEffect": ()=>{
+            window.scrollTo(0, 0);
+        }
+    }["App.useEffect"], [
+        view
+    ]);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "App.useEffect": ()=>{
             const q = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["query"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["collection"])(db, "classes"));
@@ -3091,14 +3116,14 @@ function App() {
                 children: "Loading Application..."
             }, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 560,
+                lineNumber: 582,
                 columnNumber: 27
             }, this);
         }
         if (!user) {
             return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(LoginScreen, {}, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 561,
+                lineNumber: 583,
                 columnNumber: 25
             }, this);
         }
@@ -3112,14 +3137,14 @@ function App() {
                     user: user
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 568,
+                    lineNumber: 590,
                     columnNumber: 26
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "text-center py-10",
                     children: "Product not found."
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 568,
+                    lineNumber: 590,
                     columnNumber: 92
                 }, this);
             case 'dashboard':
@@ -3133,12 +3158,12 @@ function App() {
                             })
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 571,
+                        lineNumber: 593,
                         columnNumber: 61
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 571,
+                    lineNumber: 593,
                     columnNumber: 15
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
                     className: "container mx-auto px-4 py-8",
@@ -3151,12 +3176,12 @@ function App() {
                             })
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 572,
+                        lineNumber: 594,
                         columnNumber: 61
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 572,
+                    lineNumber: 594,
                     columnNumber: 15
                 }, this);
             case 'create_product':
@@ -3170,12 +3195,12 @@ function App() {
                         editingProduct: view.product
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.js",
-                        lineNumber: 574,
+                        lineNumber: 596,
                         columnNumber: 64
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.js",
-                    lineNumber: 574,
+                    lineNumber: 596,
                     columnNumber: 18
                 }, this);
             case 'home':
@@ -3188,7 +3213,7 @@ function App() {
                             setAdminViewingClass: setAdminViewingClass
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 579,
+                            lineNumber: 601,
                             columnNumber: 34
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ProductGrid, {
@@ -3198,7 +3223,7 @@ function App() {
                             setSortOrder: setSortOrder
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.js",
-                            lineNumber: 580,
+                            lineNumber: 602,
                             columnNumber: 17
                         }, this)
                     ]
@@ -3216,23 +3241,23 @@ function App() {
                 setSearchQuery: setSearchQuery
             }, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 588,
+                lineNumber: 610,
                 columnNumber: 9
             }, this),
             renderView(),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Footer, {}, void 0, false, {
                 fileName: "[project]/src/app/page.js",
-                lineNumber: 590,
+                lineNumber: 612,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.js",
-        lineNumber: 587,
+        lineNumber: 609,
         columnNumber: 5
     }, this);
 }
-_s6(App, "GmelSNXfEYGL8rVdLtYma6Es6lM=");
+_s6(App, "4D8IggXhN23TtfBS2PUjozHsrHU=");
 _c12 = App;
 var _c, _c1, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _c10, _c11, _c12;
 __turbopack_context__.k.register(_c, "StarRating");

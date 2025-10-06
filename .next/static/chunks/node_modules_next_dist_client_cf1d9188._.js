@@ -9894,7 +9894,7 @@ function ServerRoot(param) {
     }
     return router;
 }
-const StrictModeIfEnabled = ("TURBOPACK compile-time truthy", 1) ? _react.default.StrictMode : "TURBOPACK unreachable";
+const StrictModeIfEnabled = ("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : _react.default.Fragment;
 function Root(param) {
     let { children } = param;
     if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable

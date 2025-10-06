@@ -800,6 +800,10 @@
     display: none;
   }
 
+  .table {
+    display: table;
+  }
+
   .aspect-square {
     aspect-ratio: 1;
   }
@@ -1469,10 +1473,6 @@
     text-align: left;
   }
 
-  .text-right {
-    text-align: right;
-  }
-
   .font-sans {
     font-family: var(--font-geist-sans);
   }
@@ -1607,6 +1607,15 @@
 
   .uppercase {
     text-transform: uppercase;
+  }
+
+  .italic {
+    font-style: italic;
+  }
+
+  .underline {
+    -webkit-text-decoration-line: underline;
+    text-decoration-line: underline;
   }
 
   .antialiased {
