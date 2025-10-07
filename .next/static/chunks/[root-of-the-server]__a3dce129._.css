@@ -1895,6 +1895,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.short-description ul, .long-description ul {
+  margin: 1em 0;
+  padding-left: 40px;
+  list-style-type: disc;
+}
+
+.short-description ol, .long-description ol {
+  margin: 1em 0;
+  padding-left: 40px;
+  list-style-type: decimal;
+}
+
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;

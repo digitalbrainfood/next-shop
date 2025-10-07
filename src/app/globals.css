@@ -24,3 +24,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.short-description ul,
+.long-description ul {
+  list-style-type: disc;
+  padding-left: 40px;
+  margin: 1em 0;
+}
+
+.short-description ol,
+.long-description ol {
+  list-style-type: decimal;
+  padding-left: 40px;
+  margin: 1em 0;
+}
