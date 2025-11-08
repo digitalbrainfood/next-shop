@@ -64,7 +64,10 @@
       "Bash(\"C:\\Users\\ryanr\\next-shop\\src\\components\\Header.js\" )",
       "Bash(\"C:\\Users\\ryanr\\next-shop\\postcss.config.mjs\")",
       "Bash(/tmp/results.txt)",
-      "Bash(__NEW_LINE__ cat /tmp/results.txt)"
+      "Bash(__NEW_LINE__ cat /tmp/results.txt)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Next.js e-commerce app with Firebase\n\nFeatures:\n- Product catalog with search and sorting\n- Firebase authentication and Firestore\n- Vendor dashboard for product management  \n- Admin dashboard with user and class management\n- TinyMCE rich text editor for product descriptions\n- Image and video upload to Firebase Storage\n- Product reviews and ratings\n- Responsive design with Tailwind CSS\n- Touch-friendly UI (iPad compatible)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []
