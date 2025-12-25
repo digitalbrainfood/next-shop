@@ -304,29 +304,12 @@ const ProductPage = ({ product, setView, user }) => {
                     <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
                     <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
 
-                    {/* All Tags Display */}
-                    {(allTags.trigger.length > 0 || allTags.solution.length > 0) && (
-                        <div className="mt-4 space-y-2">
-                            {allTags.trigger.length > 0 && (
-                                <div>
-                                    <span className="text-xs font-semibold text-amber-700 uppercase">Trigger Events</span>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {allTags.trigger.map(tag => (
-                                            <span key={tag} className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {allTags.solution.length > 0 && (
-                                <div>
-                                    <span className="text-xs font-semibold text-teal-700 uppercase">Solutions</span>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {allTags.solution.map(tag => (
-                                            <span key={tag} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                    {/* Solution Tags Display (no labels) */}
+                    {allTags.solution.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-1">
+                            {allTags.solution.map(tag => (
+                                <span key={tag} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
+                            ))}
                         </div>
                     )}
 
