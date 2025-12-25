@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { PlusCircle, Trash2, Video, Image as ImageIcon, Info, RefreshCw } from 'lucide-react';
+import { PlusCircle, Trash2, Video, Image as ImageIcon, Info, Crop } from 'lucide-react';
 import { RTB_LABELS, MEDIA_CONFIG } from '../lib/constants';
 import { ImageCropperModal, validateImageDimensions, ImageValidationError } from './ImageCropper';
 
@@ -9,6 +9,7 @@ const RTBImageSlot = ({
     imageUrl,
     onUpload,
     onRemove,
+    onEdit,
     isUploading,
     uploadingSlot
 }) => {
@@ -77,12 +78,12 @@ const RTBImageSlot = ({
                                 type="button"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleClick();
+                                    onEdit(imageUrl, rtbLabel.id);
                                 }}
                                 className="bg-blue-600 text-white rounded-full p-1.5 shadow-lg hover:bg-blue-700 cursor-pointer"
-                                title="Replace image"
+                                title="Edit & crop image"
                             >
-                                <RefreshCw className="h-4 w-4" />
+                                <Crop className="h-4 w-4" />
                             </button>
                             <button
                                 type="button"
@@ -250,8 +251,8 @@ const RTBImageUploader = ({
         const file = new File([croppedBlob], cropperFileName, { type: 'image/jpeg' });
         onUploadImage(file, cropperRtbId);
 
-        // Cleanup
-        if (cropperImage) {
+        // Cleanup - only revoke blob URLs, not http URLs
+        if (cropperImage && !cropperImage.startsWith('http')) {
             URL.revokeObjectURL(cropperImage);
         }
         setCropperImage(null);
@@ -261,7 +262,7 @@ const RTBImageUploader = ({
     };
 
     const handleCropperClose = () => {
-        if (cropperImage) {
+        if (cropperImage && !cropperImage.startsWith('http')) {
             URL.revokeObjectURL(cropperImage);
         }
         setCropperOpen(false);
@@ -269,6 +270,16 @@ const RTBImageUploader = ({
         setCropperFileName('');
         setCropperRtbId(null);
         setCropperRtbLabel('');
+    };
+
+    const handleEditImage = (imageUrl, rtbId) => {
+        // Open cropper with existing image URL
+        const rtbLabel = RTB_LABELS.find(l => l.id === rtbId);
+        setCropperImage(imageUrl);
+        setCropperFileName(`rtb-${rtbId}-edited.jpg`);
+        setCropperRtbId(rtbId);
+        setCropperRtbLabel(rtbLabel?.name || '');
+        setCropperOpen(true);
     };
 
     return (
@@ -309,6 +320,7 @@ const RTBImageUploader = ({
                             imageUrl={imageData?.url}
                             onUpload={handleImageUpload}
                             onRemove={onRemoveImage}
+                            onEdit={handleEditImage}
                             isUploading={isUploading}
                             uploadingSlot={uploadingSlot}
                         />
