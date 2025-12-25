@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { PlusCircle, Trash2, Video, Image as ImageIcon, AlertTriangle, Info, X } from 'lucide-react';
+import { PlusCircle, Trash2, Video, Image as ImageIcon, Info, RefreshCw } from 'lucide-react';
 import { RTB_LABELS, MEDIA_CONFIG } from '../lib/constants';
 import { ImageCropperModal, validateImageDimensions, ImageValidationError } from './ImageCropper';
 
@@ -71,16 +71,31 @@ const RTBImageSlot = ({
                             alt={rtbLabel.name}
                             className="w-full h-full object-cover"
                         />
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onRemove(rtbLabel.id);
-                            }}
-                            className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow-lg hover:bg-red-700 cursor-pointer"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </button>
+                        {/* Action buttons */}
+                        <div className="absolute top-2 right-2 flex space-x-1">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClick();
+                                }}
+                                className="bg-blue-600 text-white rounded-full p-1.5 shadow-lg hover:bg-blue-700 cursor-pointer"
+                                title="Replace image"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemove(rtbLabel.id);
+                                }}
+                                className="bg-red-600 text-white rounded-full p-1.5 shadow-lg hover:bg-red-700 cursor-pointer"
+                                title="Remove image"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        </div>
                         {/* RTB Badge on image */}
                         <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white text-xs py-1 px-2 text-center">
                             {rtbLabel.shortName}
