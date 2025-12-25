@@ -294,17 +294,17 @@ const ProductPage = ({ product, setView, user }) => {
                     <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
                     <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
 
-                    {/* All Tags Display (no labels) */}
-                    {(allTags.trigger.length > 0 || allTags.solution.length > 0) && (
-                        <div className="mt-4 flex flex-wrap gap-1">
-                            {allTags.trigger.map(tag => (
-                                <span key={tag} className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
-                            ))}
-                            {allTags.solution.map(tag => (
-                                <span key={tag} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
-                            ))}
-                        </div>
-                    )}
+                    {/* Solution Tags Display (capped at max) */}
+                    {(() => {
+                        const cappedSolutionTags = allTags.solution.slice(0, TAG_CONFIG.MAX_SOLUTION_TAGS);
+                        return cappedSolutionTags.length > 0 ? (
+                            <div className="mt-4 flex flex-wrap gap-1">
+                                {cappedSolutionTags.map(tag => (
+                                    <span key={tag} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
+                                ))}
+                            </div>
+                        ) : null;
+                    })()}
 
                     {/* Short Description */}
                     <div className="mt-6 border-t pt-4 short-description">
