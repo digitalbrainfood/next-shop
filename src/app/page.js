@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff } from 'lucide-react';
+import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw } from 'lucide-react';
 import RichTextEditor from '../components/RichTextEditor';
 import TagManager from '../components/TagManager';
 import RTBImageUploader from '../components/RTBImageUploader';
@@ -1006,6 +1006,10 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
     const [viewerCreationMsg, setViewerCreationMsg] = useState('');
     const [isLoadingViewerCreation, setIsLoadingViewerCreation] = useState(false);
 
+    // Migration state
+    const [isMigrating, setIsMigrating] = useState(false);
+    const [migrationMsg, setMigrationMsg] = useState('');
+
     useEffect(() => {
         const q = query(collection(db, "classes"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -1085,6 +1089,54 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
             setViewerCreationMsg(`Error: ${error.message}`);
         }
         setIsLoadingViewerCreation(false);
+    };
+
+    // Migrate old tag format to new format
+    const handleMigrateTags = async () => {
+        if (!window.confirm("This will migrate all products with old tag format (flat array) to the new format (trigger/solution objects). Continue?")) {
+            return;
+        }
+        setIsMigrating(true);
+        setMigrationMsg('');
+        try {
+            const productsSnapshot = await getDocs(collection(db, "products"));
+            const batch = writeBatch(db);
+            let migratedCount = 0;
+
+            productsSnapshot.docs.forEach((docSnapshot) => {
+                const data = docSnapshot.data();
+                // Check if tags is an array (old format) instead of object (new format)
+                if (Array.isArray(data.tags)) {
+                    const oldTags = data.tags;
+                    // Split tags evenly between trigger and solution, respecting limits
+                    const halfIndex = Math.ceil(oldTags.length / 2);
+                    const triggerTags = oldTags.slice(0, Math.min(halfIndex, TAG_CONFIG.MAX_TRIGGER_TAGS));
+                    const solutionTags = oldTags.slice(halfIndex, halfIndex + TAG_CONFIG.MAX_SOLUTION_TAGS);
+
+                    batch.update(doc(db, "products", docSnapshot.id), {
+                        tags: {
+                            trigger: triggerTags,
+                            solution: solutionTags
+                        },
+                        displayTags: {
+                            trigger: triggerTags.slice(0, TAG_CONFIG.DISPLAY_TRIGGER_TAGS),
+                            solution: solutionTags.slice(0, TAG_CONFIG.DISPLAY_SOLUTION_TAGS)
+                        }
+                    });
+                    migratedCount++;
+                }
+            });
+
+            if (migratedCount > 0) {
+                await batch.commit();
+                setMigrationMsg(`Successfully migrated ${migratedCount} product(s) to new tag format.`);
+            } else {
+                setMigrationMsg('No products needed migration. All products already use the new format.');
+            }
+        } catch (error) {
+            setMigrationMsg(`Error: ${error.message}`);
+        }
+        setIsMigrating(false);
     };
 
     return (
@@ -1179,6 +1231,19 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
                                 <FolderPlus className="h-5 w-5" />
                                 <span>Manage Classes</span>
                             </button>
+                            <button
+                                onClick={handleMigrateTags}
+                                disabled={isMigrating}
+                                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors cursor-pointer disabled:bg-orange-300"
+                            >
+                                <RefreshCw className={`h-5 w-5 ${isMigrating ? 'animate-spin' : ''}`} />
+                                <span>{isMigrating ? 'Migrating...' : 'Migrate Old Tags'}</span>
+                            </button>
+                            {migrationMsg && (
+                                <p className={`text-xs text-center ${migrationMsg.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`}>
+                                    {migrationMsg}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

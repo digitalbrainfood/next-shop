@@ -37,14 +37,20 @@ const ProductPage = ({ product, setView }) => {
                     <p className="text-4xl font-extrabold text-gray-900">${product.price.toFixed(2)}</p>
                     <p className="mt-6 text-gray-700 leading-relaxed">{product.longDescription}</p>
                     
-                    <div className="mt-6">
-                        <h3 className="text-sm font-semibold text-gray-800 mb-2">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {product.tags.map(tag => (
-                                <span key={tag} className="bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded-full">{tag}</span>
-                            ))}
-                        </div>
-                    </div>
+                    {/* Show only solution tags on product page */}
+                    {(() => {
+                        const solutionTags = product.tags?.solution || (Array.isArray(product.tags) ? [] : []);
+                        return solutionTags.length > 0 ? (
+                            <div className="mt-6">
+                                <h3 className="text-sm font-semibold text-gray-800 mb-2">Tags</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {solutionTags.map(tag => (
+                                        <span key={tag} className="bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded-full">#{tag}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null;
+                    })()}
 
                     <button className="w-full mt-8 bg-blue-600 text-white py-3 rounded-full font-semibold text-lg hover:bg-blue-700 transition-colors">
                         Add to cart
