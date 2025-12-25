@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, ArrowLeft, Video } from 'lucide-react';
 import StarRating from './StarRating';
 import { mockReviews } from '../lib/mockData';
+import { TAG_CONFIG } from '../lib/constants';
 
 const ProductPage = ({ product, setView }) => {
     const [mainImage, setMainImage] = useState(product.images[0]);
@@ -37,9 +38,10 @@ const ProductPage = ({ product, setView }) => {
                     <p className="text-4xl font-extrabold text-gray-900">${product.price.toFixed(2)}</p>
                     <p className="mt-6 text-gray-700 leading-relaxed">{product.longDescription}</p>
                     
-                    {/* Show only solution tags on product page */}
+                    {/* Show only solution tags on product page (capped at MAX_SOLUTION_TAGS) */}
                     {(() => {
-                        const solutionTags = product.tags?.solution || (Array.isArray(product.tags) ? [] : []);
+                        const allSolutionTags = product.tags?.solution || (Array.isArray(product.tags) ? [] : []);
+                        const solutionTags = allSolutionTags.slice(0, TAG_CONFIG.MAX_SOLUTION_TAGS);
                         return solutionTags.length > 0 ? (
                             <div className="mt-6">
                                 <h3 className="text-sm font-semibold text-gray-800 mb-2">Tags</h3>
