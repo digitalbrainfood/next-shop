@@ -91,17 +91,11 @@ const Footer = () => (
 );
 
 const ProductCard = ({ product, setView }) => {
-    // Handle both old and new tag formats
+    // Only show trigger tags on product cards
     const getDisplayTags = () => {
-        // New format with categorized tags
-        if (product.displayTags) {
-            const triggerTags = (product.displayTags.trigger || []).map(tag => ({ tag, type: 'trigger' }));
-            const solutionTags = (product.displayTags.solution || []).map(tag => ({ tag, type: 'solution' }));
-            return [...triggerTags, ...solutionTags];
-        }
-        // Old format - show first 4 as solution tags for backward compatibility
-        if (product.tags && Array.isArray(product.tags)) {
-            return product.tags.slice(0, 4).map(tag => ({ tag, type: 'solution' }));
+        // New format - only trigger tags
+        if (product.displayTags && product.displayTags.trigger) {
+            return product.displayTags.trigger;
         }
         return [];
     };
@@ -118,14 +112,10 @@ const ProductCard = ({ product, setView }) => {
                 <p className="text-sm text-gray-500 mb-2 truncate">{product.subtitle}</p>
                 <div className="flex-grow">
                     <div className="flex flex-wrap gap-1 mb-2">
-                        {displayTags.map(({ tag, type }) => (
+                        {displayTags.map(tag => (
                             <span
                                 key={tag}
-                                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                    type === 'trigger'
-                                        ? 'bg-amber-100 text-amber-800'
-                                        : 'bg-teal-100 text-teal-800'
-                                }`}
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
                             >
                                 #{tag}
                             </span>
@@ -304,9 +294,12 @@ const ProductPage = ({ product, setView, user }) => {
                     <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
                     <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
 
-                    {/* Solution Tags Display (no labels) */}
-                    {allTags.solution.length > 0 && (
+                    {/* All Tags Display (no labels) */}
+                    {(allTags.trigger.length > 0 || allTags.solution.length > 0) && (
                         <div className="mt-4 flex flex-wrap gap-1">
+                            {allTags.trigger.map(tag => (
+                                <span key={tag} className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
+                            ))}
                             {allTags.solution.map(tag => (
                                 <span key={tag} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
                             ))}
