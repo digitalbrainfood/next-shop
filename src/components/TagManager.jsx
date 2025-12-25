@@ -13,7 +13,7 @@ const TagInput = ({ category, tags, setTags, displayTags, setDisplayTags }) => {
         if ((e.key === ',' || e.key === 'Enter') && inputValue.trim() !== '') {
             e.preventDefault();
             const newTag = inputValue.trim().toLowerCase();
-            if (!tags.includes(newTag) && tags.length < maxTags) {
+            if (!tags.includes(newTag)) {
                 setTags([...tags, newTag]);
             }
             setInputValue('');
@@ -47,8 +47,30 @@ const TagInput = ({ category, tags, setTags, displayTags, setDisplayTags }) => {
 
             {/* Tag display area */}
             <div className="flex flex-wrap gap-2 mb-3 min-h-[40px]">
-                {tags.map(tag => {
+                {tags.map((tag, index) => {
+                    const isOverLimit = index >= maxTags;
                     const isDisplayTag = displayTags.includes(tag);
+
+                    // If over limit, show in red and don't allow display selection
+                    if (isOverLimit) {
+                        return (
+                            <div
+                                key={tag}
+                                className="flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-red-100 text-red-800 border border-red-300"
+                                title="This tag exceeds the limit and won't be saved"
+                            >
+                                <span>#{tag}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(tag)}
+                                    className="text-red-600 hover:text-red-800 cursor-pointer"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </div>
+                        );
+                    }
+
                     return (
                         <div
                             key={tag}
@@ -76,16 +98,14 @@ const TagInput = ({ category, tags, setTags, displayTags, setDisplayTags }) => {
             </div>
 
             {/* Input field */}
-            {tags.length < maxTags && (
-                <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={`Add ${config.name.toLowerCase().replace(' tags', '')} tag...`}
-                    className="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            )}
+            <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={`Add ${config.name.toLowerCase().replace(' tags', '')} tag...`}
+                className="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
 
             {/* Display tag selection info */}
             <div className="mt-2 flex items-center text-xs text-gray-500">

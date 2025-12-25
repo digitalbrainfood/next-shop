@@ -577,17 +577,23 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         const imageUrls = rtbImages.filter(img => img.url).map(img => img.url);
 
         try {
+            // Only save tags within the allowed limits
+            const validTriggerTags = triggerTags.slice(0, TAG_CONFIG.MAX_TRIGGER_TAGS);
+            const validSolutionTags = solutionTags.slice(0, TAG_CONFIG.MAX_SOLUTION_TAGS);
+            const validDisplayTriggerTags = displayTriggerTags.filter(t => validTriggerTags.includes(t));
+            const validDisplaySolutionTags = displaySolutionTags.filter(t => validSolutionTags.includes(t));
+
             const commonData = {
                 ...product,
                 price: parseFloat(product.price),
-                // New tag format
+                // New tag format - only valid tags within limits
                 tags: {
-                    trigger: triggerTags,
-                    solution: solutionTags
+                    trigger: validTriggerTags,
+                    solution: validSolutionTags
                 },
                 displayTags: {
-                    trigger: displayTriggerTags,
-                    solution: displaySolutionTags
+                    trigger: validDisplayTriggerTags,
+                    solution: validDisplaySolutionTags
                 },
                 highlights: highlights.filter(h => h.title && h.text),
                 // New RTB images format
