@@ -93,11 +93,13 @@ const Footer = () => (
 const ProductCard = ({ product, setView }) => {
     // Only show trigger tags on product cards
     const getDisplayTags = () => {
-        // New format - only trigger tags
-        if (product.displayTags && product.displayTags.trigger) {
-            return product.displayTags.trigger;
-        }
-        return [];
+        // New format - both trigger and solution tags
+        const triggerTags = product.displayTags?.trigger || [];
+        const solutionTags = product.displayTags?.solution || [];
+        return {
+            trigger: triggerTags,
+            solution: solutionTags
+        };
     };
 
     const displayTags = getDisplayTags();
@@ -112,10 +114,18 @@ const ProductCard = ({ product, setView }) => {
                 <p className="text-sm text-gray-500 mb-2 truncate">{product.subtitle}</p>
                 <div className="flex-grow">
                     <div className="flex flex-wrap gap-1 mb-2">
-                        {displayTags.map(tag => (
+                        {displayTags.trigger.map(tag => (
                             <span
                                 key={tag}
                                 className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
+                            >
+                                #{tag}
+                            </span>
+                        ))}
+                        {displayTags.solution.map(tag => (
+                            <span
+                                key={tag}
+                                className="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800"
                             >
                                 #{tag}
                             </span>
@@ -294,11 +304,15 @@ const ProductPage = ({ product, setView, user }) => {
                     <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
                     <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
 
-                    {/* Solution Tags Display (capped at max) */}
+                    {/* All Tags Display (capped at max) */}
                     {(() => {
+                        const cappedTriggerTags = allTags.trigger.slice(0, TAG_CONFIG.MAX_TRIGGER_TAGS);
                         const cappedSolutionTags = allTags.solution.slice(0, TAG_CONFIG.MAX_SOLUTION_TAGS);
-                        return cappedSolutionTags.length > 0 ? (
+                        return (cappedTriggerTags.length > 0 || cappedSolutionTags.length > 0) ? (
                             <div className="mt-4 flex flex-wrap gap-1">
+                                {cappedTriggerTags.map(tag => (
+                                    <span key={tag} className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
+                                ))}
                                 {cappedSolutionTags.map(tag => (
                                     <span key={tag} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-xs font-medium">#{tag}</span>
                                 ))}
@@ -382,6 +396,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     const [rtbImages, setRtbImages] = useState(RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
     const [videoUrl, setVideoUrl] = useState('');
     const [uploadingSlot, setUploadingSlot] = useState(null);
+    const [featuredImageId, setFeaturedImageId] = useState(1); // Default to first RTB slot
 
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState('');
@@ -419,11 +434,14 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
 
             // Handle both old and new image formats
             if (editingProduct.rtbImages && editingProduct.rtbImages.length > 0) {
-                const mergedRtbImages = RTB_LABELS.map(rtb => {
-                    const existing = editingProduct.rtbImages.find(img => img.rtbId === rtb.id);
-                    return existing || { rtbId: rtb.id, rtbLabel: rtb.name, url: '' };
-                });
-                setRtbImages(mergedRtbImages);
+                setRtbImages(editingProduct.rtbImages);
+                // Set featured image ID if it exists, otherwise default to first image with URL
+                if (editingProduct.featuredImageId) {
+                    setFeaturedImageId(editingProduct.featuredImageId);
+                } else {
+                    const firstImageWithUrl = editingProduct.rtbImages.find(img => img.url);
+                    setFeaturedImageId(firstImageWithUrl?.rtbId || 1);
+                }
             } else if (editingProduct.imageUrls && editingProduct.imageUrls.length > 0) {
                 // Migrate old format - map images to RTB slots
                 const migratedRtbImages = RTB_LABELS.map((rtb, index) => ({
@@ -598,6 +616,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 highlights: highlights.filter(h => h.title && h.text),
                 // New RTB images format
                 rtbImages: rtbImages.filter(img => img.url),
+                featuredImageId: featuredImageId,
                 videoUrl: videoUrl || '',
                 // Backward compatibility
                 imageUrl,
@@ -737,6 +756,8 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                     uploadingSlot={uploadingSlot}
                     error={error}
                     setError={setError}
+                    featuredImageId={featuredImageId}
+                    setFeaturedImageId={setFeaturedImageId}
                 />
 
                 {/* Error/Success Messages */}

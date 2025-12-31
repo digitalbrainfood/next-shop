@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef } from 'react';
-import { PlusCircle, Trash2, Video, Image as ImageIcon, Info, Crop } from 'lucide-react';
+import { PlusCircle, Trash2, Video, Image as ImageIcon, Info, Crop, Star, GripVertical } from 'lucide-react';
 import { RTB_LABELS, MEDIA_CONFIG } from '../lib/constants';
 import { ImageCropperModal, validateImageDimensions, ImageValidationError } from './ImageCropper';
 
@@ -11,7 +11,13 @@ const RTBImageSlot = ({
     onRemove,
     onEdit,
     isUploading,
-    uploadingSlot
+    uploadingSlot,
+    isFeatured,
+    onSetFeatured,
+    onDragStart,
+    onDragOver,
+    onDragEnd,
+    isDragging
 }) => {
     const fileInputRef = useRef(null);
     const [showTooltip, setShowTooltip] = useState(false);
@@ -61,9 +67,15 @@ const RTBImageSlot = ({
             {/* Image Slot */}
             <div
                 onClick={!imageUrl ? handleClick : undefined}
+                draggable={!!imageUrl}
+                onDragStart={(e) => imageUrl && onDragStart && onDragStart(e, rtbLabel.id)}
+                onDragOver={(e) => imageUrl && onDragOver && onDragOver(e, rtbLabel.id)}
+                onDragEnd={(e) => imageUrl && onDragEnd && onDragEnd(e)}
                 className={`relative aspect-square rounded-lg border-2 border-dashed overflow-hidden transition-all
-                    ${imageUrl ? 'border-blue-300 bg-gray-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'}
-                    ${isThisSlotUploading ? 'opacity-50' : ''}`}
+                    ${imageUrl ? (isFeatured ? 'border-yellow-400 bg-yellow-50' : 'border-blue-300 bg-gray-50') : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'}
+                    ${isThisSlotUploading ? 'opacity-50' : ''}
+                    ${isDragging ? 'opacity-50 scale-95' : ''}
+                    ${imageUrl ? 'cursor-move' : ''}`}
             >
                 {imageUrl ? (
                     <>
@@ -72,6 +84,26 @@ const RTBImageSlot = ({
                             alt={rtbLabel.name}
                             className="w-full h-full object-cover"
                         />
+                        {/* Drag handle */}
+                        <div className="absolute top-2 left-2 bg-gray-800 bg-opacity-70 text-white rounded p-1 cursor-move">
+                            <GripVertical className="h-4 w-4" />
+                        </div>
+
+                        {/* Featured star */}
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onSetFeatured && onSetFeatured(rtbLabel.id);
+                            }}
+                            className={`absolute top-2 left-10 rounded-full p-1.5 shadow-lg cursor-pointer ${
+                                isFeatured ? 'bg-yellow-500 text-white' : 'bg-white text-gray-400 hover:text-yellow-500'
+                            }`}
+                            title={isFeatured ? "Featured image" : "Set as featured"}
+                        >
+                            <Star className={`h-4 w-4 ${isFeatured ? 'fill-current' : ''}`} />
+                        </button>
+
                         {/* Action buttons */}
                         <div className="absolute top-2 right-2 flex space-x-1">
                             <button
@@ -216,13 +248,16 @@ const RTBImageUploader = ({
     isUploading,
     uploadingSlot,
     error,
-    setError
+    setError,
+    featuredImageId,
+    setFeaturedImageId
 }) => {
     const [cropperOpen, setCropperOpen] = useState(false);
     const [cropperImage, setCropperImage] = useState(null);
     const [cropperFileName, setCropperFileName] = useState('');
     const [cropperRtbId, setCropperRtbId] = useState(null);
     const [cropperRtbLabel, setCropperRtbLabel] = useState('');
+    const [draggedId, setDraggedId] = useState(null);
 
     const handleImageUpload = async (file, rtbId) => {
         // Validate image dimensions
@@ -282,6 +317,35 @@ const RTBImageUploader = ({
         setCropperOpen(true);
     };
 
+    const handleDragStart = (e, rtbId) => {
+        setDraggedId(rtbId);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e, targetRtbId) => {
+        e.preventDefault();
+        if (draggedId === null || draggedId === targetRtbId) return;
+
+        const draggedIndex = rtbImages.findIndex(img => img.rtbId === draggedId);
+        const targetIndex = rtbImages.findIndex(img => img.rtbId === targetRtbId);
+
+        if (draggedIndex === -1 || targetIndex === -1) return;
+
+        const newImages = [...rtbImages];
+        const draggedImage = newImages[draggedIndex];
+        newImages.splice(draggedIndex, 1);
+        newImages.splice(targetIndex, 0, draggedImage);
+        setRtbImages(newImages);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedId(null);
+    };
+
+    const handleSetFeatured = (rtbId) => {
+        setFeaturedImageId && setFeaturedImageId(rtbId);
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -300,7 +364,8 @@ const RTBImageUploader = ({
                     <li>Each slot represents a different "Reason To Believe" for your product</li>
                     <li>Images must be at least <b>600x600 pixels</b> (will be cropped to square)</li>
                     <li>Hover over the <Info className="inline h-3 w-3" /> icon for guidance on each RTB</li>
-                    <li>The first image will be your featured/thumbnail image</li>
+                    <li><Star className="inline h-3 w-3 fill-current text-yellow-500" /> Click the star to set a featured image (thumbnail)</li>
+                    <li><GripVertical className="inline h-3 w-3" /> Drag images to reorder them</li>
                 </ul>
             </div>
 
@@ -311,18 +376,25 @@ const RTBImageUploader = ({
 
             {/* RTB Image Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {RTB_LABELS.map((rtbLabel) => {
-                    const imageData = rtbImages.find(img => img.rtbId === rtbLabel.id);
+                {rtbImages.map((imageData) => {
+                    const rtbLabel = RTB_LABELS.find(l => l.id === imageData.rtbId);
+                    if (!rtbLabel) return null;
                     return (
                         <RTBImageSlot
                             key={rtbLabel.id}
                             rtbLabel={rtbLabel}
-                            imageUrl={imageData?.url}
+                            imageUrl={imageData.url}
                             onUpload={handleImageUpload}
                             onRemove={onRemoveImage}
                             onEdit={handleEditImage}
                             isUploading={isUploading}
                             uploadingSlot={uploadingSlot}
+                            isFeatured={featuredImageId === rtbLabel.id}
+                            onSetFeatured={handleSetFeatured}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDragEnd={handleDragEnd}
+                            isDragging={draggedId === rtbLabel.id}
                         />
                     );
                 })}
