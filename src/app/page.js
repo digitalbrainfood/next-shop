@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw } from 'lucide-react';
+import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw, Download } from 'lucide-react';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
 import TagManager from '../components/TagManager';
 import RTBImageUploader from '../components/RTBImageUploader';
@@ -202,11 +204,11 @@ const ProductPage = ({ product, setView, user }) => {
     };
 
     const getVideoFromProduct = () => {
-        if (product.videoUrl) {
-            return [{ type: 'video', src: product.videoUrl }];
-        }
         if (product.videoUrls && product.videoUrls.length > 0) {
             return product.videoUrls.map(src => ({ type: 'video', src }));
+        }
+        if (product.videoUrl) {
+            return [{ type: 'video', src: product.videoUrl }];
         }
         return [];
     };
@@ -219,6 +221,44 @@ const ProductPage = ({ product, setView, user }) => {
     const [activeMedia, setActiveMedia] = useState(initialMedia);
     const [reviews, setReviews] = useState([]);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownloadMedia = async () => {
+        const downloadableMedia = allMedia.filter(m => m.src && !m.src.includes('placehold.co'));
+        if (downloadableMedia.length === 0) return;
+
+        setIsDownloading(true);
+        try {
+            const zip = new JSZip();
+            const imagesFolder = zip.folder('images');
+            const videosFolder = zip.folder('videos');
+
+            await Promise.all(downloadableMedia.map(async (media, index) => {
+                try {
+                    const response = await fetch(media.src);
+                    const blob = await response.blob();
+                    const ext = media.type === 'video' ? 'mp4' : 'jpg';
+                    const label = media.rtbLabel ? `_${media.rtbLabel.replace(/\s+/g, '-')}` : '';
+                    const fileName = `${media.type}_${index + 1}${label}.${ext}`;
+
+                    if (media.type === 'video') {
+                        videosFolder.file(fileName, blob);
+                    } else {
+                        imagesFolder.file(fileName, blob);
+                    }
+                } catch (err) {
+                    console.error(`Failed to fetch ${media.src}:`, err);
+                }
+            }));
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            const safeName = (product.name || 'product').replace(/[^a-zA-Z0-9]/g, '_');
+            saveAs(content, `${safeName}_media.zip`);
+        } catch (err) {
+            console.error('Failed to create ZIP:', err);
+        }
+        setIsDownloading(false);
+    };
 
     useEffect(() => {
         const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => {
@@ -297,6 +337,27 @@ const ProductPage = ({ product, setView, user }) => {
                             </button>
                         ))}
                     </div>
+
+                    {/* Download All Media Button */}
+                    {allMedia.filter(m => m.src && !m.src.includes('placehold.co')).length > 0 && (
+                        <button
+                            onClick={handleDownloadMedia}
+                            disabled={isDownloading}
+                            className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-900 transition-colors cursor-pointer disabled:bg-gray-400"
+                        >
+                            {isDownloading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <span>Preparing download...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="h-4 w-4" />
+                                    <span>Download All Media ({allMedia.filter(m => m.src && !m.src.includes('placehold.co')).length} files)</span>
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
                 <div>
                     <h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1>
@@ -394,7 +455,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
 
     // New RTB Images state
     const [rtbImages, setRtbImages] = useState(RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
-    const [videoUrl, setVideoUrl] = useState('');
+    const [videoUrls, setVideoUrls] = useState([]);
     const [uploadingSlot, setUploadingSlot] = useState(null);
     const [featuredImageId, setFeaturedImageId] = useState(1); // Default to first RTB slot
 
@@ -452,11 +513,11 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 setRtbImages(migratedRtbImages);
             }
 
-            // Handle video - new single video format or old array format
-            if (editingProduct.videoUrl) {
-                setVideoUrl(editingProduct.videoUrl);
-            } else if (editingProduct.videoUrls && editingProduct.videoUrls.length > 0) {
-                setVideoUrl(editingProduct.videoUrls[0]);
+            // Handle video - load videoUrls array, with backward compat for old single videoUrl
+            if (editingProduct.videoUrls && editingProduct.videoUrls.length > 0) {
+                setVideoUrls(editingProduct.videoUrls);
+            } else if (editingProduct.videoUrl) {
+                setVideoUrls([editingProduct.videoUrl]);
             }
         } else {
             // Reset form for new product
@@ -467,7 +528,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
             setDisplaySolutionTags([]);
             setHighlights([{ title: '', text: '' }]);
             setRtbImages(RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
-            setVideoUrl('');
+            setVideoUrls([]);
         }
         setEditorLoaded(true);
     }, [editingProduct]);
@@ -516,7 +577,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
             },
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    setVideoUrl(downloadURL);
+                    setVideoUrls(prev => [...prev, downloadURL]);
                     setIsUploading(false);
                 });
             }
@@ -542,17 +603,18 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     };
 
     // Remove video handler
-    const handleRemoveVideo = async () => {
-        if (!videoUrl) return;
+    const handleRemoveVideo = async (index) => {
+        const url = videoUrls[index];
+        if (!url) return;
 
         if (window.confirm("Are you sure you want to remove this video?")) {
             try {
-                const fileRef = storageRef(storage, videoUrl);
+                const fileRef = storageRef(storage, url);
                 await deleteObject(fileRef);
             } catch (err) {
                 console.error("Failed to delete video from storage:", err);
             }
-            setVideoUrl('');
+            setVideoUrls(prev => prev.filter((_, i) => i !== index));
         }
     };
 
@@ -617,11 +679,11 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 // New RTB images format
                 rtbImages: rtbImages.filter(img => img.url),
                 featuredImageId: featuredImageId,
-                videoUrl: videoUrl || '',
+                videoUrls: videoUrls || [],
                 // Backward compatibility
                 imageUrl,
                 imageUrls,
-                videoUrls: videoUrl ? [videoUrl] : [],
+                videoUrl: (videoUrls && videoUrls.length > 0) ? videoUrls[0] : '',
                 class: editingProduct ? editingProduct.class : user.customClaims.class
             };
 
@@ -746,8 +808,8 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 <RTBImageUploader
                     rtbImages={rtbImages}
                     setRtbImages={setRtbImages}
-                    videoUrl={videoUrl}
-                    setVideoUrl={setVideoUrl}
+                    videoUrls={videoUrls}
+                    setVideoUrls={setVideoUrls}
                     onUploadImage={handleUploadImage}
                     onUploadVideo={handleUploadVideo}
                     onRemoveImage={handleRemoveImage}

@@ -163,7 +163,7 @@ const RTBImageSlot = ({
     );
 };
 
-const VideoUploadSlot = ({ videoUrl, onUpload, onRemove, isUploading }) => {
+const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading }) => {
     const fileInputRef = useRef(null);
 
     const handleClick = () => {
@@ -180,32 +180,47 @@ const VideoUploadSlot = ({ videoUrl, onUpload, onRemove, isUploading }) => {
         e.target.value = '';
     };
 
+    const canAddMore = (videoUrls || []).length < MEDIA_CONFIG.MAX_VIDEOS;
+
     return (
         <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                     <Video className="h-5 w-5 text-purple-600 mr-2" />
-                    <span className="font-medium text-gray-700">Product Video (Optional)</span>
+                    <span className="font-medium text-gray-700">Product Videos (Optional)</span>
                 </div>
-                <span className="text-xs text-gray-500">1 video max, MP4 format</span>
+                <span className="text-xs text-gray-500">
+                    {(videoUrls || []).length}/{MEDIA_CONFIG.MAX_VIDEOS} videos, MP4 format
+                </span>
             </div>
 
-            {videoUrl ? (
-                <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
-                    <video
-                        src={videoUrl}
-                        controls
-                        className="w-full h-full object-contain"
-                    />
-                    <button
-                        type="button"
-                        onClick={() => onRemove()}
-                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow-lg hover:bg-red-700 cursor-pointer"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </button>
+            {/* Video Grid */}
+            {(videoUrls || []).length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    {(videoUrls || []).map((url, index) => (
+                        <div key={index} className="relative rounded-lg overflow-hidden bg-black aspect-video">
+                            <video
+                                src={url}
+                                controls
+                                className="w-full h-full object-contain"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => onRemove(index)}
+                                className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow-lg hover:bg-red-700 cursor-pointer"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                            <div className="absolute top-2 left-2 bg-purple-600 text-white rounded-full px-2 py-0.5 text-xs font-bold">
+                                {index + 1}
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            ) : (
+            )}
+
+            {/* Add Video Button */}
+            {canAddMore && (
                 <button
                     type="button"
                     onClick={handleClick}
@@ -239,8 +254,8 @@ const VideoUploadSlot = ({ videoUrl, onUpload, onRemove, isUploading }) => {
 const RTBImageUploader = ({
     rtbImages,
     setRtbImages,
-    videoUrl,
-    setVideoUrl,
+    videoUrls,
+    setVideoUrls,
     onUploadImage,
     onUploadVideo,
     onRemoveImage,
@@ -402,7 +417,7 @@ const RTBImageUploader = ({
 
             {/* Video Upload */}
             <VideoUploadSlot
-                videoUrl={videoUrl}
+                videoUrls={videoUrls}
                 onUpload={onUploadVideo}
                 onRemove={onRemoveVideo}
                 isUploading={isUploading}

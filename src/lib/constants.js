@@ -77,7 +77,7 @@ export const TAG_CATEGORIES = {
 // Media configuration
 export const MEDIA_CONFIG = {
     MAX_IMAGES: 6,
-    MAX_VIDEOS: 1,
+    MAX_VIDEOS: 10,
     MIN_IMAGE_WIDTH: 600,
     MIN_IMAGE_HEIGHT: 600,
     OUTPUT_SIZE: 600,
