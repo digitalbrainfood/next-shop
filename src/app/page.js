@@ -232,11 +232,15 @@ const ProductPage = ({ product, setView, user }) => {
             const zip = new JSZip();
             const imagesFolder = zip.folder('images');
             const videosFolder = zip.folder('videos');
+            let addedCount = 0;
 
             await Promise.all(downloadableMedia.map(async (media, index) => {
                 try {
-                    const response = await fetch(media.src);
+                    const proxyUrl = `/api/download-proxy?url=${encodeURIComponent(media.src)}`;
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const blob = await response.blob();
+                    if (blob.size === 0) throw new Error('Empty response');
                     const ext = media.type === 'video' ? 'mp4' : 'jpg';
                     const label = media.rtbLabel ? `_${media.rtbLabel.replace(/\s+/g, '-')}` : '';
                     const fileName = `${media.type}_${index + 1}${label}.${ext}`;
@@ -246,14 +250,19 @@ const ProductPage = ({ product, setView, user }) => {
                     } else {
                         imagesFolder.file(fileName, blob);
                     }
+                    addedCount++;
                 } catch (err) {
                     console.error(`Failed to fetch ${media.src}:`, err);
                 }
             }));
 
-            const content = await zip.generateAsync({ type: 'blob' });
-            const safeName = (product.name || 'product').replace(/[^a-zA-Z0-9]/g, '_');
-            saveAs(content, `${safeName}_media.zip`);
+            if (addedCount === 0) {
+                alert('Failed to download any media files.');
+            } else {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const safeName = (product.name || 'product').replace(/[^a-zA-Z0-9]/g, '_');
+                saveAs(content, `${safeName}_media.zip`);
+            }
         } catch (err) {
             console.error('Failed to create ZIP:', err);
         }
