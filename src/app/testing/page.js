@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import {
     School, CreditCard, Lock, CheckCircle2, Check, ChevronRight, ChevronLeft,
     Zap, Star, Building, ShieldCheck, Loader2, Copy, ClipboardCheck,
-    Mail, Globe, Key, Users, GraduationCap, Download
+    Mail, Globe, Key, Users, GraduationCap, Download, Settings, Palette,
+    Plus, Trash2, Image as ImageIcon, Monitor
 } from 'lucide-react';
 
 // --- CONSTANTS ---
@@ -12,6 +13,7 @@ const STEPS = [
     { label: 'School Info', icon: School },
     { label: 'Select Plan', icon: CreditCard },
     { label: 'Payment', icon: Lock },
+    { label: 'Setup', icon: Settings },
     { label: 'Confirmation', icon: CheckCircle2 },
 ];
 
@@ -455,7 +457,374 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
     );
 };
 
-// --- STEP 4: CONFIRMATION ---
+// --- STEP 4: INSTANCE SETUP ---
+
+const COLOR_PRESETS = [
+    { name: 'Blue', value: '#2563eb' },
+    { name: 'Purple', value: '#7c3aed' },
+    { name: 'Green', value: '#059669' },
+    { name: 'Red', value: '#dc2626' },
+    { name: 'Orange', value: '#ea580c' },
+    { name: 'Teal', value: '#0d9488' },
+    { name: 'Pink', value: '#db2777' },
+    { name: 'Indigo', value: '#4f46e5' },
+];
+
+const InstanceSetupStep = ({ formData, updateFormData, onNext, onBack, errors }) => {
+    const [subdomainStatus, setSubdomainStatus] = useState(null); // null | 'checking' | 'available' | 'taken'
+
+    const handleSubdomainChange = (value) => {
+        const clean = value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 30);
+        updateFormData('subdomain', clean);
+        if (clean.length >= 3) {
+            setSubdomainStatus('checking');
+            // Mock availability check
+            setTimeout(() => {
+                const taken = ['demo', 'test', 'admin', 'shopnext'];
+                setSubdomainStatus(taken.includes(clean) ? 'taken' : 'available');
+            }, 800);
+        } else {
+            setSubdomainStatus(null);
+        }
+    };
+
+    const handleLogoUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            updateFormData('logoFile', file);
+            const reader = new FileReader();
+            reader.onload = (ev) => updateFormData('logoPreview', ev.target.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const togglePlatform = (platform) => {
+        const current = formData.platforms;
+        if (current.includes(platform)) {
+            if (current.length > 1) {
+                updateFormData('platforms', current.filter(p => p !== platform));
+            }
+        } else {
+            updateFormData('platforms', [...current, platform]);
+        }
+    };
+
+    const addAdmin = () => {
+        updateFormData('adminAccounts', [...formData.adminAccounts, { name: '', email: '' }]);
+    };
+
+    const removeAdmin = (index) => {
+        if (formData.adminAccounts.length > 1) {
+            updateFormData('adminAccounts', formData.adminAccounts.filter((_, i) => i !== index));
+        }
+    };
+
+    const updateAdmin = (index, field, value) => {
+        const updated = formData.adminAccounts.map((a, i) => i === index ? { ...a, [field]: value } : a);
+        updateFormData('adminAccounts', updated);
+    };
+
+    const addClass = () => {
+        updateFormData('classNames', [...formData.classNames, '']);
+    };
+
+    const removeClass = (index) => {
+        if (formData.classNames.length > 1) {
+            updateFormData('classNames', formData.classNames.filter((_, i) => i !== index));
+        }
+    };
+
+    const updateClass = (index, value) => {
+        const updated = formData.classNames.map((c, i) => i === index ? value : c);
+        updateFormData('classNames', updated);
+    };
+
+    return (
+        <div>
+            <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Set Up Your Instance</h2>
+                <p className="text-gray-500 mt-1">Configure your platform, branding, and initial accounts.</p>
+            </div>
+
+            <div className="space-y-8">
+                {/* Subdomain */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Globe className="h-5 w-5 text-blue-600" /> Your URL
+                    </h3>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Subdomain *</label>
+                        <div className="flex items-center">
+                            <input
+                                type="text"
+                                value={formData.subdomain}
+                                onChange={(e) => handleSubdomainChange(e.target.value)}
+                                placeholder="your-school"
+                                className={`flex-1 border rounded-l-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.subdomain ? 'border-red-400' : 'border-gray-300'}`}
+                            />
+                            <span className="bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg px-4 py-3 text-gray-500 text-sm whitespace-nowrap">.shopnext.app</span>
+                        </div>
+                        {errors.subdomain && <p className="text-red-500 text-xs mt-1">{errors.subdomain}</p>}
+                        {subdomainStatus === 'checking' && (
+                            <p className="text-gray-400 text-xs mt-1 flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Checking availability...</p>
+                        )}
+                        {subdomainStatus === 'available' && (
+                            <p className="text-green-600 text-xs mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {formData.subdomain}.shopnext.app is available!</p>
+                        )}
+                        {subdomainStatus === 'taken' && (
+                            <p className="text-red-500 text-xs mt-1">This subdomain is already taken. Try another.</p>
+                        )}
+                    </div>
+                    <div className="mt-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Custom Domain <span className="text-gray-400">(optional)</span></label>
+                        <input
+                            type="text"
+                            value={formData.customDomain}
+                            onChange={(e) => updateFormData('customDomain', e.target.value)}
+                            placeholder="shop.yourschool.edu"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">You can configure a custom domain later. DNS setup instructions will be provided.</p>
+                    </div>
+                </div>
+
+                {/* Branding */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Palette className="h-5 w-5 text-blue-600" /> Branding
+                    </h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name *</label>
+                            <input
+                                type="text"
+                                value={formData.displayName}
+                                onChange={(e) => updateFormData('displayName', e.target.value)}
+                                placeholder="e.g. Riverside Academy Store"
+                                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.displayName ? 'border-red-400' : 'border-gray-300'}`}
+                            />
+                            {errors.displayName && <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">School Logo</label>
+                            <div className="flex items-center gap-4">
+                                {formData.logoPreview ? (
+                                    <div className="relative">
+                                        <img src={formData.logoPreview} alt="Logo preview" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                                        <button
+                                            type="button"
+                                            onClick={() => { updateFormData('logoFile', null); updateFormData('logoPreview', ''); }}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 cursor-pointer"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <label className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                                        <ImageIcon className="h-6 w-6 text-gray-400" />
+                                        <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                                    </label>
+                                )}
+                                <p className="text-xs text-gray-400">Upload a square logo (PNG, JPG). Recommended 200x200px.</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Primary Color</label>
+                            <div className="flex flex-wrap gap-2">
+                                {COLOR_PRESETS.map((color) => (
+                                    <button
+                                        key={color.value}
+                                        type="button"
+                                        onClick={() => updateFormData('primaryColor', color.value)}
+                                        className={`w-9 h-9 rounded-full border-2 transition-all cursor-pointer ${
+                                            formData.primaryColor === color.value ? 'border-gray-900 scale-110 shadow-md' : 'border-transparent hover:scale-105'
+                                        }`}
+                                        style={{ backgroundColor: color.value }}
+                                        title={color.name}
+                                    />
+                                ))}
+                                <label className="w-9 h-9 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 relative overflow-hidden" title="Custom color">
+                                    <span className="text-xs text-gray-400">+</span>
+                                    <input
+                                        type="color"
+                                        value={formData.primaryColor}
+                                        onChange={(e) => updateFormData('primaryColor', e.target.value)}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </label>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                                <div className="w-4 h-4 rounded" style={{ backgroundColor: formData.primaryColor }} />
+                                <span className="text-xs text-gray-500 font-mono">{formData.primaryColor}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Platform Selection */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Monitor className="h-5 w-5 text-blue-600" /> Platforms
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3">Select which platforms to enable. You can change this later.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            type="button"
+                            onClick={() => togglePlatform('products')}
+                            className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                formData.platforms.includes('products') ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="font-semibold text-gray-900">Products</span>
+                                {formData.platforms.includes('products') && <CheckCircle2 className="h-5 w-5 text-blue-600" />}
+                            </div>
+                            <p className="text-xs text-gray-500">Students create and showcase product marketing campaigns.</p>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => togglePlatform('avatars')}
+                            className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                formData.platforms.includes('avatars') ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="font-semibold text-gray-900">Hirable Talent</span>
+                                {formData.platforms.includes('avatars') && <CheckCircle2 className="h-5 w-5 text-blue-600" />}
+                            </div>
+                            <p className="text-xs text-gray-500">Students create avatar profiles with photos and media portfolios.</p>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Admin Accounts */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <Users className="h-5 w-5 text-blue-600" /> Admin Accounts
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3">Set up initial admin accounts. More can be added later.</p>
+                    <div className="space-y-3">
+                        {formData.adminAccounts.map((admin, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <input
+                                        type="text"
+                                        value={admin.name}
+                                        onChange={(e) => updateAdmin(index, 'name', e.target.value)}
+                                        placeholder="Full name"
+                                        className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    />
+                                    <input
+                                        type="email"
+                                        value={admin.email}
+                                        onChange={(e) => updateAdmin(index, 'email', e.target.value)}
+                                        placeholder="Email address"
+                                        className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                                {formData.adminAccounts.length > 1 && (
+                                    <button type="button" onClick={() => removeAdmin(index)} className="text-red-400 hover:text-red-600 p-2.5 cursor-pointer">
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {errors.adminAccounts && <p className="text-red-500 text-xs mt-1">{errors.adminAccounts}</p>}
+                    <button
+                        type="button"
+                        onClick={addAdmin}
+                        className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                    >
+                        <Plus className="h-4 w-4" /> Add another admin
+                    </button>
+                </div>
+
+                {/* Class Names */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <School className="h-5 w-5 text-blue-600" /> Classes
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-3">Create your initial classes. Students will be assigned to these.</p>
+                    <div className="space-y-2">
+                        {formData.classNames.map((cls, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={cls}
+                                    onChange={(e) => updateClass(index, e.target.value)}
+                                    placeholder={`e.g. Spring 2026 - Section ${index + 1}`}
+                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                />
+                                {formData.classNames.length > 1 && (
+                                    <button type="button" onClick={() => removeClass(index)} className="text-red-400 hover:text-red-600 p-2.5 cursor-pointer">
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {errors.classNames && <p className="text-red-500 text-xs mt-1">{errors.classNames}</p>}
+                    <button
+                        type="button"
+                        onClick={addClass}
+                        className="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                    >
+                        <Plus className="h-4 w-4" /> Add another class
+                    </button>
+                </div>
+
+                {/* Preview */}
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Instance Preview</h3>
+                    <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                        <div className="h-2" style={{ backgroundColor: formData.primaryColor }} />
+                        <div className="p-4 flex items-center gap-3">
+                            {formData.logoPreview ? (
+                                <img src={formData.logoPreview} alt="" className="w-8 h-8 rounded object-cover" />
+                            ) : (
+                                <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: formData.primaryColor + '20' }}>
+                                    <GraduationCap className="h-5 w-5" style={{ color: formData.primaryColor }} />
+                                </div>
+                            )}
+                            <div>
+                                <p className="font-bold text-sm text-gray-900">{formData.displayName || 'Your School Name'}</p>
+                                <p className="text-xs text-gray-400">{formData.subdomain ? `${formData.subdomain}.shopnext.app` : 'your-school.shopnext.app'}</p>
+                            </div>
+                        </div>
+                        <div className="px-4 pb-3 flex gap-2">
+                            {formData.platforms.includes('products') && (
+                                <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: formData.primaryColor + '15', color: formData.primaryColor }}>Products</span>
+                            )}
+                            {formData.platforms.includes('avatars') && (
+                                <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: formData.primaryColor + '15', color: formData.primaryColor }}>Hirable Talent</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-between mt-8">
+                <button
+                    onClick={onBack}
+                    className="flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                    <ChevronLeft className="h-5 w-5" /> Back
+                </button>
+                <button
+                    onClick={onNext}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+                >
+                    Complete Setup <ChevronRight className="h-5 w-5" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// --- STEP 5: CONFIRMATION ---
 
 const ConfirmationStep = ({ formData, licenseKey }) => {
     const [copied, setCopied] = useState(false);
@@ -487,7 +856,7 @@ const ConfirmationStep = ({ formData, licenseKey }) => {
 
     const nextSteps = [
         { icon: Mail, text: `Check your email at ${formData.email} for setup instructions` },
-        { icon: Globe, text: 'Your hosted instance will be ready within 24 hours' },
+        { icon: Globe, text: `Your instance at ${formData.subdomain || 'your-school'}.shopnext.app will be ready within 24 hours` },
         { icon: Key, text: 'Use your license key to activate your platform' },
         { icon: Users, text: 'Our team will reach out for onboarding' },
     ];
@@ -582,6 +951,16 @@ const INITIAL_FORM_DATA = {
     billingAddress: '',
     billingCity: '',
     billingZip: '',
+    // Instance Setup
+    subdomain: '',
+    customDomain: '',
+    displayName: '',
+    primaryColor: '#2563eb',
+    logoFile: null,
+    logoPreview: '',
+    platforms: ['products'],
+    adminAccounts: [{ name: '', email: '' }],
+    classNames: [''],
 };
 
 export default function TestingPage() {
@@ -628,8 +1007,25 @@ export default function TestingPage() {
         return Object.keys(errs).length === 0;
     };
 
+    const validateStep4 = () => {
+        const errs = {};
+        if (!formData.subdomain.trim() || formData.subdomain.length < 3) errs.subdomain = 'Subdomain must be at least 3 characters';
+        if (!formData.displayName.trim()) errs.displayName = 'Display name is required';
+        const hasValidAdmin = formData.adminAccounts.some(a => a.name.trim() && a.email.trim());
+        if (!hasValidAdmin) errs.adminAccounts = 'At least one admin with name and email is required';
+        const hasValidClass = formData.classNames.some(c => c.trim());
+        if (!hasValidClass) errs.classNames = 'At least one class name is required';
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
+
     const handleNext = () => {
         if (currentStep === 0 && !validateStep1()) return;
+        if (currentStep === 3 && !validateStep4()) return;
+        if (currentStep === 3) {
+            // Setup complete — generate license key and go to confirmation
+            setLicenseKey(generateLicenseKey());
+        }
         setErrors({});
         setCurrentStep(prev => prev + 1);
         window.scrollTo(0, 0);
@@ -646,7 +1042,6 @@ export default function TestingPage() {
         setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
-            setLicenseKey(generateLicenseKey());
             setCurrentStep(3);
             window.scrollTo(0, 0);
         }, 2500);
@@ -661,6 +1056,8 @@ export default function TestingPage() {
             case 2:
                 return <PaymentStep formData={formData} updateFormData={updateFormData} onSubmit={handlePayment} onBack={handleBack} isProcessing={isProcessing} errors={errors} />;
             case 3:
+                return <InstanceSetupStep formData={formData} updateFormData={updateFormData} onNext={handleNext} onBack={handleBack} errors={errors} />;
+            case 4:
                 return <ConfirmationStep formData={formData} licenseKey={licenseKey} />;
             default:
                 return null;
@@ -688,7 +1085,7 @@ export default function TestingPage() {
                 </div>
 
                 {/* Trust badges */}
-                {currentStep < 3 && (
+                {currentStep < 4 && (
                     <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-gray-400">
                         <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4" /> SSL Encrypted</span>
                         <span className="flex items-center gap-1"><Lock className="h-4 w-4" /> PCI Compliant</span>
