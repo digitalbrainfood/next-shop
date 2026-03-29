@@ -700,7 +700,7 @@ const CreateTalentForm = ({ setVendorView, user, editingTalent }) => {
                 imageUrl,
                 imageUrls,
                 videoUrl: (videoUrls && videoUrls.length > 0) ? videoUrls[0] : '',
-                class: editingTalent ? editingTalent.class : (user.customClaims.avatarClass || user.customClaims.class)
+                class: editingTalent ? editingTalent.class : user.customClaims.avatarClass
             };
 
             if (editingTalent) {
@@ -930,7 +930,7 @@ const VendorDashboard = ({ user, setView, onEditTalent }) => {
     const [vendorTalents, setVendorTalents] = useState([]);
     useEffect(() => { if (user) { const q = query(collection(db, "avatars"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorTalents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user]);
     const handleDeleteTalent = async (talent) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "avatars", talent.id)); (talent.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (talent.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting talent: ", error); } }};
-    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Hirable Talent ({vendorTalents.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Class: {user?.customClaims.avatarClass || user?.customClaims.class})</p></div><button onClick={() => { onEditTalent(null); setView({ page: 'create_talent' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4 cursor-pointer"><PlusCircle className="h-5 w-5 mr-2" />Add New Hirable Talent</button></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Talent</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorTalents.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/e2e8f0/4a5568?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditTalent(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteTalent(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
+    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Hirable Talent ({vendorTalents.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Class: {user?.customClaims.avatarClass})</p></div><button onClick={() => { onEditTalent(null); setView({ page: 'create_talent' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4 cursor-pointer"><PlusCircle className="h-5 w-5 mr-2" />Add New Hirable Talent</button></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Talent</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorTalents.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/e2e8f0/4a5568?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditTalent(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteTalent(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
 };
 
 // Modal Component
@@ -1030,7 +1030,8 @@ const DeleteUsersModal = ({ isOpen, onClose }) => {
                                 <div>
                                     <p className="font-medium text-gray-900">{user.email}</p>
                                     <p className="text-xs text-gray-500">UID: {user.uid}</p>
-                                    {(user.customClaims?.avatarClass || user.customClaims?.class) && <p className="text-xs text-blue-600">Class: {user.customClaims.avatarClass || user.customClaims.class}</p>}
+                                    {user.customClaims?.avatarClass && <p className="text-xs text-blue-600">Avatar Class: {user.customClaims.avatarClass}</p>}
+                                    {user.customClaims?.class && <p className="text-xs text-blue-600">Product Class: {user.customClaims.class}</p>}
                                     {user.customClaims?.viewer && <p className="text-xs text-purple-600 flex items-center"><Eye className="h-3 w-3 mr-1" />Viewer</p>}
                                     {user.customClaims?.superAdmin && <p className="text-xs text-green-600 flex items-center"><ShieldCheck className="h-3 w-3 mr-1" />Super Admin</p>}
                                 </div>
@@ -1506,8 +1507,8 @@ export default function App() {
             setTalents([]);
             return; // Return early if no class is selected
           }
-      } else if (user.customClaims.avatarClass || user.customClaims.class) {
-          q = query(collection(db, "avatars"), where("class", "==", user.customClaims.avatarClass || user.customClaims.class), orderBy("featuredOrder", "asc"));
+      } else if (user.customClaims.avatarClass) {
+          q = query(collection(db, "avatars"), where("class", "==", user.customClaims.avatarClass), orderBy("featuredOrder", "asc"));
       }
 
       if (q) {
@@ -1576,6 +1577,24 @@ export default function App() {
 
     const isSuperAdmin = (user.customClaims && user.customClaims.superAdmin === true) || user.uid === SUPER_ADMIN_UID;
     const isViewerUser = checkIsViewer(user);
+
+    const hasAvatarAccess = isSuperAdmin || isViewerUser || !!user.customClaims?.avatarClass;
+
+    // Vendors without avatarClass see a message
+    if (!hasAvatarAccess) {
+        return (
+            <main className="container mx-auto px-4 py-8">
+                <div className="max-w-lg mx-auto text-center py-16">
+                    <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                        <Eye className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Hirable Talent Not Available</h2>
+                    <p className="text-gray-500 mb-4">You haven&apos;t been assigned to an avatar class yet. Please contact your administrator to get access to the Hirable Talent platform.</p>
+                    <a href="/" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-colors">Go to Products</a>
+                </div>
+            </main>
+        );
+    }
 
     switch (view.page) {
       case 'talent':
