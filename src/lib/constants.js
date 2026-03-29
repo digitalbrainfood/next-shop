@@ -1,3 +1,43 @@
+// Avatar (Hirable Talent) image labels
+export const AVATAR_RTB_LABELS = [
+    {
+        id: 1,
+        name: "Face View",
+        description: "Photo showing the face from the front",
+        shortName: "Face"
+    },
+    {
+        id: 2,
+        name: "Face Sideview",
+        description: "Photo showing the face from the side",
+        shortName: "Side"
+    },
+    {
+        id: 3,
+        name: "Full Body",
+        description: "Full body photo from the front",
+        shortName: "Body"
+    },
+    {
+        id: 4,
+        name: "Full Body Side View",
+        description: "Full body photo from the side",
+        shortName: "Body Side"
+    },
+    {
+        id: 5,
+        name: "Dramatic or Thoughtful",
+        description: "A dramatic or thoughtful expression",
+        shortName: "Dramatic"
+    },
+    {
+        id: 6,
+        name: "Happy or Excited",
+        description: "A happy or excited expression",
+        shortName: "Happy"
+    }
+];
+
 // RTB (Reason To Believe) Labels for the 6 product images
 export const RTB_LABELS = [
     {

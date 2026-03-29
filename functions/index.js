@@ -99,6 +99,98 @@ exports.createNewVendor = onCall(
 );
 
 /**
+ * A callable Cloud Function to create a new avatar vendor user with custom claims.
+ * This function can only be called by an authenticated user who is a super admin.
+ * Sets an 'avatarClass' custom claim instead of 'class'.
+ */
+exports.createAvatarVendor = onCall(
+  {
+    timeoutSeconds: 60,
+    memory: "256MiB",
+    minInstances: 0,
+    maxInstances: 10,
+  },
+  async (request) => {
+    const {auth, data} = request;
+
+    if (!auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "You must be logged in to create a new vendor."
+      );
+    }
+
+    const isSuperAdmin = auth.token?.superAdmin === true;
+    const isInitialAdmin = auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
+
+    if (!isSuperAdmin && !isInitialAdmin) {
+      throw new HttpsError(
+        "permission-denied",
+        "You do not have permission to perform this action."
+      );
+    }
+
+    const { username, password, avatarClass } = data || {};
+    if (!username || !password || !avatarClass) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Please provide username, password, and avatar class."
+      );
+    }
+
+    try {
+      const authService = getAuth();
+
+      // Check if user already exists (may already have a product vendor account)
+      let userRecord;
+      try {
+        userRecord = await authService.getUserByEmail(`${username.trim()}@shopnext.dev`);
+        // User exists — merge avatarClass into their existing claims
+        const existingClaims = userRecord.customClaims || {};
+        await authService.setCustomUserClaims(userRecord.uid, {
+          ...existingClaims,
+          avatarClass: avatarClass.trim().toLowerCase(),
+        });
+      } catch (lookupError) {
+        if (lookupError.code === 'auth/user-not-found') {
+          // User doesn't exist — create new
+          userRecord = await authService.createUser({
+            email: `${username.trim()}@shopnext.dev`,
+            password: password,
+            displayName: username.trim(),
+          });
+          await authService.setCustomUserClaims(userRecord.uid, {
+            avatarClass: avatarClass.trim().toLowerCase(),
+          });
+        } else {
+          throw lookupError;
+        }
+      }
+
+      console.log("Successfully created/updated avatar vendor:", userRecord.uid);
+
+      return {
+        success: true,
+        result: `Successfully set up ${username} in avatar class ${avatarClass}.`,
+        uid: userRecord.uid
+      };
+    } catch (error) {
+      console.error("Error creating avatar vendor:", error);
+
+      if (error.code === 'auth/email-already-exists') {
+        throw new HttpsError("already-exists", "A user with this username already exists.");
+      } else if (error.code === 'auth/invalid-email') {
+        throw new HttpsError("invalid-argument", "Invalid email format generated from username.");
+      } else if (error.code === 'auth/weak-password') {
+        throw new HttpsError("invalid-argument", "Password is too weak.");
+      }
+
+      throw new HttpsError("internal", error.message);
+    }
+  }
+);
+
+/**
  * A callable Cloud Function to list all users.
  * This function can only be called by an authenticated user who is a super admin.
  */

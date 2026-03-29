@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { X, Check, AlertCircle } from 'lucide-react';
 import { TAG_CONFIG, TAG_CATEGORIES } from '../lib/constants';
 
-const TagInput = ({ category, tags, setTags, displayTags, setDisplayTags }) => {
+const TagInput = ({ category, tags, setTags, displayTags, setDisplayTags, entityLabel = "product" }) => {
     const [inputValue, setInputValue] = useState('');
     const config = TAG_CATEGORIES[category];
     const maxTags = config.maxTags;
@@ -111,7 +111,7 @@ const TagInput = ({ category, tags, setTags, displayTags, setDisplayTags }) => {
             <div className="mt-2 flex items-center text-xs text-gray-500">
                 <AlertCircle className="h-3 w-3 mr-1" />
                 <span>
-                    Select {maxDisplayTags} tags to show on product card ({displayTags.length}/{maxDisplayTags} selected)
+                    Select {maxDisplayTags} tags to show on {entityLabel} card ({displayTags.length}/{maxDisplayTags} selected)
                 </span>
             </div>
         </div>
@@ -126,7 +126,8 @@ const TagManager = ({
     displayTriggerTags,
     setDisplayTriggerTags,
     displaySolutionTags,
-    setDisplaySolutionTags
+    setDisplaySolutionTags,
+    entityLabel = "product"
 }) => {
     const totalTags = triggerTags.length + solutionTags.length;
     const totalDisplayTags = displayTriggerTags.length + displaySolutionTags.length;
@@ -135,7 +136,7 @@ const TagManager = ({
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-700">
-                    Product Tags
+                    {entityLabel.charAt(0).toUpperCase() + entityLabel.slice(1)} Tags
                 </label>
                 <span className={`text-sm ${totalTags >= TAG_CONFIG.TOTAL_MAX_TAGS ? 'text-red-500' : 'text-gray-500'}`}>
                     Total: {totalTags}/{TAG_CONFIG.TOTAL_MAX_TAGS}
@@ -144,7 +145,7 @@ const TagManager = ({
 
             <p className="text-xs text-gray-500 -mt-2">
                 Add up to {TAG_CONFIG.MAX_TRIGGER_TAGS} trigger event tags and {TAG_CONFIG.MAX_SOLUTION_TAGS} solution tags.
-                Select {TAG_CONFIG.TOTAL_DISPLAY_TAGS} total to display on the product card.
+                Select {TAG_CONFIG.TOTAL_DISPLAY_TAGS} total to display on the {entityLabel} card.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,6 +155,7 @@ const TagManager = ({
                     setTags={setTriggerTags}
                     displayTags={displayTriggerTags}
                     setDisplayTags={setDisplayTriggerTags}
+                    entityLabel={entityLabel}
                 />
                 <TagInput
                     category="SOLUTION"
@@ -161,6 +163,7 @@ const TagManager = ({
                     setTags={setSolutionTags}
                     displayTags={displaySolutionTags}
                     setDisplayTags={setDisplaySolutionTags}
+                    entityLabel={entityLabel}
                 />
             </div>
 
@@ -169,7 +172,7 @@ const TagManager = ({
                 <div className="flex items-center p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
                     <AlertCircle className="h-4 w-4 mr-2" />
                     <span>
-                        Please select exactly {TAG_CONFIG.DISPLAY_TRIGGER_TAGS} trigger tags and {TAG_CONFIG.DISPLAY_SOLUTION_TAGS} solution tags to display on the product card.
+                        Please select exactly {TAG_CONFIG.DISPLAY_TRIGGER_TAGS} trigger tags and {TAG_CONFIG.DISPLAY_SOLUTION_TAGS} solution tags to display on the {entityLabel} card.
                     </span>
                 </div>
             )}

@@ -3,37 +3,15 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw, Download } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import RichTextEditor from '../components/RichTextEditor';
-import TagManager from '../components/TagManager';
-import RTBImageUploader from '../components/RTBImageUploader';
-import { RTB_LABELS, TAG_CONFIG, TAG_CATEGORIES, isViewer as checkIsViewer, isSuperAdmin as checkIsSuperAdmin } from '../lib/constants';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, getDocs, writeBatch, orderBy, setDoc } from "firebase/firestore";
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
-import { getFunctions, httpsCallable } from "firebase/functions";
-
-
-// --- FIREBASE INITIALIZATION ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDiCbTkbfn3LHAZnvlBxYZEDU1Ng_LftdA",
-  authDomain: "nextshop-a17fe.firebaseapp.com",
-  projectId: "nextshop-a17fe",
-  storageBucket: "nextshop-a17fe.firebasestorage.app",
-  messagingSenderId: "135352358131",
-  appId: "1:135352358131:web:1eed317a816366721f1386",
-  measurementId: "G-98EJ5Y0RMG"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const functions = getFunctions(app, 'us-central1');
-
-
-// --- SUPER ADMIN CONFIGURATION ---
-const SUPER_ADMIN_UID = "RnBej9HSStVJXA0rtIB02W0R1yv2";
+import RichTextEditor from '../../components/RichTextEditor';
+import TagManager from '../../components/TagManager';
+import RTBImageUploader from '../../components/RTBImageUploader';
+import { AVATAR_RTB_LABELS, TAG_CONFIG, TAG_CATEGORIES, isViewer as checkIsViewer, isSuperAdmin as checkIsSuperAdmin } from '../../lib/constants';
+import { auth, db, storage, functions, SUPER_ADMIN_UID } from '../../lib/firebase';
+import { onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, getDocs, writeBatch, orderBy, setDoc } from "firebase/firestore";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { httpsCallable } from "firebase/functions";
 
 
 // --- UI COMPONENTS ---
@@ -57,7 +35,7 @@ const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery }) => {
                     <div className="relative w-full max-w-lg">
                         <input
                             type="search"
-                            placeholder="Search by product name or tag..."
+                            placeholder="Search by talent name or tag..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -68,7 +46,7 @@ const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery }) => {
 
                 {user && (
                     <div className="flex items-center space-x-4 flex-shrink-0">
-                        <a href="/avatars" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Hirable Talent</a>
+                        <a href="/" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Products</a>
                         {isViewerUser && (
                             <span className="flex items-center text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
                                 <Eye className="h-4 w-4 mr-1" />
@@ -93,12 +71,12 @@ const Footer = () => (
     <footer className="bg-gray-800 text-white mt-12"><div className="container mx-auto px-4 py-6 text-center"><p>&copy; 2025 ShopNext. All rights reserved.</p><p className="text-sm text-gray-300">A prototype for educational purposes.</p></div></footer>
 );
 
-const ProductCard = ({ product, setView }) => {
-    // Only show trigger tags on product cards
+const TalentCard = ({ talent, setView }) => {
+    // Only show trigger tags on talent cards
     const getDisplayTags = () => {
         // New format - both trigger and solution tags
-        const triggerTags = product.displayTags?.trigger || [];
-        const solutionTags = product.displayTags?.solution || [];
+        const triggerTags = talent.displayTags?.trigger || [];
+        const solutionTags = talent.displayTags?.solution || [];
         return {
             trigger: triggerTags,
             solution: solutionTags
@@ -110,11 +88,11 @@ const ProductCard = ({ product, setView }) => {
     return (
         <div className="bg-white border rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 group flex flex-col">
             <div className="relative aspect-square">
-                <img src={product.imageUrl || 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image'} alt={product.name} className="w-full h-full object-cover" />
+                <img src={talent.imageUrl || 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image'} alt={talent.name} className="w-full h-full object-cover" />
             </div>
             <div className="p-4 flex flex-col flex-grow">
-                <h3 className="text-lg font-bold text-gray-800 truncate">{product.name}</h3>
-                <p className="text-sm text-gray-500 mb-2 truncate">{product.subtitle}</p>
+                <h3 className="text-lg font-bold text-gray-800 truncate">{talent.name}</h3>
+                <p className="text-sm text-gray-500 mb-2 truncate">{talent.subtitle}</p>
                 <div className="flex-grow">
                     <div className="flex flex-wrap gap-1 mb-2">
                         {displayTags.trigger.map(tag => (
@@ -135,21 +113,21 @@ const ProductCard = ({ product, setView }) => {
                         ))}
                     </div>
                 </div>
-                <div className="flex justify-between items-center mt-2"><p className="text-xl font-extrabold text-blue-600">${parseFloat(product.price).toFixed(2)}</p><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
-                <button onClick={() => setView({ page: 'product', id: product.id })} className="mt-4 w-full bg-blue-500 text-white py-2 rounded-full font-semibold hover:bg-blue-600 transition-colors cursor-pointer">View Details</button>
+                <div className="flex justify-between items-center mt-2"><p className="text-xl font-extrabold text-blue-600">${parseFloat(talent.price).toFixed(2)}</p><StarRating rating={talent.rating} reviewCount={talent.reviewCount} /></div>
+                <button onClick={() => setView({ page: 'talent', id: talent.id })} className="mt-4 w-full bg-blue-500 text-white py-2 rounded-full font-semibold hover:bg-blue-600 transition-colors cursor-pointer">View Details</button>
             </div>
         </div>
     );
 };
 
-const ProductGrid = ({ products, setView, sortOrder, setSortOrder }) => {
+const TalentGrid = ({ talents, setView, sortOrder, setSortOrder }) => {
     return (
         <main className="container mx-auto px-4 pt-8 pb-2">
             <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-3xl font-extrabold text-gray-900">Products</h2>
+                 <h2 className="text-3xl font-extrabold text-gray-900">Hirable Talent</h2>
                  <div className="flex items-center space-x-2">
                     <label htmlFor="sort-order" className="text-sm font-medium text-gray-700">Sort by:</label>
-                    <select 
+                    <select
                         id="sort-order"
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value)}
@@ -163,13 +141,13 @@ const ProductGrid = ({ products, setView, sortOrder, setSortOrder }) => {
                     </select>
                  </div>
             </div>
-            {products.length > 0 ? (
+            {talents.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.map(product => (<ProductCard key={product.id} product={product} setView={setView} />))}
+                    {talents.map(talent => (<TalentCard key={talent.id} talent={talent} setView={setView} />))}
                 </div>
             ) : (
                 <div className="text-center py-16">
-                    <p className="text-gray-500 text-lg">No products found.</p>
+                    <p className="text-gray-500 text-lg">No talent found.</p>
                     <p className="text-gray-600 text-sm">Try adjusting your search or filter, or for admins, select a class to view.</p>
                 </div>
             )}
@@ -177,49 +155,49 @@ const ProductGrid = ({ products, setView, sortOrder, setSortOrder }) => {
     );
 };
 
-const ReviewFormComponent = ({ productId, user }) => {
+const ReviewFormComponent = ({ talentId, user }) => {
     const [ratings, setRatings] = useState({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 });
     const [text, setText] = useState(''); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
     const criteria = ['attention', 'persuasion', 'brandedRecall', 'liking'];
     const handleRatingChange = (criterion, value) => { setRatings(prev => ({ ...prev, [criterion]: value })); };
-    const updateProductRatingAfterSubmission = async () => { const reviewsRef = collection(db, "products", productId, "reviews"); const reviewsSnapshot = await getDocs(reviewsRef); const newReviewCount = reviewsSnapshot.size; let totalRating = 0; reviewsSnapshot.forEach(doc => { totalRating += doc.data().overallRating; }); const newAverageRating = newReviewCount > 0 ? totalRating / newReviewCount : 0; await updateDoc(doc(db, "products", productId), { rating: newAverageRating, reviewCount: newReviewCount }); };
-    const handleReviewSubmit = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (Object.values(ratings).some(r => r === 0) || !text) { setError('Please provide a rating for all criteria and write a review.'); return; } const overallRating = Object.values(ratings).reduce((a, b) => a + b, 0) / criteria.length; try { await addDoc(collection(db, "products", productId, "reviews"), { userId: user.uid, username: user.displayName, ...ratings, overallRating, text, createdAt: serverTimestamp() }); await updateProductRatingAfterSubmission(); setSuccess('Thank you for your review!'); setRatings({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 }); setText(''); } catch (err) { setError('Failed to submit review. ' + err.message); } };
+    const updateTalentRatingAfterSubmission = async () => { const reviewsRef = collection(db, "avatars", talentId, "reviews"); const reviewsSnapshot = await getDocs(reviewsRef); const newReviewCount = reviewsSnapshot.size; let totalRating = 0; reviewsSnapshot.forEach(doc => { totalRating += doc.data().overallRating; }); const newAverageRating = newReviewCount > 0 ? totalRating / newReviewCount : 0; await updateDoc(doc(db, "avatars", talentId), { rating: newAverageRating, reviewCount: newReviewCount }); };
+    const handleReviewSubmit = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (Object.values(ratings).some(r => r === 0) || !text) { setError('Please provide a rating for all criteria and write a review.'); return; } const overallRating = Object.values(ratings).reduce((a, b) => a + b, 0) / criteria.length; try { await addDoc(collection(db, "avatars", talentId, "reviews"), { userId: user.uid, username: user.displayName, ...ratings, overallRating, text, createdAt: serverTimestamp() }); await updateTalentRatingAfterSubmission(); setSuccess('Thank you for your review!'); setRatings({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 }); setText(''); } catch (err) { setError('Failed to submit review. ' + err.message); } };
     return (<div className="bg-white p-6 rounded-lg shadow-md border mt-8"><h3 className="text-xl font-bold text-gray-800 mb-4">Leave a Review</h3><form onSubmit={handleReviewSubmit} className="space-y-4">{criteria.map(criterion => (<div key={criterion} className="flex flex-col sm:flex-row justify-between sm:items-center"><span className="capitalize text-gray-700 mb-2 sm:mb-0">{criterion.replace(/([A-Z])/g, ' $1')}</span><div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-6 w-6 cursor-pointer ${i < ratings[criterion] ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} onClick={() => handleRatingChange(criterion, i + 1)} />))}</div></div>))}<div><textarea value={text} onChange={(e) => setText(e.target.value)} rows="4" placeholder="Share your thoughts..." className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 cursor-pointer">Submit Review</button></form></div>);
 };
 
-const ProductPage = ({ product, setView, user }) => {
+const TalentPage = ({ talent, setView, user }) => {
     // Handle both old (imageUrls) and new (rtbImages) formats
-    const getMediaFromProduct = () => {
-        if (product.rtbImages && product.rtbImages.length > 0) {
-            return product.rtbImages.filter(img => img.url).map(img => ({
+    const getMediaFromTalent = () => {
+        if (talent.rtbImages && talent.rtbImages.length > 0) {
+            return talent.rtbImages.filter(img => img.url).map(img => ({
                 type: 'image',
                 src: img.url,
                 rtbLabel: img.rtbLabel,
                 rtbId: img.rtbId
             }));
         }
-        if (product.imageUrls && product.imageUrls.length > 0) {
-            return product.imageUrls.map(src => ({ type: 'image', src }));
+        if (talent.imageUrls && talent.imageUrls.length > 0) {
+            return talent.imageUrls.map(src => ({ type: 'image', src }));
         }
         return [{ type: 'image', src: 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image' }];
     };
 
-    const getVideoFromProduct = () => {
-        if (product.videoUrls && product.videoUrls.length > 0) {
-            return product.videoUrls.map(src => ({ type: 'video', src }));
+    const getVideoFromTalent = () => {
+        if (talent.videoUrls && talent.videoUrls.length > 0) {
+            return talent.videoUrls.map(src => ({ type: 'video', src }));
         }
-        if (product.videoUrl) {
-            return [{ type: 'video', src: product.videoUrl }];
+        if (talent.videoUrl) {
+            return [{ type: 'video', src: talent.videoUrl }];
         }
         return [];
     };
 
-    const imageMedia = getMediaFromProduct();
-    const videoMedia = getVideoFromProduct();
+    const imageMedia = getMediaFromTalent();
+    const videoMedia = getVideoFromTalent();
     const allMedia = [...imageMedia, ...videoMedia];
 
     // Filter to only vendor-approved downloadable media
-    const allowedDownloads = product.downloadableMedia || { images: [], videos: [] };
+    const allowedDownloads = talent.downloadableMedia || { images: [], videos: [] };
     const downloadableMedia = allMedia.filter(m => {
         if (m.src && m.src.includes('placehold.co')) return false;
         if (m.type === 'image' && m.rtbId) return allowedDownloads.images.includes(m.rtbId);
@@ -273,7 +251,7 @@ const ProductPage = ({ product, setView, user }) => {
                 alert('Failed to download any media files.');
             } else {
                 const content = await zip.generateAsync({ type: 'blob' });
-                const safeName = (product.name || 'product').replace(/[^a-zA-Z0-9]/g, '_');
+                const safeName = (talent.name || 'talent').replace(/[^a-zA-Z0-9]/g, '_');
                 saveAs(content, `${safeName}_media.zip`);
             }
         } catch (err) {
@@ -283,23 +261,23 @@ const ProductPage = ({ product, setView, user }) => {
     };
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(query(collection(db, "products", product.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => {
+        const unsubscribe = onSnapshot(query(collection(db, "avatars", talent.id, "reviews"), orderBy("createdAt", "desc")), (snapshot) => {
             setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
         return () => unsubscribe();
-    }, [product.id]);
+    }, [talent.id]);
 
     // Get all tags for display (both old and new format)
     const getAllTags = () => {
-        if (product.tags && typeof product.tags === 'object' && !Array.isArray(product.tags)) {
+        if (talent.tags && typeof talent.tags === 'object' && !Array.isArray(talent.tags)) {
             return {
-                trigger: product.tags.trigger || [],
-                solution: product.tags.solution || []
+                trigger: talent.tags.trigger || [],
+                solution: talent.tags.solution || []
             };
         }
         // Old format - treat as solution tags
-        if (Array.isArray(product.tags)) {
-            return { trigger: [], solution: product.tags };
+        if (Array.isArray(talent.tags)) {
+            return { trigger: [], solution: talent.tags };
         }
         return { trigger: [], solution: [] };
     };
@@ -309,7 +287,7 @@ const ProductPage = ({ product, setView, user }) => {
     return (
         <main className="container mx-auto px-4 py-8">
             <button onClick={() => setView({ page: 'home' })} className="flex items-center text-blue-600 hover:underline mb-6 cursor-pointer">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to products
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to talent
             </button>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
@@ -317,7 +295,7 @@ const ProductPage = ({ product, setView, user }) => {
                     <div className="mb-4 w-full h-auto aspect-square bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center relative">
                         <div className="w-full h-full">
                             {activeMedia.type === 'image' ? (
-                                <img src={activeMedia.src} alt={product.name} className="w-full h-full object-cover" />
+                                <img src={activeMedia.src} alt={talent.name} className="w-full h-full object-cover" />
                             ) : (
                                 <video key={activeMedia.src} src={activeMedia.src} controls autoPlay muted className="w-full h-full object-cover"></video>
                             )}
@@ -382,10 +360,10 @@ const ProductPage = ({ product, setView, user }) => {
                     )}
                 </div>
                 <div>
-                    <h1 className="text-4xl font-extrabold text-gray-900 mt-1">{product.name}</h1>
-                    <p className="text-lg text-gray-600 mt-2">{product.subtitle}</p>
-                    <div className="my-4"><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
-                    <p className="text-3xl font-bold text-blue-600">${parseFloat(product.price).toFixed(2)}</p>
+                    <h1 className="text-4xl font-extrabold text-gray-900 mt-1">{talent.name}</h1>
+                    <p className="text-lg text-gray-600 mt-2">{talent.subtitle}</p>
+                    <div className="my-4"><StarRating rating={talent.rating} reviewCount={talent.reviewCount} /></div>
+                    <p className="text-3xl font-bold text-blue-600">${parseFloat(talent.price).toFixed(2)}</p>
 
                     {/* All Tags Display (capped at max) */}
                     {(() => {
@@ -405,10 +383,10 @@ const ProductPage = ({ product, setView, user }) => {
 
                     {/* Short Description */}
                     <div className="mt-6 border-t pt-4 short-description">
-                        <div className="text-gray-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: product.shortDescription }} />
+                        <div className="text-gray-700 prose max-w-none" dangerouslySetInnerHTML={{ __html: talent.shortDescription }} />
                     </div>
                     <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {(product.highlights || []).map((highlight, index) => (
+                        {(talent.highlights || []).map((highlight, index) => (
                             <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <p className="font-bold text-blue-800">{highlight.title}</p>
                                 <p className="text-sm text-blue-700 mt-1">{highlight.text}</p>
@@ -424,11 +402,11 @@ const ProductPage = ({ product, setView, user }) => {
                     <button onClick={() => setIsDetailsOpen(!isDetailsOpen)} className="w-full flex justify-between items-center py-4 text-left cursor-pointer">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">About this item</h2>
-                            <p className="text-sm text-gray-500">Product Details</p>
+                            <p className="text-sm text-gray-500">Talent Details</p>
                         </div>
                         {isDetailsOpen ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}
                     </button>
-                    {isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none long-description" dangerouslySetInnerHTML={{ __html: product.longDescription }}/>)}
+                    {isDetailsOpen && (<div className="pb-4 text-gray-600 prose max-w-none long-description" dangerouslySetInnerHTML={{ __html: talent.longDescription }}/>)}
                 </div>
             </div>
 
@@ -450,7 +428,7 @@ const ProductPage = ({ product, setView, user }) => {
                 ) : (
                     <p className="text-gray-500">No reviews yet. Be the first to share your thoughts!</p>
                 )}
-                {user && !checkIsViewer(user) && <ReviewFormComponent productId={product.id} user={user} />}
+                {user && !checkIsViewer(user) && <ReviewFormComponent talentId={talent.id} user={user} />}
             </div>
         </main>
     );
@@ -460,11 +438,11 @@ const LoginScreen = () => {
     const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [isLoading, setIsLoading] = useState(false);
     const formatEmail = (user) => `${user.trim()}@shopnext.dev`;
     const handleSignIn = async (e) => { e.preventDefault(); setError(''); setIsLoading(true); try { await signInWithEmailAndPassword(auth, formatEmail(username), password); } catch (err) { setError(err.message); } setIsLoading(false); };
-    return (<div className="flex items-center justify-center min-h-[80vh] bg-gray-50"><div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-xl border"><div className="flex justify-center"><Store className="h-12 w-12 text-blue-600" /></div><h2 className="text-2xl font-bold text-center text-gray-800">Welcome to ShopNext</h2><p className="text-center text-gray-500">Please sign in to view products.</p><form onSubmit={handleSignIn} className="space-y-4"><div><label className="text-sm font-medium text-gray-700">Username</label><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div><div><label className="text-sm font-medium text-gray-700">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}<button type="submit" disabled={isLoading} className="w-full py-3 font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-blue-300 cursor-pointer">{isLoading ? 'Signing In...' : 'Sign In'}</button></form></div></div>);
+    return (<div className="flex items-center justify-center min-h-[80vh] bg-gray-50"><div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-xl border"><div className="flex justify-center"><Store className="h-12 w-12 text-blue-600" /></div><h2 className="text-2xl font-bold text-center text-gray-800">Welcome to ShopNext</h2><p className="text-center text-gray-500">Please sign in to view talent.</p><form onSubmit={handleSignIn} className="space-y-4"><div><label className="text-sm font-medium text-gray-700">Username</label><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div><div><label className="text-sm font-medium text-gray-700">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}<button type="submit" disabled={isLoading} className="w-full py-3 font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-blue-300 cursor-pointer">{isLoading ? 'Signing In...' : 'Sign In'}</button></form></div></div>);
 };
 
-const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
-    const [product, setProduct] = useState({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
+const CreateTalentForm = ({ setVendorView, user, editingTalent }) => {
+    const [talent, setTalent] = useState({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
     const [editorLoaded, setEditorLoaded] = useState(false);
 
     // New categorized tags
@@ -476,7 +454,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     const [highlights, setHighlights] = useState([{ title: '', text: '' }]);
 
     // New RTB Images state
-    const [rtbImages, setRtbImages] = useState(RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
+    const [rtbImages, setRtbImages] = useState(AVATAR_RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
     const [videoUrls, setVideoUrls] = useState([]);
     const [uploadingSlot, setUploadingSlot] = useState(null);
     const [featuredImageId, setFeaturedImageId] = useState(1); // Default to first RTB slot
@@ -489,81 +467,81 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
 
     // Initialize form with editing data
     useEffect(() => {
-        if (editingProduct) {
-            setProduct({
-                name: editingProduct.name || '',
-                subtitle: editingProduct.subtitle || '',
-                shortDescription: editingProduct.shortDescription || '',
-                longDescription: editingProduct.longDescription || '',
-                price: editingProduct.price || '',
-                category: editingProduct.category || ''
+        if (editingTalent) {
+            setTalent({
+                name: editingTalent.name || '',
+                subtitle: editingTalent.subtitle || '',
+                shortDescription: editingTalent.shortDescription || '',
+                longDescription: editingTalent.longDescription || '',
+                price: editingTalent.price || '',
+                category: editingTalent.category || ''
             });
 
             // Handle both old and new tag formats
-            if (editingProduct.tags && typeof editingProduct.tags === 'object' && !Array.isArray(editingProduct.tags)) {
-                setTriggerTags(editingProduct.tags.trigger || []);
-                setSolutionTags(editingProduct.tags.solution || []);
-            } else if (Array.isArray(editingProduct.tags)) {
+            if (editingTalent.tags && typeof editingTalent.tags === 'object' && !Array.isArray(editingTalent.tags)) {
+                setTriggerTags(editingTalent.tags.trigger || []);
+                setSolutionTags(editingTalent.tags.solution || []);
+            } else if (Array.isArray(editingTalent.tags)) {
                 // Old format - put all in solution tags
-                setSolutionTags(editingProduct.tags);
+                setSolutionTags(editingTalent.tags);
                 setTriggerTags([]);
             }
 
             // Handle display tags
-            if (editingProduct.displayTags) {
-                setDisplayTriggerTags(editingProduct.displayTags.trigger || []);
-                setDisplaySolutionTags(editingProduct.displayTags.solution || []);
+            if (editingTalent.displayTags) {
+                setDisplayTriggerTags(editingTalent.displayTags.trigger || []);
+                setDisplaySolutionTags(editingTalent.displayTags.solution || []);
             }
 
-            setHighlights(editingProduct.highlights && editingProduct.highlights.length > 0 ? editingProduct.highlights : [{ title: '', text: '' }]);
+            setHighlights(editingTalent.highlights && editingTalent.highlights.length > 0 ? editingTalent.highlights : [{ title: '', text: '' }]);
 
             // Handle both old and new image formats
-            if (editingProduct.rtbImages && editingProduct.rtbImages.length > 0) {
-                setRtbImages(editingProduct.rtbImages);
+            if (editingTalent.rtbImages && editingTalent.rtbImages.length > 0) {
+                setRtbImages(editingTalent.rtbImages);
                 // Set featured image ID if it exists, otherwise default to first image with URL
-                if (editingProduct.featuredImageId) {
-                    setFeaturedImageId(editingProduct.featuredImageId);
+                if (editingTalent.featuredImageId) {
+                    setFeaturedImageId(editingTalent.featuredImageId);
                 } else {
-                    const firstImageWithUrl = editingProduct.rtbImages.find(img => img.url);
+                    const firstImageWithUrl = editingTalent.rtbImages.find(img => img.url);
                     setFeaturedImageId(firstImageWithUrl?.rtbId || 1);
                 }
-            } else if (editingProduct.imageUrls && editingProduct.imageUrls.length > 0) {
+            } else if (editingTalent.imageUrls && editingTalent.imageUrls.length > 0) {
                 // Migrate old format - map images to RTB slots
-                const migratedRtbImages = RTB_LABELS.map((rtb, index) => ({
+                const migratedRtbImages = AVATAR_RTB_LABELS.map((rtb, index) => ({
                     rtbId: rtb.id,
                     rtbLabel: rtb.name,
-                    url: editingProduct.imageUrls[index] || ''
+                    url: editingTalent.imageUrls[index] || ''
                 }));
                 setRtbImages(migratedRtbImages);
             }
 
             // Handle video - load videoUrls array, with backward compat for old single videoUrl
-            if (editingProduct.videoUrls && editingProduct.videoUrls.length > 0) {
-                setVideoUrls(editingProduct.videoUrls);
-            } else if (editingProduct.videoUrl) {
-                setVideoUrls([editingProduct.videoUrl]);
+            if (editingTalent.videoUrls && editingTalent.videoUrls.length > 0) {
+                setVideoUrls(editingTalent.videoUrls);
+            } else if (editingTalent.videoUrl) {
+                setVideoUrls([editingTalent.videoUrl]);
             }
 
             // Load downloadable media selections
-            if (editingProduct.downloadableMedia) {
-                setDownloadableImages(editingProduct.downloadableMedia.images || []);
-                setDownloadableVideos(editingProduct.downloadableMedia.videos || []);
+            if (editingTalent.downloadableMedia) {
+                setDownloadableImages(editingTalent.downloadableMedia.images || []);
+                setDownloadableVideos(editingTalent.downloadableMedia.videos || []);
             }
         } else {
-            // Reset form for new product
-            setProduct({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
+            // Reset form for new talent
+            setTalent({ name: '', subtitle: '', shortDescription: '', longDescription: '', price: '', category: '' });
             setTriggerTags([]);
             setSolutionTags([]);
             setDisplayTriggerTags([]);
             setDisplaySolutionTags([]);
             setHighlights([{ title: '', text: '' }]);
-            setRtbImages(RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
+            setRtbImages(AVATAR_RTB_LABELS.map(rtb => ({ rtbId: rtb.id, rtbLabel: rtb.name, url: '' })));
             setVideoUrls([]);
             setDownloadableImages([]);
             setDownloadableVideos([]);
         }
         setEditorLoaded(true);
-    }, [editingProduct]);
+    }, [editingTalent]);
 
     // Image upload handler
     const handleUploadImage = async (file, rtbId) => {
@@ -571,7 +549,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         setUploadingSlot(rtbId);
         setError('');
 
-        const fileRef = storageRef(storage, `products/${Date.now()}_${file.name}`);
+        const fileRef = storageRef(storage, `avatars/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(fileRef, file);
 
         uploadTask.on('state_changed',
@@ -598,7 +576,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         setIsUploading(true);
         setError('');
 
-        const fileRef = storageRef(storage, `product-videos/${Date.now()}_${file.name}`);
+        const fileRef = storageRef(storage, `avatar-videos/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(fileRef, file);
 
         uploadTask.on('state_changed',
@@ -652,7 +630,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setProduct(prev => ({ ...prev, [name]: value }));
+        setTalent(prev => ({ ...prev, [name]: value }));
     };
 
     const handleHighlightChange = (index, field, value) => {
@@ -671,13 +649,13 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         }
     };
 
-    const handleSaveProduct = async (e) => {
+    const handleSaveTalent = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
 
-        if (!product.name || !product.price) {
-            setError('Product Name and Price are required.');
+        if (!talent.name || !talent.price) {
+            setError('Talent Name and Price are required.');
             return;
         }
 
@@ -696,8 +674,8 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
             const validDisplaySolutionTags = displaySolutionTags.filter(t => validSolutionTags.includes(t));
 
             const commonData = {
-                ...product,
-                price: parseFloat(product.price),
+                ...talent,
+                price: parseFloat(talent.price),
                 // New tag format - only valid tags within limits
                 tags: {
                     trigger: validTriggerTags,
@@ -721,17 +699,17 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 imageUrl,
                 imageUrls,
                 videoUrl: (videoUrls && videoUrls.length > 0) ? videoUrls[0] : '',
-                class: editingProduct ? editingProduct.class : user.customClaims.class
+                class: editingTalent ? editingTalent.class : user.customClaims.avatarClass
             };
 
-            if (editingProduct) {
-                await updateDoc(doc(db, "products", editingProduct.id), {
+            if (editingTalent) {
+                await updateDoc(doc(db, "avatars", editingTalent.id), {
                     ...commonData,
-                    featuredOrder: editingProduct.featuredOrder !== undefined ? editingProduct.featuredOrder : 999
+                    featuredOrder: editingTalent.featuredOrder !== undefined ? editingTalent.featuredOrder : 999
                 });
-                setSuccess('Product updated successfully!');
+                setSuccess('Hirable Talent updated successfully!');
             } else {
-                await addDoc(collection(db, "products"), {
+                await addDoc(collection(db, "avatars"), {
                     ...commonData,
                     vendorId: user.uid,
                     vendor: user.displayName,
@@ -740,11 +718,11 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                     reviewCount: 0,
                     featuredOrder: Date.now()
                 });
-                setSuccess('Product saved successfully!');
+                setSuccess('Hirable Talent saved successfully!');
             }
             setTimeout(() => { setVendorView('dashboard'); }, 1500);
         } catch (err) {
-            setError('Failed to save product. ' + err.message);
+            setError('Failed to save talent. ' + err.message);
         }
     };
 
@@ -752,42 +730,42 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
         return <div className="text-center py-8">Loading Editor...</div>;
     }
 
-    const [showDarkModeTip, setShowDarkModeTip] = useState(!editingProduct);
+    const [showDarkModeTip, setShowDarkModeTip] = useState(!editingTalent);
 
     return (
         <div className="bg-white p-8 rounded-lg shadow-md border max-w-4xl mx-auto">
-            {showDarkModeTip && !editingProduct && (
+            {showDarkModeTip && !editingTalent && (
                 <div className="mb-4 flex items-center justify-between bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-md">
                     <span className="text-sm">If you can&#39;t see the words, adjust your machine from dark mode to light mode</span>
                     <button type="button" onClick={() => setShowDarkModeTip(false)} className="ml-4 text-yellow-800 hover:text-yellow-900 cursor-pointer"><X className="h-4 w-4" /></button>
                 </div>
             )}
-            <h3 className="text-xl font-bold mb-6 text-gray-800">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
-            <form onSubmit={handleSaveProduct} className="space-y-6">
+            <h3 className="text-xl font-bold mb-6 text-gray-800">{editingTalent ? 'Edit Hirable Talent' : 'Add New Hirable Talent'}</h3>
+            <form onSubmit={handleSaveTalent} className="space-y-6">
                 {/* Basic Info */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Product Name</label>
-                    <input name="name" value={product.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
+                    <label className="block text-sm font-medium text-gray-700">Talent Name</label>
+                    <input name="name" value={talent.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-                    <input name="subtitle" value={product.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
+                    <input name="subtitle" value={talent.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
                 </div>
 
                 {/* Short Description - Custom Editor */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
                     <RichTextEditor
-                        value={product.shortDescription}
-                        onChange={(content) => setProduct(prev => ({ ...prev, shortDescription: content }))}
-                        placeholder="Enter a brief product description..."
+                        value={talent.shortDescription}
+                        onChange={(content) => setTalent(prev => ({ ...prev, shortDescription: content }))}
+                        placeholder="Enter a brief talent description..."
                         minHeight={250}
                     />
                 </div>
 
-                {/* Product Highlights */}
+                {/* Talent Highlights */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Highlights (Up to 6)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Talent Highlights (Up to 6)</label>
                     {highlights.map((h, i) => (
                         <div key={i} className="flex items-center gap-2 mt-2">
                             <input
@@ -818,9 +796,9 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
                     <RichTextEditor
-                        value={product.longDescription}
-                        onChange={(content) => setProduct(prev => ({ ...prev, longDescription: content }))}
-                        placeholder="Enter detailed product information..."
+                        value={talent.longDescription}
+                        onChange={(content) => setTalent(prev => ({ ...prev, longDescription: content }))}
+                        placeholder="Enter detailed talent information..."
                         minHeight={400}
                     />
                 </div>
@@ -829,11 +807,11 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Price</label>
-                        <input name="price" value={product.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md" />
+                        <input name="price" value={talent.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Category</label>
-                        <input name="category" value={product.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
+                        <input name="category" value={talent.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
                     </div>
                 </div>
 
@@ -847,6 +825,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                     setDisplayTriggerTags={setDisplayTriggerTags}
                     displaySolutionTags={displaySolutionTags}
                     setDisplaySolutionTags={setDisplaySolutionTags}
+                    entityLabel="talent"
                 />
 
                 {/* RTB Image Uploader */}
@@ -865,6 +844,9 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                     setError={setError}
                     featuredImageId={featuredImageId}
                     setFeaturedImageId={setFeaturedImageId}
+                    rtbLabels={AVATAR_RTB_LABELS}
+                    imagesSectionTitle="Talent Photos"
+                    videoSectionTitle="Talent Videos"
                 />
 
                 {/* Download Permissions */}
@@ -937,7 +919,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
                         Cancel
                     </button>
                     <button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full cursor-pointer disabled:bg-blue-300">
-                        {isUploading ? 'Uploading...' : 'Save Product'}
+                        {isUploading ? 'Uploading...' : 'Save Hirable Talent'}
                     </button>
                 </div>
             </form>
@@ -945,11 +927,11 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     );
 };
 
-const VendorDashboard = ({ user, setView, onEditProduct }) => {
-    const [vendorProducts, setVendorProducts] = useState([]);
-    useEffect(() => { if (user) { const q = query(collection(db, "products"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user]);
-    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
-    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Products ({vendorProducts.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Class: {user?.customClaims.class})</p></div><button onClick={() => { onEditProduct(null); setView({ page: 'create_product' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4 cursor-pointer"><PlusCircle className="h-5 w-5 mr-2" />Add New Product</button></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorProducts.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/e2e8f0/4a5568?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
+const VendorDashboard = ({ user, setView, onEditTalent }) => {
+    const [vendorTalents, setVendorTalents] = useState([]);
+    useEffect(() => { if (user) { const q = query(collection(db, "avatars"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorTalents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user]);
+    const handleDeleteTalent = async (talent) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "avatars", talent.id)); (talent.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (talent.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting talent: ", error); } }};
+    return (<div><div className="flex justify-between items-center mb-6"><div><h2 className="text-2xl font-bold text-gray-800">My Hirable Talent ({vendorTalents.length})</h2><p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Class: {user?.customClaims.avatarClass})</p></div><button onClick={() => { onEditTalent(null); setView({ page: 'create_talent' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4 cursor-pointer"><PlusCircle className="h-5 w-5 mr-2" />Add New Hirable Talent</button></div><div className="bg-white rounded-lg shadow-md border overflow-hidden"><table className="min-w-full divide-y divide-gray-200"><thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Talent</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead><tbody className="bg-white divide-y divide-gray-200">{vendorTalents.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/e2e8f0/4a5568?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditTalent(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteTalent(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody></table></div></div>);
 };
 
 // Modal Component
@@ -1049,7 +1031,7 @@ const DeleteUsersModal = ({ isOpen, onClose }) => {
                                 <div>
                                     <p className="font-medium text-gray-900">{user.email}</p>
                                     <p className="text-xs text-gray-500">UID: {user.uid}</p>
-                                    {user.customClaims?.class && <p className="text-xs text-blue-600">Class: {user.customClaims.class}</p>}
+                                    {user.customClaims?.avatarClass && <p className="text-xs text-blue-600">Avatar Class: {user.customClaims.avatarClass}</p>}
                                     {user.customClaims?.viewer && <p className="text-xs text-purple-600 flex items-center"><Eye className="h-3 w-3 mr-1" />Viewer</p>}
                                     {user.customClaims?.superAdmin && <p className="text-xs text-green-600 flex items-center"><ShieldCheck className="h-3 w-3 mr-1" />Super Admin</p>}
                                 </div>
@@ -1078,7 +1060,7 @@ const ManageClassesModal = ({ isOpen, onClose }) => {
 
     useEffect(() => {
         if (isOpen) {
-            const q = query(collection(db, "classes"));
+            const q = query(collection(db, "avatar-classes"));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             });
@@ -1098,7 +1080,7 @@ const ManageClassesModal = ({ isOpen, onClose }) => {
         try {
             const className = newClassName.trim().toLowerCase().replace(/\s+/g, '-');
             const displayName = newClassName.trim().charAt(0).toUpperCase() + newClassName.trim().slice(1);
-            await setDoc(doc(db, "classes", className), { name: displayName });
+            await setDoc(doc(db, "avatar-classes", className), { name: displayName });
             setMessage(`Class "${displayName}" added successfully`);
             setNewClassName('');
         } catch (error) {
@@ -1108,12 +1090,12 @@ const ManageClassesModal = ({ isOpen, onClose }) => {
     };
 
     const handleDeleteClass = async (classId, className) => {
-        if (!window.confirm(`Are you sure you want to delete class "${className}"? This will not delete associated products or users.`)) return;
+        if (!window.confirm(`Are you sure you want to delete class "${className}"? This will not delete associated talent or users.`)) return;
 
         setLoading(true);
         setMessage('');
         try {
-            await deleteDoc(doc(db, "classes", classId));
+            await deleteDoc(doc(db, "avatar-classes", classId));
             setMessage(`Class "${className}" deleted successfully`);
         } catch (error) {
             setMessage(`Error: ${error.message}`);
@@ -1178,8 +1160,8 @@ const ManageClassesModal = ({ isOpen, onClose }) => {
     );
 };
 
-const SuperAdminDashboard = ({ user, onEditProduct }) => {
-    const [allProducts, setAllProducts] = useState([]);
+const SuperAdminDashboard = ({ user, onEditTalent }) => {
+    const [allTalents, setAllTalents] = useState([]);
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
     const [draggedItem, setDraggedItem] = useState(null);
@@ -1199,7 +1181,7 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
     const [migrationMsg, setMigrationMsg] = useState('');
 
     useEffect(() => {
-        const q = query(collection(db, "classes"));
+        const q = query(collection(db, "avatar-classes"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const classList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setClasses(classList);
@@ -1212,21 +1194,21 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
 
     useEffect(() => {
         if (!selectedClass) {
-            setAllProducts([]);
+            setAllTalents([]);
             return;
         };
-        const q = query(collection(db, "products"), where("class", "==", selectedClass), orderBy("featuredOrder", "asc"));
+        const q = query(collection(db, "avatars"), where("class", "==", selectedClass), orderBy("featuredOrder", "asc"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setAllProducts(prods);
+            const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setAllTalents(items);
         });
         return () => unsubscribe();
     }, [selectedClass]);
 
-    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
-    const handleDragStart = (e, index) => { setDraggedItem(allProducts[index]); };
-    const handleDragOver = (e, index) => { e.preventDefault(); const draggedOverItem = allProducts[index]; if (draggedItem === draggedOverItem) { return; } let items = allProducts.filter(item => item !== draggedItem); items.splice(index, 0, draggedItem); setAllProducts(items); };
-    const handleDragEnd = async () => { setDraggedItem(null); const batch = writeBatch(db); allProducts.forEach((product, index) => { const productRef = doc(db, "products", product.id); batch.update(productRef, { featuredOrder: index }); }); await batch.commit(); };
+    const handleDeleteTalent = async (talent) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "avatars", talent.id)); (talent.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (talent.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting talent: ", error); } }};
+    const handleDragStart = (e, index) => { setDraggedItem(allTalents[index]); };
+    const handleDragOver = (e, index) => { e.preventDefault(); const draggedOverItem = allTalents[index]; if (draggedItem === draggedOverItem) { return; } let items = allTalents.filter(item => item !== draggedItem); items.splice(index, 0, draggedItem); setAllTalents(items); };
+    const handleDragEnd = async () => { setDraggedItem(null); const batch = writeBatch(db); allTalents.forEach((talent, index) => { const talentRef = doc(db, "avatars", talent.id); batch.update(talentRef, { featuredOrder: index }); }); await batch.commit(); };
 
     const handleCreateUser = async (e) => {
         e.preventDefault();
@@ -1237,15 +1219,15 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
         setIsLoadingUserCreation(true);
         setUserCreationMsg('');
         try {
-            const createNewVendor = httpsCallable(functions, 'createNewVendor');
-            const result = await createNewVendor({
+            const createAvatarVendor = httpsCallable(functions, 'createAvatarVendor');
+            const result = await createAvatarVendor({
                 username: newUser.username,
                 password: newUser.password,
-                class: newUser.class
+                avatarClass: newUser.class
             });
-            
+
             const className = newUser.class.trim().toLowerCase();
-            const classRef = doc(db, "classes", className);
+            const classRef = doc(db, "avatar-classes", className);
             const displayName = className.charAt(0).toUpperCase() + className.slice(1).replace(/-/g, ' ');
             await setDoc(classRef, { name: displayName });
 
@@ -1281,17 +1263,17 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
 
     // Migrate old tag format to new format
     const handleMigrateTags = async () => {
-        if (!window.confirm("This will migrate all products with old tag format (flat array) to the new format (trigger/solution objects). Continue?")) {
+        if (!window.confirm("This will migrate all talent with old tag format (flat array) to the new format (trigger/solution objects). Continue?")) {
             return;
         }
         setIsMigrating(true);
         setMigrationMsg('');
         try {
-            const productsSnapshot = await getDocs(collection(db, "products"));
+            const talentsSnapshot = await getDocs(collection(db, "avatars"));
             const batch = writeBatch(db);
             let migratedCount = 0;
 
-            productsSnapshot.docs.forEach((docSnapshot) => {
+            talentsSnapshot.docs.forEach((docSnapshot) => {
                 const data = docSnapshot.data();
                 // Check if tags is an array (old format) instead of object (new format)
                 if (Array.isArray(data.tags)) {
@@ -1301,7 +1283,7 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
                     const triggerTags = oldTags.slice(0, Math.min(halfIndex, TAG_CONFIG.MAX_TRIGGER_TAGS));
                     const solutionTags = oldTags.slice(halfIndex, halfIndex + TAG_CONFIG.MAX_SOLUTION_TAGS);
 
-                    batch.update(doc(db, "products", docSnapshot.id), {
+                    batch.update(doc(db, "avatars", docSnapshot.id), {
                         tags: {
                             trigger: triggerTags,
                             solution: solutionTags
@@ -1317,9 +1299,9 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
 
             if (migratedCount > 0) {
                 await batch.commit();
-                setMigrationMsg(`Successfully migrated ${migratedCount} product(s) to new tag format.`);
+                setMigrationMsg(`Successfully migrated ${migratedCount} talent(s) to new tag format.`);
             } else {
-                setMigrationMsg('No products needed migration. All products already use the new format.');
+                setMigrationMsg('No talent needed migration. All talent already use the new format.');
             }
         } catch (error) {
             setMigrationMsg(`Error: ${error.message}`);
@@ -1340,8 +1322,8 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
                            <p className="text-gray-500">No classes created yet.</p>
                         )}
                      </div>
-                     <h3 className="text-xl font-bold text-gray-800 mb-4">Product Order (Drag to Reorder)</h3>
-                     <div className="bg-white rounded-lg shadow-md border overflow-hidden">{allProducts.map((p, index) => (<div key={p.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd} className="flex items-center justify-between p-4 border-b last:border-b-0 cursor-move"><div className="flex items-center"><GripVertical className="h-5 w-5 text-gray-400 mr-4" /><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><div><p className="font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-500">{p.vendor}</p></div></div><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></div>))}</div>
+                     <h3 className="text-xl font-bold text-gray-800 mb-4">Talent Order (Drag to Reorder)</h3>
+                     <div className="bg-white rounded-lg shadow-md border overflow-hidden">{allTalents.map((p, index) => (<div key={p.id} draggable onDragStart={(e) => handleDragStart(e, index)} onDragOver={(e) => handleDragOver(e, index)} onDragEnd={handleDragEnd} className="flex items-center justify-between p-4 border-b last:border-b-0 cursor-move"><div className="flex items-center"><GripVertical className="h-5 w-5 text-gray-400 mr-4" /><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0]} alt={p.name} /><div><p className="font-medium text-gray-900">{p.name}</p><p className="text-xs text-gray-500">{p.vendor}</p></div></div><div className="flex space-x-4"><button onClick={() => onEditTalent(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteTalent(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></div>))}</div>
                 </div>
                 <div className="space-y-6">
                     <div>
@@ -1363,7 +1345,7 @@ const SuperAdminDashboard = ({ user, onEditProduct }) => {
                         <div className="bg-white p-6 rounded-lg shadow-md border border-purple-200">
                             <p className="text-xs text-gray-500 mb-4">
                                 <Eye className="inline h-4 w-4 mr-1 text-purple-500" />
-                                Viewers can see all classes and products but cannot make any edits.
+                                Viewers can see all classes and talent but cannot make any edits.
                             </p>
                             <form onSubmit={handleCreateViewer} className="space-y-4">
                                 <div>
@@ -1449,10 +1431,10 @@ const AdminClassSelector = ({ classes, adminViewingClass, setAdminViewingClass }
         <div className="flex items-center space-x-3 bg-white p-4 rounded-lg shadow-sm border border-blue-200">
             <Eye className="h-6 w-6 text-blue-600" />
             <label htmlFor="admin-class-select" className="font-bold text-gray-700">Admin View:</label>
-            <select 
-                id="admin-class-select" 
-                value={adminViewingClass} 
-                onChange={(e) => setAdminViewingClass(e.target.value)} 
+            <select
+                id="admin-class-select"
+                value={adminViewingClass}
+                onChange={(e) => setAdminViewingClass(e.target.value)}
                 className="p-2 border rounded-md w-full max-w-xs"
             >
                 <option value="">-- Select a Class to View --</option>
@@ -1466,21 +1448,21 @@ const AdminClassSelector = ({ classes, adminViewingClass, setAdminViewingClass }
 // --- MAIN APP COMPONENT ---
 export default function App() {
   const [view, setView] = useState({ page: 'home', id: null });
-  const [products, setProducts] = useState([]);
-  const [user, setUser] = useState(null); 
-  const [loading, setLoading] = useState(true); 
+  const [talents, setTalents] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState([]);
   const [adminViewingClass, setAdminViewingClass] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('featured');
 
 
-  const handleSignOut = async () => { 
-      setAdminViewingClass(''); 
-      await signOut(auth); 
+  const handleSignOut = async () => {
+      setAdminViewingClass('');
+      await signOut(auth);
   };
 
-  useEffect(() => { 
+  useEffect(() => {
       const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
           if (currentUser) {
               const tokenResult = await currentUser.getIdTokenResult();
@@ -1491,7 +1473,7 @@ export default function App() {
           }
           setLoading(false);
       });
-      return () => unsubscribe(); 
+      return () => unsubscribe();
   }, []);
 
   // FIXED: Add useEffect to scroll to top on view change
@@ -1500,16 +1482,16 @@ export default function App() {
   }, [view]);
 
   useEffect(() => {
-    const q = query(collection(db, "classes"));
+    const q = query(collection(db, "avatar-classes"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
   }, []);
-  
+
   useEffect(() => {
       if (!user) {
-          setProducts([]);
+          setTalents([]);
           return;
       }
 
@@ -1520,27 +1502,27 @@ export default function App() {
       // Both super admin and viewer can see all classes
       if (isSuperAdmin || isViewerUser) {
           if (adminViewingClass) {
-            q = query(collection(db, "products"), where("class", "==", adminViewingClass), orderBy("featuredOrder", "asc"));
+            q = query(collection(db, "avatars"), where("class", "==", adminViewingClass), orderBy("featuredOrder", "asc"));
           } else {
-            setProducts([]);
+            setTalents([]);
             return; // Return early if no class is selected
           }
-      } else if (user.customClaims.class) {
-          q = query(collection(db, "products"), where("class", "==", user.customClaims.class), orderBy("featuredOrder", "asc"));
+      } else if (user.customClaims.avatarClass) {
+          q = query(collection(db, "avatars"), where("class", "==", user.customClaims.avatarClass), orderBy("featuredOrder", "asc"));
       }
 
       if (q) {
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setProducts(prods);
+            const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setTalents(items);
         });
         return () => unsubscribe();
       }
   }, [user, adminViewingClass]);
 
-  // Memoized hook to handle filtering and sorting of products
-  const displayedProducts = useMemo(() => {
-    let filtered = [...products];
+  // Memoized hook to handle filtering and sorting of talents
+  const displayedTalents = useMemo(() => {
+    let filtered = [...talents];
 
     // 1. Search Filter
     if (searchQuery) {
@@ -1587,8 +1569,8 @@ export default function App() {
     }
 
     return filtered;
-  }, [products, searchQuery, sortOrder]);
-  
+  }, [talents, searchQuery, sortOrder]);
+
   const renderView = () => {
     if (loading) { return <div className="min-h-screen flex items-center justify-center text-lg">Loading Application...</div> }
     if (!user) { return <LoginScreen/> }
@@ -1597,30 +1579,30 @@ export default function App() {
     const isViewerUser = checkIsViewer(user);
 
     switch (view.page) {
-      case 'product':
-        const product = products.find(p => p.id === view.id);
-        return product ? <ProductPage product={product} setView={setView} user={user} /> : <div className="text-center py-10">Product not found.</div>;
+      case 'talent':
+        const talent = talents.find(p => p.id === view.id);
+        return talent ? <TalentPage talent={talent} setView={setView} user={user} /> : <div className="text-center py-10">Talent not found.</div>;
       case 'dashboard':
           // Viewers cannot access dashboard
           if (isViewerUser) {
             return <div className="text-center py-10">Viewers do not have dashboard access.</div>;
           }
           return isSuperAdmin
-            ? <main className="container mx-auto px-4 py-8"><SuperAdminDashboard user={user} onEditProduct={(p) => setView({ page: 'create_product', product: p })} /></main>
-            : <main className="container mx-auto px-4 py-8"><VendorDashboard user={user} setView={setView} onEditProduct={(p) => setView({ page: 'create_product', product: p })}/></main>;
-      case 'create_product':
-          // Viewers cannot create/edit products
+            ? <main className="container mx-auto px-4 py-8"><SuperAdminDashboard user={user} onEditTalent={(p) => setView({ page: 'create_talent', talent: p })} /></main>
+            : <main className="container mx-auto px-4 py-8"><VendorDashboard user={user} setView={setView} onEditTalent={(p) => setView({ page: 'create_talent', talent: p })}/></main>;
+      case 'create_talent':
+          // Viewers cannot create/edit talent
           if (isViewerUser) {
-            return <div className="text-center py-10">Viewers cannot create or edit products.</div>;
+            return <div className="text-center py-10">Viewers cannot create or edit talent.</div>;
           }
-          return <main className="container mx-auto px-4 py-8"><CreateProductForm setVendorView={() => setView({ page: 'dashboard' })} user={user} editingProduct={view.product} /></main>;
+          return <main className="container mx-auto px-4 py-8"><CreateTalentForm setVendorView={() => setView({ page: 'dashboard' })} user={user} editingTalent={view.talent} /></main>;
       case 'home':
       default:
         return (
             <>
                 {/* Show class selector for both admins and viewers */}
                 {(isSuperAdmin || isViewerUser) && <AdminClassSelector classes={classes} adminViewingClass={adminViewingClass} setAdminViewingClass={setAdminViewingClass} />}
-                <ProductGrid products={displayedProducts} setView={setView} sortOrder={sortOrder} setSortOrder={setSortOrder} />
+                <TalentGrid talents={displayedTalents} setView={setView} sortOrder={sortOrder} setSortOrder={setSortOrder} />
             </>
         );
     }

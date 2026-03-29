@@ -163,7 +163,7 @@ const RTBImageSlot = ({
     );
 };
 
-const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading }) => {
+const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading, sectionTitle = "Product Videos (Optional)" }) => {
     const fileInputRef = useRef(null);
 
     const handleClick = () => {
@@ -187,7 +187,7 @@ const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading }) => {
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                     <Video className="h-5 w-5 text-purple-600 mr-2" />
-                    <span className="font-medium text-gray-700">Product Videos (Optional)</span>
+                    <span className="font-medium text-gray-700">{sectionTitle}</span>
                 </div>
                 <span className="text-xs text-gray-500">
                     {(videoUrls || []).length}/{MEDIA_CONFIG.MAX_VIDEOS} videos, MP4 format
@@ -265,7 +265,11 @@ const RTBImageUploader = ({
     error,
     setError,
     featuredImageId,
-    setFeaturedImageId
+    setFeaturedImageId,
+    rtbLabels = RTB_LABELS,
+    imagesSectionTitle = "Product Images (RTB - Reasons To Believe)",
+    videoSectionTitle = "Product Videos (Optional)",
+    uploadGuidelines
 }) => {
     const [cropperOpen, setCropperOpen] = useState(false);
     const [cropperImage, setCropperImage] = useState(null);
@@ -288,7 +292,7 @@ const RTBImageUploader = ({
         }
 
         // Open cropper for valid images
-        const rtbLabel = RTB_LABELS.find(l => l.id === rtbId);
+        const rtbLabel = rtbLabels.find(l => l.id === rtbId);
         setCropperImage(URL.createObjectURL(file));
         setCropperFileName(file.name);
         setCropperRtbId(rtbId);
@@ -324,7 +328,7 @@ const RTBImageUploader = ({
 
     const handleEditImage = (imageUrl, rtbId) => {
         // Open cropper with existing image URL
-        const rtbLabel = RTB_LABELS.find(l => l.id === rtbId);
+        const rtbLabel = rtbLabels.find(l => l.id === rtbId);
         setCropperImage(imageUrl);
         setCropperFileName(`rtb-${rtbId}-edited.jpg`);
         setCropperRtbId(rtbId);
@@ -365,7 +369,7 @@ const RTBImageUploader = ({
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-700">
-                    Product Images (RTB - Reasons To Believe)
+                    {imagesSectionTitle}
                 </label>
                 <span className="text-xs text-gray-500">
                     {rtbImages.filter(img => img.url).length}/{MEDIA_CONFIG.MAX_IMAGES} images
@@ -376,11 +380,17 @@ const RTBImageUploader = ({
             <div className="text-xs text-gray-500 p-3 bg-blue-50 rounded-md border border-blue-100">
                 <p className="font-medium text-blue-700 mb-1">Upload Guidelines:</p>
                 <ul className="list-disc list-inside space-y-0.5 text-blue-600">
-                    <li>Each slot represents a different "Reason To Believe" for your product</li>
-                    <li>Images must be at least <b>600x600 pixels</b> (will be cropped to square)</li>
-                    <li>Hover over the <Info className="inline h-3 w-3" /> icon for guidance on each RTB</li>
-                    <li><Star className="inline h-3 w-3 fill-current text-yellow-500" /> Click the star to set a featured image (thumbnail)</li>
-                    <li><GripVertical className="inline h-3 w-3" /> Drag images to reorder them</li>
+                    {uploadGuidelines ? (
+                        uploadGuidelines.map((line, i) => <li key={i}>{line}</li>)
+                    ) : (
+                        <>
+                            <li>Each slot represents a different &quot;Reason To Believe&quot; for your product</li>
+                            <li>Images must be at least <b>600x600 pixels</b> (will be cropped to square)</li>
+                            <li>Hover over the <Info className="inline h-3 w-3" /> icon for guidance on each slot</li>
+                            <li><Star className="inline h-3 w-3 fill-current text-yellow-500" /> Click the star to set a featured image (thumbnail)</li>
+                            <li><GripVertical className="inline h-3 w-3" /> Drag images to reorder them</li>
+                        </>
+                    )}
                 </ul>
             </div>
 
@@ -392,7 +402,7 @@ const RTBImageUploader = ({
             {/* RTB Image Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {rtbImages.map((imageData) => {
-                    const rtbLabel = RTB_LABELS.find(l => l.id === imageData.rtbId);
+                    const rtbLabel = rtbLabels.find(l => l.id === imageData.rtbId);
                     if (!rtbLabel) return null;
                     return (
                         <RTBImageSlot
@@ -421,6 +431,7 @@ const RTBImageUploader = ({
                 onUpload={onUploadVideo}
                 onRemove={onRemoveVideo}
                 isUploading={isUploading}
+                sectionTitle={videoSectionTitle}
             />
 
             {/* Image Cropper Modal */}
