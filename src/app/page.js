@@ -464,6 +464,7 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showDarkModeTip, setShowDarkModeTip] = useState(!editingProduct);
 
     // Initialize form with editing data
     useEffect(() => {
@@ -729,8 +730,6 @@ const CreateProductForm = ({ setVendorView, user, editingProduct }) => {
     if (!editorLoaded) {
         return <div className="text-center py-8">Loading Editor...</div>;
     }
-
-    const [showDarkModeTip, setShowDarkModeTip] = useState(!editingProduct);
 
     return (
         <div className="bg-white p-8 rounded-lg shadow-md border max-w-4xl mx-auto">

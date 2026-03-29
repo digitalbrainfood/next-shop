@@ -464,6 +464,7 @@ const CreateTalentForm = ({ setVendorView, user, editingTalent }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showDarkModeTip, setShowDarkModeTip] = useState(!editingTalent);
 
     // Initialize form with editing data
     useEffect(() => {
@@ -729,8 +730,6 @@ const CreateTalentForm = ({ setVendorView, user, editingTalent }) => {
     if (!editorLoaded) {
         return <div className="text-center py-8">Loading Editor...</div>;
     }
-
-    const [showDarkModeTip, setShowDarkModeTip] = useState(!editingTalent);
 
     return (
         <div className="bg-white p-8 rounded-lg shadow-md border max-w-4xl mx-auto">
