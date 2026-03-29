@@ -7,33 +7,11 @@ import RichTextEditor from '../components/RichTextEditor';
 import TagManager from '../components/TagManager';
 import RTBImageUploader from '../components/RTBImageUploader';
 import { RTB_LABELS, TAG_CONFIG, TAG_CATEGORIES, isViewer as checkIsViewer, isSuperAdmin as checkIsSuperAdmin } from '../lib/constants';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, getDocs, writeBatch, orderBy, setDoc } from "firebase/firestore";
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
-import { getFunctions, httpsCallable } from "firebase/functions";
-
-
-// --- FIREBASE INITIALIZATION ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDiCbTkbfn3LHAZnvlBxYZEDU1Ng_LftdA",
-  authDomain: "nextshop-a17fe.firebaseapp.com",
-  projectId: "nextshop-a17fe",
-  storageBucket: "nextshop-a17fe.firebasestorage.app",
-  messagingSenderId: "135352358131",
-  appId: "1:135352358131:web:1eed317a816366721f1386",
-  measurementId: "G-98EJ5Y0RMG"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const functions = getFunctions(app, 'us-central1');
-
-
-// --- SUPER ADMIN CONFIGURATION ---
-const SUPER_ADMIN_UID = "RnBej9HSStVJXA0rtIB02W0R1yv2";
+import { auth, db, storage, functions, SUPER_ADMIN_UID } from '../lib/firebase';
+import { onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, getDocs, writeBatch, orderBy, setDoc } from "firebase/firestore";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { httpsCallable } from "firebase/functions";
 
 
 // --- UI COMPONENTS ---
