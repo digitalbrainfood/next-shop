@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     School, CreditCard, Lock, CheckCircle2, Check, ChevronRight, ChevronLeft,
-    Zap, Star, Building, ShieldCheck, Loader2, Copy, ClipboardCheck,
+    ShieldCheck, Loader2, Copy, ClipboardCheck,
     Mail, Globe, Key, Users, GraduationCap, Download, Settings, Palette,
     Plus, Trash2, Image as ImageIcon, Monitor
 } from 'lucide-react';
@@ -11,59 +11,12 @@ import {
 
 const STEPS = [
     { label: 'School Info', icon: School },
-    { label: 'Select Plan', icon: CreditCard },
     { label: 'Payment', icon: Lock },
     { label: 'Setup', icon: Settings },
     { label: 'Confirmation', icon: CheckCircle2 },
 ];
 
-const PLANS = [
-    {
-        id: 'starter',
-        name: 'Starter',
-        price: 499,
-        icon: Zap,
-        color: 'text-amber-500',
-        features: [
-            'Up to 200 students',
-            'Basic analytics dashboard',
-            'Email support',
-            '5 admin accounts',
-            '1 platform instance',
-        ],
-    },
-    {
-        id: 'standard',
-        name: 'Standard',
-        price: 999,
-        icon: Star,
-        color: 'text-blue-600',
-        recommended: true,
-        features: [
-            'Up to 1,000 students',
-            'Advanced analytics & reporting',
-            'Priority email & phone support',
-            '25 admin accounts',
-            'Custom branding',
-            '2 platform instances',
-        ],
-    },
-    {
-        id: 'enterprise',
-        name: 'Enterprise',
-        price: 2499,
-        icon: Building,
-        color: 'text-purple-600',
-        features: [
-            'Unlimited students',
-            'Full analytics suite with exports',
-            'Dedicated account manager',
-            'Unlimited admin accounts',
-            'Custom branding & domain',
-            'API access',
-        ],
-    },
-];
+const ANNUAL_PRICE = 50;
 
 const generateLicenseKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -211,76 +164,7 @@ const SchoolInfoStep = ({ formData, updateFormData, onNext, errors }) => (
     </div>
 );
 
-// --- STEP 2: PLAN SELECTION ---
-
-const PlanSelectionStep = ({ formData, updateFormData, onNext, onBack }) => (
-    <div>
-        <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Choose Your Plan</h2>
-            <p className="text-gray-500 mt-1">Select the plan that best fits your institution.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {PLANS.map((plan) => {
-                const Icon = plan.icon;
-                const isSelected = formData.selectedPlan === plan.id;
-                return (
-                    <div
-                        key={plan.id}
-                        onClick={() => updateFormData('selectedPlan', plan.id)}
-                        className={`relative border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${
-                            isSelected ? 'border-blue-600 bg-blue-50 shadow-md ring-2 ring-blue-600' : 'border-gray-200 hover:border-blue-300'
-                        }`}
-                    >
-                        {plan.recommended && (
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">Recommended</span>
-                            </div>
-                        )}
-                        <div className="text-center mb-4 pt-2">
-                            <Icon className={`h-8 w-8 mx-auto mb-2 ${plan.color}`} />
-                            <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                            <div className="mt-2">
-                                <span className="text-3xl font-bold text-gray-900">${plan.price.toLocaleString()}</span>
-                                <span className="text-gray-500 text-sm"> /year</span>
-                            </div>
-                        </div>
-                        <ul className="space-y-2">
-                            {plan.features.map((feature, i) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                        {isSelected && (
-                            <div className="mt-4 text-center">
-                                <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600">
-                                    <CheckCircle2 className="h-4 w-4" /> Selected
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
-        <div className="flex justify-between mt-8">
-            <button
-                onClick={onBack}
-                className="flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-                <ChevronLeft className="h-5 w-5" /> Back
-            </button>
-            <button
-                onClick={onNext}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
-            >
-                Next <ChevronRight className="h-5 w-5" />
-            </button>
-        </div>
-    </div>
-);
-
-// --- STEP 3: PAYMENT ---
+// --- STEP 2: PAYMENT ---
 
 const formatCardNumber = (value) => {
     const digits = value.replace(/\D/g, '').slice(0, 16);
@@ -294,8 +178,6 @@ const formatExpiry = (value) => {
 };
 
 const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing, errors }) => {
-    const selectedPlan = PLANS.find(p => p.id === formData.selectedPlan) || PLANS[1];
-
     return (
         <div>
             <div className="mb-6">
@@ -308,14 +190,14 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
                     <div className="bg-gray-50 rounded-xl p-6 sticky top-4">
                         <h3 className="font-bold text-gray-900 mb-4">Order Summary</h3>
                         <div className="flex justify-between items-center mb-2">
-                            <span className="text-gray-600">{selectedPlan.name} Plan</span>
-                            <span className="font-semibold">${selectedPlan.price.toLocaleString()}</span>
+                            <span className="text-gray-600">Professor License</span>
+                            <span className="font-semibold">${ANNUAL_PRICE}.00</span>
                         </div>
-                        <p className="text-xs text-gray-400 mb-4">Annual subscription</p>
+                        <p className="text-xs text-gray-400 mb-4">Annual subscription &middot; per professor</p>
                         <div className="border-t border-gray-200 pt-3 space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Subtotal</span>
-                                <span>${selectedPlan.price.toLocaleString()}.00</span>
+                                <span>${ANNUAL_PRICE}.00</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Tax</span>
@@ -323,7 +205,7 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
                             </div>
                             <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                                 <span>Total</span>
-                                <span>${selectedPlan.price.toLocaleString()}.00</span>
+                                <span>${ANNUAL_PRICE}.00</span>
                             </div>
                         </div>
                         <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
@@ -449,7 +331,8 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
                     {isProcessing ? (
                         <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        <>Pay ${selectedPlan.price.toLocaleString()}.00</>
+                        <>Pay ${ANNUAL_PRICE}.00</>
+
                     )}
                 </button>
             </div>
@@ -829,8 +712,6 @@ const InstanceSetupStep = ({ formData, updateFormData, onNext, onBack, errors })
 const ConfirmationStep = ({ formData, licenseKey }) => {
     const [copied, setCopied] = useState(false);
     const [showCheck, setShowCheck] = useState(false);
-    const selectedPlan = PLANS.find(p => p.id === formData.selectedPlan) || PLANS[1];
-
     useEffect(() => {
         const timer = setTimeout(() => setShowCheck(true), 100);
         return () => clearTimeout(timer);
@@ -890,10 +771,10 @@ const ConfirmationStep = ({ formData, licenseKey }) => {
             {/* Plan Summary */}
             <div className="max-w-md mx-auto bg-blue-50 rounded-xl p-4 mb-8 flex justify-between items-center">
                 <div className="text-left">
-                    <p className="font-semibold text-gray-900">{selectedPlan.name} Plan</p>
+                    <p className="font-semibold text-gray-900">Professor License</p>
                     <p className="text-sm text-gray-500">Annual subscription</p>
                 </div>
-                <p className="text-xl font-bold text-blue-600">${selectedPlan.price.toLocaleString()}/yr</p>
+                <p className="text-xl font-bold text-blue-600">${ANNUAL_PRICE}/yr</p>
             </div>
 
             {/* Next Steps */}
@@ -943,7 +824,6 @@ const INITIAL_FORM_DATA = {
     phone: '',
     schoolWebsite: '',
     studentCount: '',
-    selectedPlan: 'standard',
     cardNumber: '',
     cardExpiry: '',
     cardCvc: '',
@@ -1007,7 +887,7 @@ export default function TestingPage() {
         return Object.keys(errs).length === 0;
     };
 
-    const validateStep4 = () => {
+    const validateSetup = () => {
         const errs = {};
         if (!formData.subdomain.trim() || formData.subdomain.length < 3) errs.subdomain = 'Subdomain must be at least 3 characters';
         if (!formData.displayName.trim()) errs.displayName = 'Display name is required';
@@ -1021,9 +901,8 @@ export default function TestingPage() {
 
     const handleNext = () => {
         if (currentStep === 0 && !validateStep1()) return;
-        if (currentStep === 3 && !validateStep4()) return;
-        if (currentStep === 3) {
-            // Setup complete — generate license key and go to confirmation
+        if (currentStep === 2 && !validateSetup()) return;
+        if (currentStep === 2) {
             setLicenseKey(generateLicenseKey());
         }
         setErrors({});
@@ -1042,7 +921,7 @@ export default function TestingPage() {
         setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
-            setCurrentStep(3);
+            setCurrentStep(2);
             window.scrollTo(0, 0);
         }, 2500);
     };
@@ -1052,12 +931,10 @@ export default function TestingPage() {
             case 0:
                 return <SchoolInfoStep formData={formData} updateFormData={updateFormData} onNext={handleNext} errors={errors} />;
             case 1:
-                return <PlanSelectionStep formData={formData} updateFormData={updateFormData} onNext={handleNext} onBack={handleBack} />;
-            case 2:
                 return <PaymentStep formData={formData} updateFormData={updateFormData} onSubmit={handlePayment} onBack={handleBack} isProcessing={isProcessing} errors={errors} />;
-            case 3:
+            case 2:
                 return <InstanceSetupStep formData={formData} updateFormData={updateFormData} onNext={handleNext} onBack={handleBack} errors={errors} />;
-            case 4:
+            case 3:
                 return <ConfirmationStep formData={formData} licenseKey={licenseKey} />;
             default:
                 return null;
@@ -1085,7 +962,7 @@ export default function TestingPage() {
                 </div>
 
                 {/* Trust badges */}
-                {currentStep < 4 && (
+                {currentStep < 3 && (
                     <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-gray-400">
                         <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4" /> SSL Encrypted</span>
                         <span className="flex items-center gap-1"><Lock className="h-4 w-4" /> PCI Compliant</span>
