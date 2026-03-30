@@ -811,6 +811,7 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
         entityLabel: 'talent',
         imagesSectionTitle: 'Talent Photos',
         videoSectionTitle: 'Talent Videos',
+        videoLabels: ['Motion', 'Motion & Voice', 'Personality Example', 'Influence Example'],
     } : {
         collectionName: 'products',
         storagePath: 'products',
@@ -1227,6 +1228,7 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
                     rtbLabels={config.rtbLabels}
                     imagesSectionTitle={config.imagesSectionTitle}
                     videoSectionTitle={config.videoSectionTitle}
+                    videoLabels={config.videoLabels}
                 />
 
                 {/* Download Permissions */}
@@ -1280,7 +1282,7 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
                                                 className="h-4 w-4 rounded border-gray-300 text-blue-600 cursor-pointer"
                                             />
                                             <Video className="h-5 w-5 text-gray-500" />
-                                            <span className="text-sm text-gray-700">Video {index + 1}</span>
+                                            <span className="text-sm text-gray-700">{config.videoLabels && index < config.videoLabels.length ? config.videoLabels[index] : config.videoLabels ? (() => { try { const path = decodeURIComponent(new URL(url).pathname); return path.split('/').pop().replace(/^\d+_/, ''); } catch { return `Video ${index + 1}`; } })() : `Video ${index + 1}`}</span>
                                         </label>
                                     ))}
                                 </div>

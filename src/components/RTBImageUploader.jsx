@@ -163,7 +163,15 @@ const RTBImageSlot = ({
     );
 };
 
-const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading, sectionTitle = "Product Videos (Optional)" }) => {
+const getVideoLabel = (index, url, videoLabels) => {
+    if (videoLabels && index < videoLabels.length) return videoLabels[index];
+    if (videoLabels && url) {
+        try { const path = decodeURIComponent(new URL(url).pathname); return path.split('/').pop().replace(/^\d+_/, ''); } catch { return `Video ${index + 1}`; }
+    }
+    return `Video ${index + 1}`;
+};
+
+const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading, sectionTitle = "Product Videos (Optional)", videoLabels }) => {
     const fileInputRef = useRef(null);
 
     const handleClick = () => {
@@ -212,7 +220,7 @@ const VideoUploadSlot = ({ videoUrls, onUpload, onRemove, isUploading, sectionTi
                                 <Trash2 className="h-4 w-4" />
                             </button>
                             <div className="absolute top-2 left-2 bg-purple-600 text-white rounded-full px-2 py-0.5 text-xs font-bold">
-                                {index + 1}
+                                {getVideoLabel(index, url, videoLabels)}
                             </div>
                         </div>
                     ))}
@@ -269,6 +277,7 @@ const RTBImageUploader = ({
     rtbLabels = RTB_LABELS,
     imagesSectionTitle = "Product Images (RTB - Reasons To Believe)",
     videoSectionTitle = "Product Videos (Optional)",
+    videoLabels,
     uploadGuidelines
 }) => {
     const [cropperOpen, setCropperOpen] = useState(false);
@@ -432,6 +441,7 @@ const RTBImageUploader = ({
                 onRemove={onRemoveVideo}
                 isUploading={isUploading}
                 sectionTitle={videoSectionTitle}
+                videoLabels={videoLabels}
             />
 
             {/* Image Cropper Modal */}
