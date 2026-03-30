@@ -2013,21 +2013,23 @@ export default function App() {
 
   // Product classes subscription
   useEffect(() => {
+    if (!user) { setClasses([]); return; }
     const q = query(collection(db, "classes"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         setClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Avatar classes subscription
   useEffect(() => {
+    if (!user) { setAvatarClasses([]); return; }
     const q = query(collection(db, "avatar-classes"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
         setAvatarClasses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // Products subscription
   useEffect(() => {
