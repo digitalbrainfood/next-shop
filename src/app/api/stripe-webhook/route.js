@@ -3,8 +3,9 @@ import Stripe from 'stripe';
 import { adminDb, adminAuth } from '../../../lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+function getStripe() {
+    return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 function generateLicenseKey() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -128,7 +129,7 @@ export async function POST(request) {
     let event;
 
     try {
-        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        event = getStripe().webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
         console.error('Webhook signature verification failed:', err.message);
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });

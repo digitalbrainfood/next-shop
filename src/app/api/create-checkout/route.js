@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function getStripe() {
+    return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 const VALID_PLATFORMS = ['products', 'avatars'];
 
@@ -60,7 +62,7 @@ export async function POST(request) {
         const { schoolName, email, studentCount, platforms } = body;
 
         // Create a Stripe Checkout Session
-        const session = await stripe.checkout.sessions.create({
+        const session = await getStripe().checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'subscription',
             customer_email: email.trim(),
