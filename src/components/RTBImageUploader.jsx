@@ -386,8 +386,10 @@ const RTBImageUploader = ({
             {/* Cropper Modal */}
             {cropperOpen && cropperImage && (
                 <ImageCropperModal
+                    isOpen={cropperOpen}
                     imageSrc={cropperImage}
-                    onComplete={handleCropComplete}
+                    fileName={cropperFileName}
+                    onCropComplete={handleCropComplete}
                     onClose={handleCropperClose}
                     rtbLabel={cropperRtbLabel}
                 />

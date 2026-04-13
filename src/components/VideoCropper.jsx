@@ -16,11 +16,13 @@ async function getFFmpeg() {
 
         const ffmpeg = new FFmpeg();
 
+        // Use single-threaded build — doesn't require SharedArrayBuffer / COOP+COEP headers
         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
         await ffmpeg.load({
             coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
             wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
         });
+        // Note: omitting workerURL intentionally to avoid multi-threaded mode
 
         ffmpegInstance = ffmpeg;
         return ffmpeg;
