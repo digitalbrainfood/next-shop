@@ -6,17 +6,17 @@ import {
     Mail, Globe, Key, Users, GraduationCap, Download, Settings, Palette,
     Plus, Trash2, Image as ImageIcon, Monitor
 } from 'lucide-react';
+import { getStripe } from '../../lib/stripe';
 
 // --- CONSTANTS ---
 
 const STEPS = [
     { label: 'School Info', icon: School },
-    { label: 'Payment', icon: Lock },
-    { label: 'Setup', icon: Settings },
+    { label: 'Payment', icon: CreditCard },
     { label: 'Confirmation', icon: CheckCircle2 },
 ];
 
-const ANNUAL_PRICE = 50;
+const MONTHLY_PRICE = 20;
 
 const generateLicenseKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -178,6 +178,52 @@ const formatExpiry = (value) => {
 };
 
 const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing, errors }) => {
+    const [stripeLoading, setStripeLoading] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('stripe'); // 'stripe' or 'card'
+    const [stripeError, setStripeError] = useState('');
+
+    const handleStripeCheckout = async () => {
+        setStripeLoading(true);
+        setStripeError('');
+        try {
+            const response = await fetch('/api/create-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    schoolName: formData.schoolName,
+                    email: formData.email,
+                    studentCount: formData.studentCount,
+                    platforms: formData.platforms || ['products'],
+                    adminFirstName: formData.adminFirstName,
+                    adminLastName: formData.adminLastName,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                setStripeError(data.error);
+                setStripeLoading(false);
+                return;
+            }
+
+            // Redirect to Stripe Checkout
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                const stripe = await getStripe();
+                const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+                if (error) {
+                    setStripeError(error.message);
+                }
+            }
+        } catch (err) {
+            setStripeError('Unable to connect to payment service. You can use the manual form below.');
+            setPaymentMethod('card');
+        }
+        setStripeLoading(false);
+    };
+
     return (
         <div>
             <div className="mb-6">
@@ -191,13 +237,13 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
                         <h3 className="font-bold text-gray-900 mb-4">Order Summary</h3>
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-gray-600">Professor License</span>
-                            <span className="font-semibold">${ANNUAL_PRICE}.00</span>
+                            <span className="font-semibold">${MONTHLY_PRICE}.00</span>
                         </div>
-                        <p className="text-xs text-gray-400 mb-4">Annual subscription &middot; per professor</p>
+                        <p className="text-xs text-gray-400 mb-4">Monthly subscription &middot; per professor</p>
                         <div className="border-t border-gray-200 pt-3 space-y-2">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Subtotal</span>
-                                <span>${ANNUAL_PRICE}.00</span>
+                                <span>${MONTHLY_PRICE}.00</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-500">Tax</span>
@@ -205,111 +251,150 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
                             </div>
                             <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg">
                                 <span>Total</span>
-                                <span>${ANNUAL_PRICE}.00</span>
+                                <span>${MONTHLY_PRICE}.00</span>
                             </div>
                         </div>
                         <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
                             <ShieldCheck className="h-4 w-4 text-green-500" />
-                            <span>256-bit SSL encrypted payment</span>
+                            <span>Secure payment powered by Stripe</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Payment Form */}
-                <div className="lg:col-span-3 relative">
-                    {isProcessing && (
-                        <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-xl">
-                            <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-3" />
-                            <p className="text-gray-700 font-medium">Processing your payment...</p>
-                            <p className="text-gray-400 text-sm mt-1">This may take a moment</p>
-                        </div>
-                    )}
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name on Card *</label>
-                            <input
-                                type="text"
-                                value={formData.cardName}
-                                onChange={(e) => updateFormData('cardName', e.target.value)}
-                                placeholder="John Smith"
-                                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardName ? 'border-red-400' : 'border-gray-300'}`}
-                            />
-                            {errors.cardName && <p className="text-red-500 text-xs mt-1">{errors.cardName}</p>}
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Card Number *</label>
-                            <div className="relative">
-                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                <input
-                                    type="text"
-                                    value={formData.cardNumber}
-                                    onChange={(e) => updateFormData('cardNumber', formatCardNumber(e.target.value))}
-                                    placeholder="1234 5678 9012 3456"
-                                    maxLength={19}
-                                    className={`w-full border rounded-lg pl-11 pr-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardNumber ? 'border-red-400' : 'border-gray-300'}`}
-                                />
+                {/* Payment Options */}
+                <div className="lg:col-span-3">
+                    {/* Stripe Checkout Button */}
+                    <div className="mb-6">
+                        <button
+                            onClick={handleStripeCheckout}
+                            disabled={stripeLoading || isProcessing}
+                            className="w-full flex items-center justify-center gap-3 bg-[#635bff] hover:bg-[#5851db] text-white py-4 rounded-xl font-semibold transition-colors cursor-pointer disabled:opacity-60 text-lg"
+                        >
+                            {stripeLoading ? (
+                                <><Loader2 className="h-5 w-5 animate-spin" /> Connecting to Stripe...</>
+                            ) : (
+                                <>
+                                    <CreditCard className="h-5 w-5" />
+                                    Pay ${MONTHLY_PRICE}.00 with Stripe
+                                </>
+                            )}
+                        </button>
+                        <p className="text-center text-xs text-gray-400 mt-2">
+                            You&apos;ll be securely redirected to Stripe to complete payment.
+                        </p>
+                        {stripeError && (
+                            <div className="mt-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                {stripeError}
                             </div>
-                            {errors.cardNumber && <p className="text-red-500 text-xs mt-1">{errors.cardNumber}</p>}
+                        )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-200"></div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Expiry *</label>
-                                <input
-                                    type="text"
-                                    value={formData.cardExpiry}
-                                    onChange={(e) => updateFormData('cardExpiry', formatExpiry(e.target.value))}
-                                    placeholder="MM/YY"
-                                    maxLength={5}
-                                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardExpiry ? 'border-red-400' : 'border-gray-300'}`}
-                                />
-                                {errors.cardExpiry && <p className="text-red-500 text-xs mt-1">{errors.cardExpiry}</p>}
+                        <div className="relative flex justify-center text-xs">
+                            <span className="bg-white px-4 text-gray-400 uppercase tracking-wider">or pay with card</span>
+                        </div>
+                    </div>
+
+                    {/* Manual Card Form (fallback) */}
+                    <div className="relative">
+                        {isProcessing && (
+                            <div className="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center rounded-xl">
+                                <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-3" />
+                                <p className="text-gray-700 font-medium">Processing your payment...</p>
+                                <p className="text-gray-400 text-sm mt-1">This may take a moment</p>
                             </div>
+                        )}
+                        <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">CVC *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name on Card *</label>
                                 <input
                                     type="text"
-                                    value={formData.cardCvc}
-                                    onChange={(e) => updateFormData('cardCvc', e.target.value.replace(/\D/g, '').slice(0, 3))}
-                                    placeholder="123"
-                                    maxLength={3}
-                                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardCvc ? 'border-red-400' : 'border-gray-300'}`}
+                                    value={formData.cardName}
+                                    onChange={(e) => updateFormData('cardName', e.target.value)}
+                                    placeholder="John Smith"
+                                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardName ? 'border-red-400' : 'border-gray-300'}`}
                                 />
-                                {errors.cardCvc && <p className="text-red-500 text-xs mt-1">{errors.cardCvc}</p>}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Billing Address *</label>
-                            <input
-                                type="text"
-                                value={formData.billingAddress}
-                                onChange={(e) => updateFormData('billingAddress', e.target.value)}
-                                placeholder="123 Main Street"
-                                className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.billingAddress ? 'border-red-400' : 'border-gray-300'}`}
-                            />
-                            {errors.billingAddress && <p className="text-red-500 text-xs mt-1">{errors.billingAddress}</p>}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
-                                <input
-                                    type="text"
-                                    value={formData.billingCity}
-                                    onChange={(e) => updateFormData('billingCity', e.target.value)}
-                                    placeholder="New York"
-                                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.billingCity ? 'border-red-400' : 'border-gray-300'}`}
-                                />
-                                {errors.billingCity && <p className="text-red-500 text-xs mt-1">{errors.billingCity}</p>}
+                                {errors.cardName && <p className="text-red-500 text-xs mt-1">{errors.cardName}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Card Number *</label>
+                                <div className="relative">
+                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={formData.cardNumber}
+                                        onChange={(e) => updateFormData('cardNumber', formatCardNumber(e.target.value))}
+                                        placeholder="1234 5678 9012 3456"
+                                        maxLength={19}
+                                        className={`w-full border rounded-lg pl-11 pr-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardNumber ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                </div>
+                                {errors.cardNumber && <p className="text-red-500 text-xs mt-1">{errors.cardNumber}</p>}
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.cardExpiry}
+                                        onChange={(e) => updateFormData('cardExpiry', formatExpiry(e.target.value))}
+                                        placeholder="MM/YY"
+                                        maxLength={5}
+                                        className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardExpiry ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {errors.cardExpiry && <p className="text-red-500 text-xs mt-1">{errors.cardExpiry}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">CVC *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.cardCvc}
+                                        onChange={(e) => updateFormData('cardCvc', e.target.value.replace(/\D/g, '').slice(0, 3))}
+                                        placeholder="123"
+                                        maxLength={3}
+                                        className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.cardCvc ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {errors.cardCvc && <p className="text-red-500 text-xs mt-1">{errors.cardCvc}</p>}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Billing Address *</label>
                                 <input
                                     type="text"
-                                    value={formData.billingZip}
-                                    onChange={(e) => updateFormData('billingZip', e.target.value)}
-                                    placeholder="10001"
-                                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.billingZip ? 'border-red-400' : 'border-gray-300'}`}
+                                    value={formData.billingAddress}
+                                    onChange={(e) => updateFormData('billingAddress', e.target.value)}
+                                    placeholder="123 Main Street"
+                                    className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.billingAddress ? 'border-red-400' : 'border-gray-300'}`}
                                 />
-                                {errors.billingZip && <p className="text-red-500 text-xs mt-1">{errors.billingZip}</p>}
+                                {errors.billingAddress && <p className="text-red-500 text-xs mt-1">{errors.billingAddress}</p>}
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.billingCity}
+                                        onChange={(e) => updateFormData('billingCity', e.target.value)}
+                                        placeholder="New York"
+                                        className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.billingCity ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {errors.billingCity && <p className="text-red-500 text-xs mt-1">{errors.billingCity}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code *</label>
+                                    <input
+                                        type="text"
+                                        value={formData.billingZip}
+                                        onChange={(e) => updateFormData('billingZip', e.target.value)}
+                                        placeholder="10001"
+                                        className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${errors.billingZip ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {errors.billingZip && <p className="text-red-500 text-xs mt-1">{errors.billingZip}</p>}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -318,21 +403,20 @@ const PaymentStep = ({ formData, updateFormData, onSubmit, onBack, isProcessing,
             <div className="flex justify-between mt-8">
                 <button
                     onClick={onBack}
-                    disabled={isProcessing}
+                    disabled={isProcessing || stripeLoading}
                     className="flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
                 >
                     <ChevronLeft className="h-5 w-5" /> Back
                 </button>
                 <button
                     onClick={onSubmit}
-                    disabled={isProcessing}
+                    disabled={isProcessing || stripeLoading}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors cursor-pointer disabled:bg-blue-400"
                 >
                     {isProcessing ? (
                         <><Loader2 className="h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        <>Pay ${ANNUAL_PRICE}.00</>
-
+                        <>Pay ${MONTHLY_PRICE}.00 with Card</>
                     )}
                 </button>
             </div>
@@ -709,7 +793,7 @@ const InstanceSetupStep = ({ formData, updateFormData, onNext, onBack, errors })
 
 // --- STEP 5: CONFIRMATION ---
 
-const ConfirmationStep = ({ formData, licenseKey }) => {
+const ConfirmationStep = ({ formData, licenseKey, provisionedSchool, loadingSchool }) => {
     const [copied, setCopied] = useState(false);
     const [showCheck, setShowCheck] = useState(false);
     useEffect(() => {
@@ -717,15 +801,14 @@ const ConfirmationStep = ({ formData, licenseKey }) => {
         return () => clearTimeout(timer);
     }, []);
 
-    const handleCopy = async () => {
+    const handleCopy = async (text) => {
         try {
-            await navigator.clipboard.writeText(licenseKey);
+            await navigator.clipboard.writeText(text);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
-            // Fallback for non-HTTPS
             const textarea = document.createElement('textarea');
-            textarea.value = licenseKey;
+            textarea.value = text;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand('copy');
@@ -735,12 +818,19 @@ const ConfirmationStep = ({ formData, licenseKey }) => {
         }
     };
 
-    const nextSteps = [
-        { icon: Mail, text: `Check your email at ${formData.email} for setup instructions` },
-        { icon: Globe, text: `Your instance at ${formData.subdomain || 'your-school'}.shopnext.app will be ready within 24 hours` },
-        { icon: Key, text: 'Use your license key to activate your platform' },
-        { icon: Users, text: 'Our team will reach out for onboarding' },
-    ];
+    if (loadingSchool) {
+        return (
+            <div className="text-center py-16">
+                <Loader2 className="h-10 w-10 text-blue-600 animate-spin mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Setting up your school...</h2>
+                <p className="text-gray-500">This usually takes a few seconds. Creating your class, admin account, and license key.</p>
+            </div>
+        );
+    }
+
+    const school = provisionedSchool;
+    const displayLicenseKey = licenseKey || school?.licenseKey || 'Generating...';
+    const subdomain = school?.subdomain || formData.schoolName?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'your-school';
 
     return (
         <div className="text-center">
@@ -749,49 +839,89 @@ const ConfirmationStep = ({ formData, licenseKey }) => {
                 <CheckCircle2 className="h-12 w-12 text-green-500" />
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Registration Complete!</h2>
-            <p className="text-gray-500 text-lg mb-8">Welcome aboard, {formData.schoolName}!</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">You&apos;re all set!</h2>
+            <p className="text-gray-500 text-lg mb-8">Welcome aboard, {formData.schoolName || school?.schoolName || 'New School'}!</p>
 
             {/* License Key */}
-            <div className="max-w-md mx-auto mb-8">
+            <div className="max-w-md mx-auto mb-6">
                 <p className="text-sm font-medium text-gray-600 mb-2">Your License Key</p>
                 <div className="bg-gray-900 rounded-xl px-6 py-4 flex items-center justify-between gap-3">
-                    <span className="font-mono text-green-400 text-lg tracking-wider">{licenseKey}</span>
+                    <span className="font-mono text-green-400 text-lg tracking-wider">{displayLicenseKey}</span>
                     <button
-                        onClick={handleCopy}
+                        onClick={() => handleCopy(displayLicenseKey)}
                         className="text-gray-400 hover:text-white transition-colors cursor-pointer p-1"
                         title="Copy to clipboard"
                     >
                         {copied ? <ClipboardCheck className="h-5 w-5 text-green-400" /> : <Copy className="h-5 w-5" />}
                     </button>
                 </div>
-                {copied && <p className="text-green-600 text-xs mt-2">Copied to clipboard!</p>}
+            </div>
+
+            {/* Login Credentials */}
+            <div className="max-w-md mx-auto mb-6 bg-blue-50 rounded-xl p-5 text-left">
+                <h3 className="font-bold text-gray-900 mb-3 text-center">Your Login Credentials</h3>
+                <div className="space-y-3">
+                    <div>
+                        <p className="text-xs text-gray-500">Platform URL</p>
+                        <p className="font-medium text-blue-600">{subdomain}.shopnext.app</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500">Username</p>
+                        <p className="font-mono text-sm text-gray-900">{school?.adminLoginUsername || formData.email?.split('@')[0] || 'your-username'}</p>
+                    </div>
+                    {school?.initialPassword && !school?.credentialsExpired && (
+                        <div>
+                            <p className="text-xs text-gray-500">Temporary Password</p>
+                            <div className="flex items-center gap-2">
+                                <p className="font-mono text-sm text-gray-900">{school.initialPassword}</p>
+                                <button onClick={() => handleCopy(school.initialPassword)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                                    <Copy className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    {school?.credentialsExpired && (
+                        <div>
+                            <p className="text-xs text-amber-600">Credentials have expired for security. Check your email or contact support.</p>
+                        </div>
+                    )}
+                </div>
+                <p className="text-xs text-amber-600 mt-3 bg-amber-50 px-3 py-2 rounded-lg">
+                    Save these credentials now. For security, we recommend changing your password after first login.
+                </p>
             </div>
 
             {/* Plan Summary */}
-            <div className="max-w-md mx-auto bg-blue-50 rounded-xl p-4 mb-8 flex justify-between items-center">
+            <div className="max-w-md mx-auto bg-gray-50 rounded-xl p-4 mb-8 flex justify-between items-center">
                 <div className="text-left">
                     <p className="font-semibold text-gray-900">Professor License</p>
-                    <p className="text-sm text-gray-500">Annual subscription</p>
+                    <p className="text-sm text-gray-500">Monthly subscription</p>
                 </div>
-                <p className="text-xl font-bold text-blue-600">${ANNUAL_PRICE}/yr</p>
+                <p className="text-xl font-bold text-blue-600">${MONTHLY_PRICE}/mo</p>
             </div>
 
             {/* Next Steps */}
             <div className="max-w-lg mx-auto text-left mb-8">
                 <h3 className="font-bold text-gray-900 mb-4">Next Steps</h3>
                 <div className="space-y-3">
-                    {nextSteps.map((step, i) => {
-                        const Icon = step.icon;
-                        return (
-                            <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                    <Icon className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <p className="text-sm text-gray-700 pt-1">{step.text}</p>
-                            </div>
-                        );
-                    })}
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Key className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <p className="text-sm text-gray-700 pt-1">Sign in with the credentials above at the main site</p>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Settings className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <p className="text-sm text-gray-700 pt-1">Customize your branding, custom domain, and settings at <strong>/settings</strong></p>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <p className="text-sm text-gray-700 pt-1">Create student accounts from your dashboard and start building campaigns</p>
+                    </div>
                 </div>
             </div>
 
@@ -801,14 +931,14 @@ const ConfirmationStep = ({ formData, licenseKey }) => {
                     href="/"
                     className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
                 >
-                    <GraduationCap className="h-5 w-5" /> Go to Dashboard
+                    <GraduationCap className="h-5 w-5" /> Sign In Now
                 </a>
-                <button
-                    onClick={() => alert('Receipt downloaded! (mock)')}
-                    className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors cursor-pointer"
+                <a
+                    href="/settings"
+                    className="inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                 >
-                    <Download className="h-5 w-5" /> Download Receipt
-                </button>
+                    <Settings className="h-5 w-5" /> Go to Settings
+                </a>
             </div>
         </div>
     );
@@ -849,6 +979,59 @@ export default function TestingPage() {
     const [errors, setErrors] = useState({});
     const [isProcessing, setIsProcessing] = useState(false);
     const [licenseKey, setLicenseKey] = useState('');
+    const [stripeSessionId, setStripeSessionId] = useState('');
+    const [provisionedSchool, setProvisionedSchool] = useState(null);
+    const [loadingSchool, setLoadingSchool] = useState(false);
+
+    // Handle Stripe redirect back
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === 'true') {
+            const sessionId = params.get('session_id') || '';
+            setStripeSessionId(sessionId);
+            setCurrentStep(2); // Go straight to confirmation
+            window.history.replaceState({}, '', '/register');
+
+            // Fetch the provisioned school data
+            if (sessionId) {
+                setLoadingSchool(true);
+                // Poll for school doc (webhook may take a few seconds)
+                const fetchSchool = async (attempts = 0) => {
+                    try {
+                        const response = await fetch(`/api/school-credentials?session_id=${encodeURIComponent(sessionId)}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            setProvisionedSchool({
+                                ...data.school,
+                                adminLoginUsername: data.credentials?.username,
+                                initialPassword: data.credentials?.password,
+                                credentialsExpired: data.expired,
+                            });
+                            setLicenseKey(data.school?.licenseKey || '');
+                            setLoadingSchool(false);
+                        } else if (response.status === 404 && attempts < 10) {
+                            // Webhook may not have fired yet, retry
+                            setTimeout(() => fetchSchool(attempts + 1), 2000);
+                        } else {
+                            setLoadingSchool(false);
+                        }
+                    } catch (err) {
+                        console.error('Failed to fetch school:', err);
+                        if (attempts < 5) {
+                            setTimeout(() => fetchSchool(attempts + 1), 2000);
+                        } else {
+                            setLoadingSchool(false);
+                        }
+                    }
+                };
+                fetchSchool();
+            }
+        }
+        if (params.get('canceled') === 'true') {
+            setCurrentStep(1);
+            window.history.replaceState({}, '', '/register');
+        }
+    }, []);
 
     const updateFormData = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -901,10 +1084,6 @@ export default function TestingPage() {
 
     const handleNext = () => {
         if (currentStep === 0 && !validateStep1()) return;
-        if (currentStep === 2 && !validateSetup()) return;
-        if (currentStep === 2) {
-            setLicenseKey(generateLicenseKey());
-        }
         setErrors({});
         setCurrentStep(prev => prev + 1);
         window.scrollTo(0, 0);
@@ -921,7 +1100,8 @@ export default function TestingPage() {
         setIsProcessing(true);
         setTimeout(() => {
             setIsProcessing(false);
-            setCurrentStep(2);
+            setLicenseKey(generateLicenseKey());
+            setCurrentStep(2); // Skip setup, go to confirmation
             window.scrollTo(0, 0);
         }, 2500);
     };
@@ -933,9 +1113,7 @@ export default function TestingPage() {
             case 1:
                 return <PaymentStep formData={formData} updateFormData={updateFormData} onSubmit={handlePayment} onBack={handleBack} isProcessing={isProcessing} errors={errors} />;
             case 2:
-                return <InstanceSetupStep formData={formData} updateFormData={updateFormData} onNext={handleNext} onBack={handleBack} errors={errors} />;
-            case 3:
-                return <ConfirmationStep formData={formData} licenseKey={licenseKey} />;
+                return <ConfirmationStep formData={formData} licenseKey={licenseKey} provisionedSchool={provisionedSchool} loadingSchool={loadingSchool} />;
             default:
                 return null;
         }
@@ -944,13 +1122,15 @@ export default function TestingPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <header className="bg-white border-b border-gray-100 shadow-sm">
+                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <GraduationCap className="h-7 w-7 text-blue-600" />
+                        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+                            <GraduationCap className="h-5 w-5 text-white" />
+                        </div>
                         <span className="text-xl font-bold text-gray-900">ShopNext <span className="text-blue-600">for Schools</span></span>
                     </div>
-                    <a href="/" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Back to main site</a>
+                    <a href="/" className="text-sm text-gray-500 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">Back to main site</a>
                 </div>
             </header>
 
@@ -962,7 +1142,7 @@ export default function TestingPage() {
                 </div>
 
                 {/* Trust badges */}
-                {currentStep < 3 && (
+                {currentStep < 2 && (
                     <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-gray-400">
                         <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4" /> SSL Encrypted</span>
                         <span className="flex items-center gap-1"><Lock className="h-4 w-4" /> PCI Compliant</span>
@@ -973,8 +1153,8 @@ export default function TestingPage() {
 
             {/* Footer */}
             <footer className="container mx-auto px-4 py-8 text-center text-xs text-gray-400">
-                <p>&copy; 2025 ShopNext for Schools. All rights reserved.</p>
-                <p className="mt-1">A prototype for educational purposes.</p>
+                <p>&copy; 2026 ShopNext for Schools. All rights reserved.</p>
+                <p className="mt-1">A marketing simulation platform for educators.</p>
             </footer>
         </div>
     );

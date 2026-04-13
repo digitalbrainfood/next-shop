@@ -1,144 +1,14 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     GraduationCap, Users, DollarSign, Globe, TrendingUp, ChevronDown, ChevronUp,
     Search, Eye, CheckCircle2, XCircle, Clock, MoreVertical, ArrowUpRight,
     BarChart3, Activity, CreditCard, Calendar, Mail, ExternalLink, ShieldCheck,
-    AlertTriangle, RefreshCw
+    AlertTriangle, RefreshCw, Loader2
 } from 'lucide-react';
-
-// --- MOCK DATA ---
-
-const MOCK_CUSTOMERS = [
-    {
-        id: 1,
-        schoolName: 'Riverside Academy',
-        professor: 'Dr. Sarah Chen',
-        email: 'schen@riverside.edu',
-        subdomain: 'riverside',
-        status: 'active',
-        platforms: ['products', 'avatars'],
-        students: 142,
-        licenseKey: 'SCH-A7K2-MN4P-X9R1',
-        signupDate: '2025-09-15',
-        renewalDate: '2026-09-15',
-        lastActive: '2 hours ago',
-        primaryColor: '#2563eb',
-        revenue: 50,
-    },
-    {
-        id: 2,
-        schoolName: 'Metro State University',
-        professor: 'Prof. James Wright',
-        email: 'jwright@metrostate.edu',
-        subdomain: 'metrostate',
-        status: 'active',
-        platforms: ['products'],
-        students: 287,
-        licenseKey: 'SCH-B3F8-QW2L-Y6T4',
-        signupDate: '2025-08-22',
-        renewalDate: '2026-08-22',
-        lastActive: '1 day ago',
-        primaryColor: '#7c3aed',
-        revenue: 50,
-    },
-    {
-        id: 3,
-        schoolName: 'Pacific Northwest College',
-        professor: 'Dr. Maria Lopez',
-        email: 'mlopez@pnc.edu',
-        subdomain: 'pnc-marketing',
-        status: 'active',
-        platforms: ['products', 'avatars'],
-        students: 95,
-        licenseKey: 'SCH-C1D5-RT8N-Z3V7',
-        signupDate: '2025-11-03',
-        renewalDate: '2026-11-03',
-        lastActive: '5 hours ago',
-        primaryColor: '#059669',
-        revenue: 50,
-    },
-    {
-        id: 4,
-        schoolName: 'Eastbrook Institute',
-        professor: 'Dr. Kevin Park',
-        email: 'kpark@eastbrook.edu',
-        subdomain: 'eastbrook',
-        status: 'expiring',
-        platforms: ['avatars'],
-        students: 63,
-        licenseKey: 'SCH-D9G3-HJ6K-W1M2',
-        signupDate: '2025-04-10',
-        renewalDate: '2026-04-10',
-        lastActive: '3 days ago',
-        primaryColor: '#ea580c',
-        revenue: 50,
-    },
-    {
-        id: 5,
-        schoolName: 'Summit Valley HS',
-        professor: 'Ms. Angela Torres',
-        email: 'atorres@svhs.org',
-        subdomain: 'summitvalley',
-        status: 'active',
-        platforms: ['products'],
-        students: 178,
-        licenseKey: 'SCH-E4P7-VN9C-B5X8',
-        signupDate: '2025-10-28',
-        renewalDate: '2026-10-28',
-        lastActive: '12 hours ago',
-        primaryColor: '#db2777',
-        revenue: 50,
-    },
-    {
-        id: 6,
-        schoolName: 'Lakeview Community College',
-        professor: 'Prof. Robert Kim',
-        email: 'rkim@lakeviewcc.edu',
-        subdomain: 'lakeview',
-        status: 'expired',
-        platforms: ['products', 'avatars'],
-        students: 0,
-        licenseKey: 'SCH-F2S6-YL3T-Q8W4',
-        signupDate: '2024-12-01',
-        renewalDate: '2025-12-01',
-        lastActive: '45 days ago',
-        primaryColor: '#4f46e5',
-        revenue: 0,
-    },
-    {
-        id: 7,
-        schoolName: 'Harper College of Business',
-        professor: 'Dr. Emily Nguyen',
-        email: 'enguyen@harper.edu',
-        subdomain: 'harper-biz',
-        status: 'active',
-        platforms: ['products', 'avatars'],
-        students: 210,
-        licenseKey: 'SCH-G8K1-DN7F-J4R9',
-        signupDate: '2025-07-14',
-        renewalDate: '2026-07-14',
-        lastActive: '30 minutes ago',
-        primaryColor: '#0d9488',
-        revenue: 50,
-    },
-    {
-        id: 8,
-        schoolName: 'Central Arts Academy',
-        professor: 'Prof. David Martinez',
-        email: 'dmartinez@centralarts.edu',
-        subdomain: 'centralarts',
-        status: 'pending',
-        platforms: ['avatars'],
-        students: 0,
-        licenseKey: 'SCH-H5M3-XP2G-T7V6',
-        signupDate: '2026-03-25',
-        renewalDate: '2027-03-25',
-        lastActive: 'Never',
-        primaryColor: '#dc2626',
-        revenue: 50,
-    },
-];
+import { auth, db, SUPER_ADMIN_UID } from '../../lib/firebase';
+import { onIdTokenChanged } from 'firebase/auth';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 const STATUS_CONFIG = {
     active: { label: 'Active', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
@@ -146,8 +16,6 @@ const STATUS_CONFIG = {
     expired: { label: 'Expired', color: 'bg-red-100 text-red-700', icon: XCircle },
     pending: { label: 'Pending Setup', color: 'bg-blue-100 text-blue-700', icon: Clock },
 };
-
-// --- STAT CARD ---
 
 const StatCard = ({ icon: Icon, label, value, subtext, color }) => (
     <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -162,10 +30,8 @@ const StatCard = ({ icon: Icon, label, value, subtext, color }) => (
     </div>
 );
 
-// --- CUSTOMER ROW ---
-
 const CustomerRow = ({ customer, isExpanded, onToggle }) => {
-    const status = STATUS_CONFIG[customer.status];
+    const status = STATUS_CONFIG[customer.status] || STATUS_CONFIG.pending;
     const StatusIcon = status.icon;
 
     return (
@@ -176,18 +42,17 @@ const CustomerRow = ({ customer, isExpanded, onToggle }) => {
             >
                 <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: customer.primaryColor }}>
-                            {customer.schoolName.charAt(0)}
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: customer.primaryColor || '#2563eb' }}>
+                            {(customer.schoolName || '?').charAt(0)}
                         </div>
                         <div>
-                            <p className="font-medium text-gray-900 text-sm">{customer.schoolName}</p>
-                            <p className="text-xs text-gray-400">{customer.subdomain}.shopnext.app</p>
+                            <p className="font-medium text-gray-900 text-sm">{customer.schoolName || 'Unknown'}</p>
+                            <p className="text-xs text-gray-400">{customer.subdomain || '—'}.shopnext.app</p>
                         </div>
                     </div>
                 </td>
                 <td className="px-5 py-4">
-                    <p className="text-sm text-gray-700">{customer.professor}</p>
-                    <p className="text-xs text-gray-400">{customer.email}</p>
+                    <p className="text-sm text-gray-700">{customer.email || '—'}</p>
                 </td>
                 <td className="px-5 py-4">
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${status.color}`}>
@@ -195,14 +60,14 @@ const CustomerRow = ({ customer, isExpanded, onToggle }) => {
                         {status.label}
                     </span>
                 </td>
-                <td className="px-5 py-4 text-sm text-gray-700">{customer.students}</td>
-                <td className="px-5 py-4 text-sm text-gray-700">${customer.revenue}</td>
+                <td className="px-5 py-4 text-sm text-gray-700">{customer.studentCount || '—'}</td>
+                <td className="px-5 py-4 text-sm text-gray-700">${customer.revenue || 0}</td>
                 <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
-                        {customer.platforms.includes('products') && (
+                        {(customer.platforms || []).includes('products') && (
                             <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded">Products</span>
                         )}
-                        {customer.platforms.includes('avatars') && (
+                        {(customer.platforms || []).includes('avatars') && (
                             <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded">Talent</span>
                         )}
                     </div>
@@ -217,32 +82,44 @@ const CustomerRow = ({ customer, isExpanded, onToggle }) => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                                 <p className="text-xs text-gray-400 mb-1">License Key</p>
-                                <p className="font-mono text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">{customer.licenseKey}</p>
+                                <p className="font-mono text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">{customer.licenseKey || '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400 mb-1">Signup Date</p>
-                                <p className="text-gray-700">{customer.signupDate}</p>
+                                <p className="text-gray-700">{customer.signupDate?.toDate?.()?.toLocaleDateString() || '—'}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-gray-400 mb-1">Renewal Date</p>
-                                <p className={`${customer.status === 'expiring' ? 'text-amber-600 font-medium' : customer.status === 'expired' ? 'text-red-600 font-medium' : 'text-gray-700'}`}>{customer.renewalDate}</p>
+                                <p className={`${customer.status === 'expiring' ? 'text-amber-600 font-medium' : customer.status === 'expired' ? 'text-red-600 font-medium' : 'text-gray-700'}`}>{customer.renewalDate || '—'}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-400 mb-1">Last Active</p>
-                                <p className="text-gray-700">{customer.lastActive}</p>
+                                <p className="text-xs text-gray-400 mb-1">Subdomain</p>
+                                <p className="text-gray-700">{customer.subdomain || '—'}</p>
                             </div>
                         </div>
+                        {customer.customDomain && (
+                            <div className="mt-3 text-sm">
+                                <p className="text-xs text-gray-400 mb-1">Custom Domain</p>
+                                <p className="text-gray-700 flex items-center gap-1">
+                                    {customer.customDomain}
+                                    {customer.customDomainVerified ? (
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                                    ) : (
+                                        <Clock className="h-3.5 w-3.5 text-amber-500" />
+                                    )}
+                                </p>
+                            </div>
+                        )}
                         <div className="flex gap-2 mt-3">
-                            <button className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer flex items-center gap-1">
-                                <ExternalLink className="h-3 w-3" /> Visit Instance
-                            </button>
-                            <button className="text-xs border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1">
-                                <Mail className="h-3 w-3" /> Contact
-                            </button>
-                            {customer.status === 'expired' && (
-                                <button className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-lg hover:bg-amber-600 transition-colors cursor-pointer flex items-center gap-1">
-                                    <RefreshCw className="h-3 w-3" /> Send Renewal
-                                </button>
+                            {customer.subdomain && (
+                                <a href={`https://${customer.subdomain}.shopnext.app`} target="_blank" rel="noopener noreferrer" className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1">
+                                    <ExternalLink className="h-3 w-3" /> Visit Instance
+                                </a>
+                            )}
+                            {customer.email && (
+                                <a href={`mailto:${customer.email}`} className="text-xs border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1">
+                                    <Mail className="h-3 w-3" /> Contact
+                                </a>
                             )}
                         </div>
                     </td>
@@ -252,42 +129,99 @@ const CustomerRow = ({ customer, isExpanded, onToggle }) => {
     );
 };
 
-// --- MAIN PAGE ---
-
 export default function AdminDashboard() {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [schools, setSchools] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [expandedRow, setExpandedRow] = useState(null);
 
-    const filtered = MOCK_CUSTOMERS.filter(c => {
+    // Auth check
+    useEffect(() => {
+        const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                const tokenResult = await currentUser.getIdTokenResult();
+                currentUser.customClaims = tokenResult.claims;
+                const isSuperAdmin = tokenResult.claims.superAdmin === true || currentUser.uid === SUPER_ADMIN_UID;
+                if (isSuperAdmin) {
+                    setUser(currentUser);
+                } else {
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    // Schools subscription
+    useEffect(() => {
+        if (!user) return;
+        const q = query(collection(db, 'schools'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setSchools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+    }, [user]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+                <div className="text-center">
+                    <ShieldCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
+                    <p className="text-gray-500 mb-4">You must be a super admin to view this page.</p>
+                    <a href="/" className="text-blue-600 hover:text-blue-700 font-medium">Go to main site</a>
+                </div>
+            </div>
+        );
+    }
+
+    const filtered = schools.filter(c => {
         const matchesSearch = !searchQuery ||
-            c.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.email.toLowerCase().includes(searchQuery.toLowerCase());
+            (c.schoolName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (c.subdomain || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
 
-    const totalRevenue = MOCK_CUSTOMERS.filter(c => c.status !== 'expired').reduce((sum, c) => sum + c.revenue, 0);
-    const totalStudents = MOCK_CUSTOMERS.reduce((sum, c) => sum + c.students, 0);
-    const activeCount = MOCK_CUSTOMERS.filter(c => c.status === 'active').length;
-    const expiringCount = MOCK_CUSTOMERS.filter(c => c.status === 'expiring').length;
+    const totalRevenue = schools.filter(c => c.status !== 'expired').reduce((sum, c) => sum + (c.revenue || 0), 0);
+    const totalStudents = schools.reduce((sum, c) => {
+        const count = parseInt(c.studentCount) || 0;
+        return sum + count;
+    }, 0);
+    const activeCount = schools.filter(c => c.status === 'active').length;
+    const expiringCount = schools.filter(c => c.status === 'expiring').length;
 
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <header className="bg-white border-b border-gray-100 shadow-sm">
+                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <GraduationCap className="h-7 w-7 text-blue-600" />
+                        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+                            <GraduationCap className="h-5 w-5 text-white" />
+                        </div>
                         <span className="text-xl font-bold text-gray-900">ShopNext <span className="text-blue-600">Admin</span></span>
-                        <span className="hidden sm:inline-flex items-center gap-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                        <span className="hidden sm:inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full font-medium">
                             <ShieldCheck className="h-3 w-3" /> Super Admin
                         </span>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <a href="/testing" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Registration</a>
-                        <a href="/" className="text-sm text-gray-500 hover:text-blue-600 transition-colors">Main Site</a>
+                    <div className="flex items-center gap-1">
+                        <a href="/register" className="text-sm text-gray-500 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">Registration</a>
+                        <a href="/" className="text-sm text-gray-500 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">Main Site</a>
                     </div>
                 </div>
             </header>
@@ -304,58 +238,28 @@ export default function AdminDashboard() {
                     <StatCard
                         icon={Users}
                         label="Total Customers"
-                        value={MOCK_CUSTOMERS.length}
-                        subtext="+2 this month"
+                        value={schools.length}
                         color="bg-blue-100 text-blue-600"
                     />
                     <StatCard
                         icon={DollarSign}
-                        label="Annual Revenue"
+                        label="Monthly Revenue"
                         value={`$${totalRevenue.toLocaleString()}`}
-                        subtext="+$100 this month"
                         color="bg-green-100 text-green-600"
                     />
                     <StatCard
                         icon={GraduationCap}
-                        label="Total Students"
-                        value={totalStudents.toLocaleString()}
+                        label="Student Reach"
+                        value={totalStudents > 0 ? totalStudents.toLocaleString() : '—'}
                         color="bg-purple-100 text-purple-600"
                     />
                     <StatCard
                         icon={Activity}
                         label="Active Instances"
-                        value={`${activeCount}/${MOCK_CUSTOMERS.length}`}
+                        value={`${activeCount}/${schools.length}`}
                         subtext={expiringCount > 0 ? `${expiringCount} expiring soon` : undefined}
                         color="bg-amber-100 text-amber-600"
                     />
-                </div>
-
-                {/* Revenue Chart Placeholder */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <BarChart3 className="h-5 w-5 text-gray-400" /> Revenue Overview
-                        </h2>
-                        <select className="text-sm border border-gray-300 rounded-lg px-3 py-1.5">
-                            <option>Last 12 months</option>
-                            <option>Last 6 months</option>
-                            <option>Last 30 days</option>
-                        </select>
-                    </div>
-                    <div className="flex items-end gap-2 h-40">
-                        {[35, 40, 30, 45, 55, 50, 60, 75, 70, 85, 90, 100].map((h, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                                <div
-                                    className="w-full bg-blue-500 rounded-t-sm hover:bg-blue-600 transition-colors"
-                                    style={{ height: `${h}%` }}
-                                    title={`$${h * 3.5}`}
-                                />
-                                <span className="text-[10px] text-gray-400">
-                                    {['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'][i]}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
                 </div>
 
                 {/* Customer Table */}
@@ -394,7 +298,7 @@ export default function AdminDashboard() {
                             <thead>
                                 <tr className="border-b border-gray-200 bg-gray-50">
                                     <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Professor</th>
+                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                     <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Students</th>
                                     <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
@@ -414,22 +318,33 @@ export default function AdminDashboard() {
                             </tbody>
                         </table>
                         {filtered.length === 0 && (
-                            <div className="text-center py-12 text-gray-400">
-                                <Search className="h-8 w-8 mx-auto mb-2" />
-                                <p>No customers match your search.</p>
+                            <div className="text-center py-16 text-gray-400">
+                                {schools.length === 0 ? (
+                                    <>
+                                        <GraduationCap className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                                        <p className="font-medium text-gray-500">No schools registered yet</p>
+                                        <p className="text-sm mt-1">Schools will appear here after they complete registration at <a href="/register" className="text-blue-600 hover:underline">/register</a></p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Search className="h-8 w-8 mx-auto mb-2" />
+                                        <p>No customers match your search.</p>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
 
-                    <div className="px-5 py-3 border-t border-gray-200 text-xs text-gray-500 flex justify-between items-center">
-                        <span>Showing {filtered.length} of {MOCK_CUSTOMERS.length} customers</span>
-                        <span className="text-gray-400">Mock data for demonstration</span>
-                    </div>
+                    {schools.length > 0 && (
+                        <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400 flex justify-between items-center">
+                            <span>Showing {filtered.length} of {schools.length} customers</span>
+                        </div>
+                    )}
                 </div>
             </main>
 
             <footer className="container mx-auto px-4 py-8 text-center text-xs text-gray-400">
-                <p>&copy; 2025 ShopNext. Super Admin Dashboard. All rights reserved.</p>
+                <p>&copy; 2026 ShopNext. Super Admin Dashboard. All rights reserved.</p>
             </footer>
         </div>
     );

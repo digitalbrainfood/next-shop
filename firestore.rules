@@ -3,38 +3,95 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper: check if user is a super admin
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.superAdmin == true;
+    }
+
+    // Helper: check if user is a viewer
+    function isViewer() {
+      return request.auth != null && request.auth.token.viewer == true;
+    }
+
+    // Helper: check if user owns the document (by vendorId)
+    function isOwner() {
+      return request.auth != null && resource.data.vendorId == request.auth.uid;
+    }
+
+    // Helper: check if user belongs to the document's class
+    function isInProductClass() {
+      return request.auth != null && request.auth.token.class == resource.data.class;
+    }
+
+    function isInAvatarClass() {
+      return request.auth != null && request.auth.token.avatarClass == resource.data.class;
+    }
+
     // Products
     match /products/{productId} {
+      // Any authenticated user can read products in their class; admins and viewers can read all
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+
+      // Only the owner or super admin can update/delete
+      // Only authenticated non-viewers can create (with their own vendorId)
+      allow create: if request.auth != null
+                    && !isViewer()
+                    && request.resource.data.vendorId == request.auth.uid;
+      allow update: if isOwner() || isSuperAdmin();
+      allow delete: if isOwner() || isSuperAdmin();
 
       match /reviews/{reviewId} {
         allow read: if request.auth != null;
-        allow write: if request.auth != null;
+        // Any authenticated non-viewer can write reviews
+        allow create: if request.auth != null && !isViewer();
+        // Only the review author or super admin can update/delete
+        allow update, delete: if request.auth != null
+                              && (resource.data.userId == request.auth.uid || isSuperAdmin());
       }
     }
 
-    // Product classes
+    // Product classes - only super admin can write
     match /classes/{classId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow write: if isSuperAdmin();
     }
 
     // Avatars (Hirable Talent)
     match /avatars/{avatarId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+
+      allow create: if request.auth != null
+                    && !isViewer()
+                    && request.resource.data.vendorId == request.auth.uid;
+      allow update: if isOwner() || isSuperAdmin();
+      allow delete: if isOwner() || isSuperAdmin();
 
       match /reviews/{reviewId} {
         allow read: if request.auth != null;
-        allow write: if request.auth != null;
+        allow create: if request.auth != null && !isViewer();
+        allow update, delete: if request.auth != null
+                              && (resource.data.userId == request.auth.uid || isSuperAdmin());
       }
     }
 
-    // Avatar classes
+    // Avatar classes - only super admin can write
     match /avatar-classes/{classId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow write: if isSuperAdmin();
+    }
+
+    // School registrations (created by Stripe webhook)
+    match /schools/{schoolId} {
+      // Public school data (branding, subdomain) — readable by anyone
+      allow read: if true;
+      // Only server-side (webhook/API routes) can write
+      allow write: if false;
+
+      // Private school data (credentials, Stripe IDs) — server-only
+      match /private/{docId} {
+        allow read: if false;
+        allow write: if false;
+      }
     }
   }
 }

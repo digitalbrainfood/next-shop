@@ -3,28 +3,72 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    // Helper: check if user is a super admin
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.superAdmin == true;
+    }
+
+    // Helper: check if user is a viewer (viewers cannot upload)
+    function isViewer() {
+      return request.auth != null && request.auth.token.viewer == true;
+    }
+
+    // Max file sizes
+    function isImageSize() {
+      return request.resource.size < 10 * 1024 * 1024; // 10 MB
+    }
+
+    function isVideoSize() {
+      return request.resource.size < 500 * 1024 * 1024; // 500 MB
+    }
+
+    // Content type checks
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+
     // Product images
     match /products/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+                   && !isViewer()
+                   && isImage()
+                   && isImageSize();
+      allow delete: if request.auth != null && !isViewer();
     }
 
     // Product videos
     match /product-videos/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+                   && !isViewer()
+                   && isVideo()
+                   && isVideoSize();
+      allow delete: if request.auth != null && !isViewer();
     }
 
     // Avatar images
     match /avatars/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+                   && !isViewer()
+                   && isImage()
+                   && isImageSize();
+      allow delete: if request.auth != null && !isViewer();
     }
 
     // Avatar videos
     match /avatar-videos/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+                   && !isViewer()
+                   && isVideo()
+                   && isVideoSize();
+      allow delete: if request.auth != null && !isViewer();
     }
   }
 }

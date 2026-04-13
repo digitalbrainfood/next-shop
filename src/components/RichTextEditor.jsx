@@ -171,6 +171,7 @@ const EditorToolbar = ({ editor }) => {
 
 const RichTextEditor = ({ value, onChange, placeholder, minHeight = 250 }) => {
     const editor = useEditor({
+        immediatelyRender: false,
         extensions: [
             StarterKit.configure({
                 heading: {
@@ -214,7 +215,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 250 }) => {
     }, [value, editor]);
 
     return (
-        <div className="border rounded-md overflow-hidden bg-white">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
             <EditorToolbar editor={editor} />
             <div style={{ minHeight: `${minHeight}px` }}>
                 <EditorContent editor={editor} />

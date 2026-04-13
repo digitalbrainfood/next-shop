@@ -1,11 +1,13 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw, Download } from 'lucide-react';
+import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw, Download, Type, FileText, Sparkles, Tag, ImageIcon, CheckCircle2, ChevronRight, AlertTriangle } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import RichTextEditor from '../components/RichTextEditor';
 import TagManager from '../components/TagManager';
-import RTBImageUploader from '../components/RTBImageUploader';
+import RTBImageUploader, { VideoUploadSection } from '../components/RTBImageUploader';
+import SpotlightTutorial, { TutorialButton, PRODUCT_TUTORIAL_STEPS, TALENT_TUTORIAL_STEPS } from '../components/SpotlightTutorial';
+import { useSchoolConfig } from '../lib/useSchoolConfig';
 import { RTB_LABELS, AVATAR_RTB_LABELS, TAG_CONFIG, TAG_CATEGORIES, isViewer as checkIsViewer, isSuperAdmin as checkIsSuperAdmin } from '../lib/constants';
 import { auth, db, storage, functions, SUPER_ADMIN_UID } from '../lib/firebase';
 import { onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
@@ -16,198 +18,193 @@ import { httpsCallable } from "firebase/functions";
 
 // --- UI COMPONENTS ---
 
-const StarRating = ({ rating, reviewCount }) => (
-    <div className="flex items-center">
-        <div className="flex items-center">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-4 w-4 ${i < Math.round(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />))}</div>
-        {reviewCount !== undefined && <span className="ml-2 text-sm text-gray-500">({reviewCount})</span>}
-    </div>
-);
+const StarRating = ({ rating, reviewCount, size = 'sm' }) => {
+    const starSize = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
+    return (
+        <div className="flex items-center gap-1">
+            <div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`${starSize} ${i < Math.round(rating) ? 'text-yellow-400 fill-current' : 'text-gray-200'}`} />))}</div>
+            {reviewCount !== undefined && <span className="text-xs text-gray-400 ml-0.5">({reviewCount})</span>}
+        </div>
+    );
+};
 
-const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery, activeTab }) => {
+const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery, activeTab, schoolConfig }) => {
     const isSuperAdmin = (user && user.customClaims && user.customClaims.superAdmin === true) || (user && user.uid === SUPER_ADMIN_UID);
     const isViewerUser = user && checkIsViewer(user);
-    const searchPlaceholder = activeTab === 'talents' ? "Search by talent name or tag..." : "Search by product name or tag...";
+    const searchPlaceholder = activeTab === 'talents' ? "Search talent by name or tag..." : "Search products by name or tag...";
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     return (
-        <header className="bg-white shadow-md sticky top-0 z-50">
-            <nav className="container mx-auto px-4 py-3 flex justify-between items-center gap-4">
-                <div className="flex items-center space-x-2 cursor-pointer flex-shrink-0" onClick={() => setView({ page: 'home' })}><Store className="h-8 w-8 text-blue-600" /><span className="text-2xl font-bold text-gray-800">ShopNext</span></div>
+        <header className="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-100">
+            <nav className="container mx-auto px-4 py-3 flex justify-between items-center gap-3">
+                <div className="flex items-center space-x-2 cursor-pointer flex-shrink-0" onClick={() => setView({ page: 'home' })}>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: schoolConfig?.primaryColor || '#2563eb' }}>
+                        <Store className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xl font-bold text-gray-900 hidden sm:inline">{schoolConfig?.displayName || 'ShopNext'}</span>
+                </div>
 
                 {user && (
-                    <div className="relative w-full max-w-lg">
+                    <div className="hidden md:block relative w-full max-w-lg">
                         <input
                             type="search"
                             placeholder={searchPlaceholder}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all text-sm"
                         />
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>
                 )}
 
                 {user && (
-                    <div className="flex items-center space-x-4 flex-shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                        <button onClick={() => setMobileSearchOpen(!mobileSearchOpen)} className="md:hidden text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                            <Search className="h-5 w-5" />
+                        </button>
                         {isViewerUser && (
-                            <span className="flex items-center text-sm text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
-                                <Eye className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:flex items-center text-xs text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full font-medium">
+                                <Eye className="h-3.5 w-3.5 mr-1" />
                                 View Only
                             </span>
                         )}
                         {!isViewerUser && (
-                            <button onClick={() => setView({ page: 'dashboard' })} className={`flex items-center space-x-2 text-white px-4 py-2 rounded-full transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer`}>
-                                {isSuperAdmin ? <ShieldCheck className="h-5 w-5" /> : <UserCircle className="h-5 w-5" />}
-                                <span>My Dashboard</span>
+                            <button onClick={() => setView({ page: 'dashboard' })} className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                                {isSuperAdmin ? <ShieldCheck className="h-4 w-4" /> : <UserCircle className="h-4 w-4" />}
+                                <span className="hidden sm:inline">Dashboard</span>
                             </button>
                         )}
-                        <button onClick={onSignOut} title="Sign Out" className="text-gray-500 hover:text-red-600 transition-colors cursor-pointer"><LogOut className="h-6 w-6" /></button>
+                        <button onClick={onSignOut} title="Sign Out" className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-2 rounded-lg hover:bg-red-50"><LogOut className="h-5 w-5" /></button>
                     </div>
                 )}
             </nav>
+            {/* Mobile search bar */}
+            {user && mobileSearchOpen && (
+                <div className="md:hidden px-4 pb-3 border-t border-gray-100">
+                    <div className="relative mt-2">
+                        <input
+                            type="search"
+                            placeholder={searchPlaceholder}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-blue-500 transition-all text-sm"
+                            autoFocus
+                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
+                </div>
+            )}
         </header>
     );
 };
 
 const TabBar = ({ activeTab, setActiveTab, showAvatarTab }) => (
     <div className="container mx-auto px-4 pt-4">
-        <div className="flex border-b border-gray-200">
-            <button onClick={() => setActiveTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${activeTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Products</button>
-            {showAvatarTab && (<button onClick={() => setActiveTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${activeTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Hirable Talent</button>)}
+        <div className="flex gap-1 border-b border-gray-200">
+            <button onClick={() => setActiveTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${activeTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Products</button>
+            {showAvatarTab && (<button onClick={() => setActiveTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${activeTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Hirable Talent</button>)}
         </div>
     </div>
 );
 
-const Footer = () => (
-    <footer className="bg-gray-800 text-white mt-12"><div className="container mx-auto px-4 py-6 text-center"><p>&copy; 2025 ShopNext. All rights reserved.</p><p className="text-sm text-gray-300">A prototype for educational purposes.</p></div></footer>
+const Footer = ({ schoolConfig }) => (
+    <footer className="bg-gray-800 text-white mt-12"><div className="container mx-auto px-4 py-8 text-center"><p className="font-medium">&copy; 2026 {schoolConfig?.displayName || 'ShopNext'}. All rights reserved.</p><p className="text-sm text-gray-400 mt-1">A marketing simulation platform for educators.</p></div></footer>
 );
 
-const ProductCard = ({ product, setView }) => {
-    // Only show trigger tags on product cards
-    const getDisplayTags = () => {
-        // New format - both trigger and solution tags
-        const triggerTags = product.displayTags?.trigger || [];
-        const solutionTags = product.displayTags?.solution || [];
-        return {
-            trigger: triggerTags,
-            solution: solutionTags
-        };
-    };
-
-    const displayTags = getDisplayTags();
+const ItemCard = ({ item, setView, type }) => {
+    const triggerTags = item.displayTags?.trigger || [];
+    const solutionTags = item.displayTags?.solution || [];
+    const viewPage = type === 'talent' ? 'talent' : 'product';
 
     return (
-        <div className="bg-white border rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 group flex flex-col">
-            <div className="relative aspect-square">
-                <img src={product.imageUrl || 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image'} alt={product.name} className="w-full h-full object-cover" />
+        <div
+            onClick={() => setView({ page: viewPage, id: item.id })}
+            className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col"
+        >
+            {/* Image */}
+            <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                <img
+                    src={item.imageUrl || 'https://placehold.co/600x600/f1f5f9/94a3b8?text=No+Image'}
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {/* Price badge */}
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm">
+                    <span className="text-sm font-bold text-gray-900">${parseFloat(item.price || 0).toFixed(2)}</span>
+                </div>
             </div>
+
+            {/* Content */}
             <div className="p-4 flex flex-col flex-grow">
-                <h3 className="text-lg font-bold text-gray-800 truncate">{product.name}</h3>
-                <p className="text-sm text-gray-500 mb-2 truncate">{product.subtitle}</p>
-                <div className="flex-grow">
-                    <div className="flex flex-wrap gap-1 mb-2">
-                        {displayTags.trigger.map(tag => (
-                            <span
-                                key={tag}
-                                className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
-                            >
-                                #{tag}
+                <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{item.name}</h3>
+                <p className="text-sm text-gray-500 mt-0.5 truncate">{item.subtitle}</p>
+
+                {/* Tags */}
+                {(triggerTags.length > 0 || solutionTags.length > 0) && (
+                    <div className="flex flex-wrap gap-1 mt-3">
+                        {triggerTags.map(tag => (
+                            <span key={tag} className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                {tag}
                             </span>
                         ))}
-                        {displayTags.solution.map(tag => (
-                            <span
-                                key={tag}
-                                className="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800"
-                            >
-                                #{tag}
+                        {solutionTags.map(tag => (
+                            <span key={tag} className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-teal-50 text-teal-700 border border-teal-100">
+                                {tag}
                             </span>
                         ))}
                     </div>
+                )}
+
+                {/* Rating */}
+                <div className="mt-auto pt-3">
+                    <StarRating rating={item.rating} reviewCount={item.reviewCount} />
                 </div>
-                <div className="flex justify-between items-center mt-2"><p className="text-xl font-extrabold text-blue-600">${parseFloat(product.price).toFixed(2)}</p><StarRating rating={product.rating} reviewCount={product.reviewCount} /></div>
-                <button onClick={() => setView({ page: 'product', id: product.id })} className="mt-4 w-full bg-blue-500 text-white py-2 rounded-full font-semibold hover:bg-blue-600 transition-colors cursor-pointer">View Details</button>
             </div>
         </div>
     );
 };
+
+const ProductCard = ({ product, setView }) => <ItemCard item={product} setView={setView} type="product" />;
+const TalentCard = ({ talent, setView }) => <ItemCard item={talent} setView={setView} type="talent" />;
+
+const SortDropdown = ({ id, value, onChange }) => (
+    <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="px-3 py-2 border border-gray-200 rounded-xl text-sm bg-white hover:border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all cursor-pointer"
+    >
+        <option value="featured">Featured</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="rating-desc">Highest Rating</option>
+        <option value="newest">Newest</option>
+    </select>
+);
 
 const ProductGrid = ({ products, setView, sortOrder, setSortOrder }) => {
     return (
         <main className="container mx-auto px-4 pt-8 pb-2">
             <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-3xl font-extrabold text-gray-900">Products</h2>
-                 <div className="flex items-center space-x-2">
-                    <label htmlFor="sort-order" className="text-sm font-medium text-gray-700">Sort by:</label>
-                    <select
-                        id="sort-order"
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className="p-2 border rounded-md text-sm"
-                    >
-                        <option value="featured">Featured</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="rating-desc">Highest Rating</option>
-                        <option value="newest">Newest Arrivals</option>
-                    </select>
+                 <div>
+                     <h2 className="text-2xl font-bold text-gray-900">Products</h2>
+                     <p className="text-sm text-gray-400 mt-0.5">{products.length} {products.length === 1 ? 'item' : 'items'}</p>
                  </div>
+                 <SortDropdown id="sort-order" value={sortOrder} onChange={setSortOrder} />
             </div>
             {products.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                     {products.map(product => (<ProductCard key={product.id} product={product} setView={setView} />))}
                 </div>
             ) : (
-                <div className="text-center py-16">
-                    <p className="text-gray-500 text-lg">No products found.</p>
-                    <p className="text-gray-600 text-sm">Try adjusting your search or filter, or for admins, select a class to view.</p>
+                <div className="text-center py-20">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-4">
+                        <Store className="h-8 w-8 text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 text-lg font-medium">No products found</p>
+                    <p className="text-gray-400 text-sm mt-1">Try adjusting your search, or select a class to view.</p>
                 </div>
             )}
         </main>
-    );
-};
-
-const TalentCard = ({ talent, setView }) => {
-    const getDisplayTags = () => {
-        const triggerTags = talent.displayTags?.trigger || [];
-        const solutionTags = talent.displayTags?.solution || [];
-        return {
-            trigger: triggerTags,
-            solution: solutionTags
-        };
-    };
-
-    const displayTags = getDisplayTags();
-
-    return (
-        <div className="bg-white border rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 group flex flex-col">
-            <div className="relative aspect-square">
-                <img src={talent.imageUrl || 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image'} alt={talent.name} className="w-full h-full object-cover" />
-            </div>
-            <div className="p-4 flex flex-col flex-grow">
-                <h3 className="text-lg font-bold text-gray-800 truncate">{talent.name}</h3>
-                <p className="text-sm text-gray-500 mb-2 truncate">{talent.subtitle}</p>
-                <div className="flex-grow">
-                    <div className="flex flex-wrap gap-1 mb-2">
-                        {displayTags.trigger.map(tag => (
-                            <span
-                                key={tag}
-                                className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"
-                            >
-                                #{tag}
-                            </span>
-                        ))}
-                        {displayTags.solution.map(tag => (
-                            <span
-                                key={tag}
-                                className="px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800"
-                            >
-                                #{tag}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-                <div className="flex justify-between items-center mt-2"><p className="text-xl font-extrabold text-blue-600">${parseFloat(talent.price).toFixed(2)}</p><StarRating rating={talent.rating} reviewCount={talent.reviewCount} /></div>
-                <button onClick={() => setView({ page: 'talent', id: talent.id })} className="mt-4 w-full bg-blue-500 text-white py-2 rounded-full font-semibold hover:bg-blue-600 transition-colors cursor-pointer">View Details</button>
-            </div>
-        </div>
     );
 };
 
@@ -215,31 +212,23 @@ const TalentGrid = ({ talents, setView, sortOrder, setSortOrder }) => {
     return (
         <main className="container mx-auto px-4 pt-8 pb-2">
             <div className="flex justify-between items-center mb-6">
-                 <h2 className="text-3xl font-extrabold text-gray-900">Hirable Talent</h2>
-                 <div className="flex items-center space-x-2">
-                    <label htmlFor="talent-sort-order" className="text-sm font-medium text-gray-700">Sort by:</label>
-                    <select
-                        id="talent-sort-order"
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value)}
-                        className="p-2 border rounded-md text-sm"
-                    >
-                        <option value="featured">Featured</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="rating-desc">Highest Rating</option>
-                        <option value="newest">Newest Arrivals</option>
-                    </select>
+                 <div>
+                     <h2 className="text-2xl font-bold text-gray-900">Hirable Talent</h2>
+                     <p className="text-sm text-gray-400 mt-0.5">{talents.length} {talents.length === 1 ? 'profile' : 'profiles'}</p>
                  </div>
+                 <SortDropdown id="talent-sort-order" value={sortOrder} onChange={setSortOrder} />
             </div>
             {talents.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                     {talents.map(talent => (<TalentCard key={talent.id} talent={talent} setView={setView} />))}
                 </div>
             ) : (
-                <div className="text-center py-16">
-                    <p className="text-gray-500 text-lg">No talent found.</p>
-                    <p className="text-gray-600 text-sm">Try adjusting your search or filter, or for admins, select a class to view.</p>
+                <div className="text-center py-20">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-4">
+                        <Users className="h-8 w-8 text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 text-lg font-medium">No talent found</p>
+                    <p className="text-gray-400 text-sm mt-1">Try adjusting your search, or select a class to view.</p>
                 </div>
             )}
         </main>
@@ -250,20 +239,22 @@ const ReviewFormComponent = ({ productId, user }) => {
     const [ratings, setRatings] = useState({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 });
     const [text, setText] = useState(''); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
     const criteria = ['attention', 'persuasion', 'brandedRecall', 'liking'];
+    const criteriaLabels = { attention: 'Attention', persuasion: 'Persuasion', brandedRecall: 'Branded Recall', liking: 'Liking' };
     const handleRatingChange = (criterion, value) => { setRatings(prev => ({ ...prev, [criterion]: value })); };
     const updateProductRatingAfterSubmission = async () => { const reviewsRef = collection(db, "products", productId, "reviews"); const reviewsSnapshot = await getDocs(reviewsRef); const newReviewCount = reviewsSnapshot.size; let totalRating = 0; reviewsSnapshot.forEach(doc => { totalRating += doc.data().overallRating; }); const newAverageRating = newReviewCount > 0 ? totalRating / newReviewCount : 0; await updateDoc(doc(db, "products", productId), { rating: newAverageRating, reviewCount: newReviewCount }); };
     const handleReviewSubmit = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (Object.values(ratings).some(r => r === 0) || !text) { setError('Please provide a rating for all criteria and write a review.'); return; } const overallRating = Object.values(ratings).reduce((a, b) => a + b, 0) / criteria.length; try { await addDoc(collection(db, "products", productId, "reviews"), { userId: user.uid, username: user.displayName, ...ratings, overallRating, text, createdAt: serverTimestamp() }); await updateProductRatingAfterSubmission(); setSuccess('Thank you for your review!'); setRatings({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 }); setText(''); } catch (err) { setError('Failed to submit review. ' + err.message); } };
-    return (<div className="bg-white p-6 rounded-lg shadow-md border mt-8"><h3 className="text-xl font-bold text-gray-800 mb-4">Leave a Review</h3><form onSubmit={handleReviewSubmit} className="space-y-4">{criteria.map(criterion => (<div key={criterion} className="flex flex-col sm:flex-row justify-between sm:items-center"><span className="capitalize text-gray-700 mb-2 sm:mb-0">{criterion.replace(/([A-Z])/g, ' $1')}</span><div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-6 w-6 cursor-pointer ${i < ratings[criterion] ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} onClick={() => handleRatingChange(criterion, i + 1)} />))}</div></div>))}<div><textarea value={text} onChange={(e) => setText(e.target.value)} rows="4" placeholder="Share your thoughts..." className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 cursor-pointer">Submit Review</button></form></div>);
+    return (<div className="bg-white p-6 rounded-lg shadow-md border mt-8"><h3 className="text-xl font-bold text-gray-800 mb-4">Leave a Review</h3><form onSubmit={handleReviewSubmit} className="space-y-4">{criteria.map(criterion => (<div key={criterion} className="flex flex-col sm:flex-row justify-between sm:items-center"><span className="text-gray-700 font-medium mb-2 sm:mb-0">{criteriaLabels[criterion]}</span><div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-6 w-6 cursor-pointer ${i < ratings[criterion] ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} onClick={() => handleRatingChange(criterion, i + 1)} />))}</div></div>))}<div><textarea value={text} onChange={(e) => setText(e.target.value)} rows="4" placeholder="Share your thoughts..." className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 cursor-pointer">Submit Review</button></form></div>);
 };
 
 const TalentReviewForm = ({ talentId, user }) => {
     const [ratings, setRatings] = useState({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 });
     const [text, setText] = useState(''); const [error, setError] = useState(''); const [success, setSuccess] = useState('');
     const criteria = ['attention', 'persuasion', 'brandedRecall', 'liking'];
+    const criteriaLabels = { attention: 'Attention', persuasion: 'Persuasion', brandedRecall: 'Branded Recall', liking: 'Liking' };
     const handleRatingChange = (criterion, value) => { setRatings(prev => ({ ...prev, [criterion]: value })); };
     const updateTalentRatingAfterSubmission = async () => { const reviewsRef = collection(db, "avatars", talentId, "reviews"); const reviewsSnapshot = await getDocs(reviewsRef); const newReviewCount = reviewsSnapshot.size; let totalRating = 0; reviewsSnapshot.forEach(doc => { totalRating += doc.data().overallRating; }); const newAverageRating = newReviewCount > 0 ? totalRating / newReviewCount : 0; await updateDoc(doc(db, "avatars", talentId), { rating: newAverageRating, reviewCount: newReviewCount }); };
     const handleReviewSubmit = async (e) => { e.preventDefault(); setError(''); setSuccess(''); if (Object.values(ratings).some(r => r === 0) || !text) { setError('Please provide a rating for all criteria and write a review.'); return; } const overallRating = Object.values(ratings).reduce((a, b) => a + b, 0) / criteria.length; try { await addDoc(collection(db, "avatars", talentId, "reviews"), { userId: user.uid, username: user.displayName, ...ratings, overallRating, text, createdAt: serverTimestamp() }); await updateTalentRatingAfterSubmission(); setSuccess('Thank you for your review!'); setRatings({ attention: 0, persuasion: 0, brandedRecall: 0, liking: 0 }); setText(''); } catch (err) { setError('Failed to submit review. ' + err.message); } };
-    return (<div className="bg-white p-6 rounded-lg shadow-md border mt-8"><h3 className="text-xl font-bold text-gray-800 mb-4">Leave a Review</h3><form onSubmit={handleReviewSubmit} className="space-y-4">{criteria.map(criterion => (<div key={criterion} className="flex flex-col sm:flex-row justify-between sm:items-center"><span className="capitalize text-gray-700 mb-2 sm:mb-0">{criterion.replace(/([A-Z])/g, ' $1')}</span><div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-6 w-6 cursor-pointer ${i < ratings[criterion] ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} onClick={() => handleRatingChange(criterion, i + 1)} />))}</div></div>))}<div><textarea value={text} onChange={(e) => setText(e.target.value)} rows="4" placeholder="Share your thoughts..." className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 cursor-pointer">Submit Review</button></form></div>);
+    return (<div className="bg-white p-6 rounded-lg shadow-md border mt-8"><h3 className="text-xl font-bold text-gray-800 mb-4">Leave a Review</h3><form onSubmit={handleReviewSubmit} className="space-y-4">{criteria.map(criterion => (<div key={criterion} className="flex flex-col sm:flex-row justify-between sm:items-center"><span className="text-gray-700 font-medium mb-2 sm:mb-0">{criteriaLabels[criterion]}</span><div className="flex">{[...Array(5)].map((_, i) => (<Star key={i} className={`h-6 w-6 cursor-pointer ${i < ratings[criterion] ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} onClick={() => handleRatingChange(criterion, i + 1)} />))}</div></div>))}<div><textarea value={text} onChange={(e) => setText(e.target.value)} rows="4" placeholder="Share your thoughts..." className="w-full mt-2 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}{success && <p className="text-sm text-green-500 text-center">{success}</p>}<button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 cursor-pointer">Submit Review</button></form></div>);
 };
 
 const ProductPage = ({ product, setView, user }) => {
@@ -313,13 +304,15 @@ const ProductPage = ({ product, setView, user }) => {
     const initialMedia = imageMedia[0] || { type: 'image', src: 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image' };
     const [activeMedia, setActiveMedia] = useState(initialMedia);
     const [reviews, setReviews] = useState([]);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState('');
 
     const handleDownloadMedia = async () => {
         if (downloadableMedia.length === 0) return;
 
         setIsDownloading(true);
+        setDownloadError('');
         try {
             const zip = new JSZip();
             const imagesFolder = zip.folder('images');
@@ -349,7 +342,7 @@ const ProductPage = ({ product, setView, user }) => {
             }));
 
             if (addedCount === 0) {
-                alert('Failed to download any media files.');
+                setDownloadError('Failed to download media files. Please try again.');
             } else {
                 const content = await zip.generateAsync({ type: 'blob' });
                 const safeName = (product.name || 'product').replace(/[^a-zA-Z0-9]/g, '_');
@@ -580,13 +573,15 @@ const TalentPage = ({ talent, setView, user }) => {
     const initialMedia = imageMedia[0] || { type: 'image', src: 'https://placehold.co/600x600/e2e8f0/4a5568?text=Image' };
     const [activeMedia, setActiveMedia] = useState(initialMedia);
     const [reviews, setReviews] = useState([]);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState('');
 
     const handleDownloadMedia = async () => {
         if (downloadableMedia.length === 0) return;
 
         setIsDownloading(true);
+        setDownloadError('');
         try {
             const zip = new JSZip();
             const imagesFolder = zip.folder('images');
@@ -616,7 +611,7 @@ const TalentPage = ({ talent, setView, user }) => {
             }));
 
             if (addedCount === 0) {
-                alert('Failed to download any media files.');
+                setDownloadError('Failed to download media files. Please try again.');
             } else {
                 const content = await zip.generateAsync({ type: 'blob' });
                 const safeName = (talent.name || 'talent').replace(/[^a-zA-Z0-9]/g, '_');
@@ -794,10 +789,103 @@ const TalentPage = ({ talent, setView, user }) => {
 };
 
 const LoginScreen = () => {
-    const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [isLoading, setIsLoading] = useState(false);
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const formatEmail = (user) => `${user.trim()}@shopnext.dev`;
-    const handleSignIn = async (e) => { e.preventDefault(); setError(''); setIsLoading(true); try { await signInWithEmailAndPassword(auth, formatEmail(username), password); } catch (err) { setError(err.message); } setIsLoading(false); };
-    return (<div className="flex items-center justify-center min-h-[80vh] bg-gray-50"><div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-xl border"><div className="flex justify-center"><Store className="h-12 w-12 text-blue-600" /></div><h2 className="text-2xl font-bold text-center text-gray-800">Welcome to ShopNext</h2><p className="text-center text-gray-500">Please sign in to view products.</p><form onSubmit={handleSignIn} className="space-y-4"><div><label className="text-sm font-medium text-gray-700">Username</label><input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div><div><label className="text-sm font-medium text-gray-700">Password</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required/></div>{error && <p className="text-sm text-red-500 text-center">{error}</p>}<button type="submit" disabled={isLoading} className="w-full py-3 font-semibold text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-blue-300 cursor-pointer">{isLoading ? 'Signing In...' : 'Sign In'}</button></form></div></div>);
+
+    const getFriendlyError = (err) => {
+        const code = err.code || '';
+        if (code.includes('user-not-found') || code.includes('invalid-credential')) return 'Invalid username or password. Please try again.';
+        if (code.includes('wrong-password')) return 'Invalid username or password. Please try again.';
+        if (code.includes('too-many-requests')) return 'Too many failed attempts. Please wait a moment and try again.';
+        if (code.includes('network-request-failed')) return 'Network error. Please check your connection.';
+        return 'Something went wrong. Please try again.';
+    };
+
+    const handleSignIn = async (e) => {
+        e.preventDefault();
+        setError('');
+        if (!username.trim()) { setError('Please enter your username.'); return; }
+        if (!password) { setError('Please enter your password.'); return; }
+        setIsLoading(true);
+        try {
+            await signInWithEmailAndPassword(auth, formatEmail(username), password);
+        } catch (err) {
+            setError(getFriendlyError(err));
+        }
+        setIsLoading(false);
+    };
+
+    return (
+        <div className="flex items-center justify-center min-h-[80vh] bg-gray-50 px-4">
+            <div className="w-full max-w-md">
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
+                        <Store className="h-8 w-8 text-white" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900">Welcome back</h2>
+                    <p className="text-gray-500 mt-2">Sign in to your ShopNext account</p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                    <form onSubmit={handleSignIn} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => { setUsername(e.target.value); setError(''); }}
+                                placeholder="Enter your username"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                autoFocus
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                                    placeholder="Enter your password"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors pr-12"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                            </div>
+                        </div>
+                        {error && (
+                            <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                <X className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                <span>{error}</span>
+                            </div>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-3 font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-blue-400 cursor-pointer"
+                        >
+                            {isLoading ? (
+                                <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Signing in...</>
+                            ) : 'Sign In'}
+                        </button>
+                    </form>
+                </div>
+                <p className="text-center text-sm text-gray-400 mt-6">
+                    Don&apos;t have an account?{' '}
+                    <a href="/register" className="text-blue-600 hover:text-blue-700 font-medium">Register your school</a>
+                </p>
+            </div>
+        </div>
+    );
 };
 
 const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
@@ -847,6 +935,8 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showDarkModeTip, setShowDarkModeTip] = useState(!editingItem);
+    const [showTutorial, setShowTutorial] = useState(false);
+    const [formTab, setFormTab] = useState('basics');
 
     // Initialize form with editing data
     useEffect(() => {
@@ -971,6 +1061,41 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
             () => {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     setVideoUrls(prev => [...prev, downloadURL]);
+                    setIsUploading(false);
+                });
+            }
+        );
+    };
+
+    // Replace video handler (for crop/trim)
+    const handleReplaceVideo = async (file, index) => {
+        setIsUploading(true);
+        setError('');
+
+        // Delete old video from storage
+        const oldUrl = videoUrls[index];
+        if (oldUrl) {
+            try {
+                const oldRef = storageRef(storage, oldUrl);
+                await deleteObject(oldRef);
+            } catch (err) {
+                console.error("Failed to delete old video from storage:", err);
+            }
+        }
+
+        // Upload new cropped video
+        const fileRef = storageRef(storage, `${config.videoStoragePath}/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(fileRef, file);
+
+        uploadTask.on('state_changed',
+            () => {},
+            (uploadError) => {
+                setError(`Video upload failed: ${uploadError.message}`);
+                setIsUploading(false);
+            },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    setVideoUrls(prev => prev.map((url, i) => i === index ? downloadURL : url));
                     setIsUploading(false);
                 });
             }
@@ -1113,198 +1238,288 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
         return <div className="text-center py-8">Loading Editor...</div>;
     }
 
+    const inputClass = "w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white outline-none transition-all hover:border-gray-300";
+
+    const tabs = [
+        { id: 'basics', label: 'Basics', icon: Type, done: !!item.name },
+        { id: 'story', label: 'Story', icon: FileText, done: !!item.shortDescription },
+        { id: 'highlights', label: 'Highlights', icon: Sparkles, done: highlights.some(h => h.title) },
+        { id: 'tags', label: 'Tags', icon: Tag, done: triggerTags.length > 0 || solutionTags.length > 0 },
+        { id: 'photos', label: 'Photos', icon: ImageIcon, done: rtbImages.some(img => img.url) },
+        { id: 'videos', label: 'Videos', icon: Video, done: videoUrls.length > 0 },
+    ];
+
+    const tabIndex = tabs.findIndex(t => t.id === formTab);
+    const nextTab = tabs[tabIndex + 1];
+    const prevTab = tabs[tabIndex - 1];
+
     return (
-        <div className="bg-white p-8 rounded-lg shadow-md border max-w-4xl mx-auto">
-            {showDarkModeTip && !editingItem && (
-                <div className="mb-4 flex items-center justify-between bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-md">
-                    <span className="text-sm">If you can&#39;t see the words, adjust your machine from dark mode to light mode</span>
-                    <button type="button" onClick={() => setShowDarkModeTip(false)} className="ml-4 text-yellow-800 hover:text-yellow-900 cursor-pointer"><X className="h-4 w-4" /></button>
-                </div>
-            )}
-            <h3 className="text-xl font-bold mb-6 text-gray-800">{editingItem ? `Edit ${config.entityName}` : `Add New ${config.entityName}`}</h3>
-            <form onSubmit={handleSaveItem} className="space-y-6">
-                {/* Basic Info */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">{config.entityName} Name</label>
-                    <input name="name" value={item.name} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-                    <input name="subtitle" value={item.subtitle} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
-                </div>
+        <div className="max-w-5xl mx-auto pb-8">
 
-                {/* Short Description - Custom Editor */}
+            {/* Page Header */}
+            <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
-                    <RichTextEditor
-                        value={item.shortDescription}
-                        onChange={(content) => setItem(prev => ({ ...prev, shortDescription: content }))}
-                        placeholder={`Enter a brief ${config.entityLabel} description...`}
-                        minHeight={250}
-                    />
+                    <h3 className="text-2xl font-bold text-gray-900">{editingItem ? `Edit ${config.entityName}` : `Create New ${config.entityName}`}</h3>
+                    <p className="text-gray-500 mt-1">{editingItem ? `Update the details for this ${config.entityLabel}.` : `Fill in the details to create a new ${config.entityLabel}.`}</p>
                 </div>
-
-                {/* Highlights */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">{config.entityName} Highlights (Up to 6)</label>
-                    {highlights.map((h, i) => (
-                        <div key={i} className="flex items-center gap-2 mt-2">
-                            <input
-                                value={h.title}
-                                onChange={(e) => handleHighlightChange(i, 'title', e.target.value)}
-                                placeholder="Bold Title"
-                                className="p-2 border rounded-md w-1/3"
-                            />
-                            <input
-                                value={h.text}
-                                onChange={(e) => handleHighlightChange(i, 'text', e.target.value)}
-                                placeholder="Sub-headline"
-                                className="p-2 border rounded-md flex-grow"
-                            />
-                            <button type="button" onClick={() => removeHighlight(i)} className="p-2 text-red-500 hover:bg-red-100 rounded-full cursor-pointer">
-                                <X size={16} />
-                            </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    {showDarkModeTip && !editingItem && !showTutorial && (
+                        <div className="flex items-center gap-2 bg-gray-900 text-white pl-3 pr-1.5 py-1.5 rounded-xl text-xs">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
+                            <span className="text-gray-200 whitespace-nowrap">If you can&apos;t see the text, switch your device from dark mode to light mode.</span>
+                            <button type="button" onClick={() => setShowDarkModeTip(false)} className="text-gray-400 hover:text-white cursor-pointer p-1 rounded-lg hover:bg-gray-700 transition-colors"><X className="h-3.5 w-3.5" /></button>
                         </div>
-                    ))}
-                    {highlights.length < 6 && (
-                        <button type="button" onClick={addHighlight} className="text-sm text-blue-600 mt-2 font-semibold cursor-pointer">
-                            Add Highlight
-                        </button>
+                    )}
+                    {!editingItem && (
+                        <TutorialButton onClick={() => setShowTutorial(true)} />
                     )}
                 </div>
+            </div>
 
-                {/* Long Description - Custom Editor */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
-                    <RichTextEditor
-                        value={item.longDescription}
-                        onChange={(content) => setItem(prev => ({ ...prev, longDescription: content }))}
-                        placeholder={`Enter detailed ${config.entityLabel} information...`}
-                        minHeight={400}
-                    />
-                </div>
+            <form onSubmit={handleSaveItem}>
+                <div className="flex gap-6">
+                    {/* === LEFT SIDEBAR NAV === */}
+                    <div className="hidden md:block w-52 flex-shrink-0">
+                        <div className="sticky top-20 space-y-1">
+                            {tabs.map((tab, i) => {
+                                const Icon = tab.icon;
+                                const isActive = formTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => setFormTab(tab.id)}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all cursor-pointer group ${
+                                            isActive
+                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                                : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        <Icon className={`h-4 w-4 flex-shrink-0 ${isActive ? 'text-blue-100' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                                        <span className="flex-1 text-left">{tab.label}</span>
+                                        {tab.done && !isActive && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                        {tab.done && isActive && <CheckCircle2 className="h-4 w-4 text-blue-200" />}
+                                    </button>
+                                );
+                            })}
 
-                {/* Price and Category */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Price</label>
-                        <input name="price" value={item.price} onChange={handleChange} type="number" step="0.01" className="w-full mt-1 p-2 border rounded-md" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Category</label>
-                        <input name="category" value={item.category} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md" />
-                    </div>
-                </div>
-
-                {/* Tag Manager */}
-                <TagManager
-                    triggerTags={triggerTags}
-                    setTriggerTags={setTriggerTags}
-                    solutionTags={solutionTags}
-                    setSolutionTags={setSolutionTags}
-                    displayTriggerTags={displayTriggerTags}
-                    setDisplayTriggerTags={setDisplayTriggerTags}
-                    displaySolutionTags={displaySolutionTags}
-                    setDisplaySolutionTags={setDisplaySolutionTags}
-                    entityLabel={config.entityLabel}
-                />
-
-                {/* RTB Image Uploader */}
-                <RTBImageUploader
-                    rtbImages={rtbImages}
-                    setRtbImages={setRtbImages}
-                    videoUrls={videoUrls}
-                    setVideoUrls={setVideoUrls}
-                    onUploadImage={handleUploadImage}
-                    onUploadVideo={handleUploadVideo}
-                    onRemoveImage={handleRemoveImage}
-                    onRemoveVideo={handleRemoveVideo}
-                    isUploading={isUploading}
-                    uploadingSlot={uploadingSlot}
-                    error={error}
-                    setError={setError}
-                    featuredImageId={featuredImageId}
-                    setFeaturedImageId={setFeaturedImageId}
-                    rtbLabels={config.rtbLabels}
-                    imagesSectionTitle={config.imagesSectionTitle}
-                    videoSectionTitle={config.videoSectionTitle}
-                    videoLabels={config.videoLabels}
-                />
-
-                {/* Download Permissions */}
-                {(rtbImages.some(img => img.url) || videoUrls.length > 0) && (
-                    <div className="border rounded-lg p-4">
-                        <h4 className="text-md font-semibold text-gray-800 mb-1">Download Permissions</h4>
-                        <p className="text-sm text-gray-500 mb-3">Select which media files viewers are allowed to download.</p>
-
-                        {rtbImages.some(img => img.url) && (
-                            <div className="mb-3">
-                                <p className="text-sm font-medium text-gray-700 mb-2">Images</p>
-                                <div className="space-y-2">
-                                    {rtbImages.filter(img => img.url).map(img => (
-                                        <label key={img.rtbId} className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={downloadableImages.includes(img.rtbId)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setDownloadableImages(prev => [...prev, img.rtbId]);
-                                                    } else {
-                                                        setDownloadableImages(prev => prev.filter(id => id !== img.rtbId));
-                                                    }
-                                                }}
-                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 cursor-pointer"
-                                            />
-                                            <img src={img.url} alt={img.rtbLabel} className="h-10 w-10 object-cover rounded" />
-                                            <span className="text-sm text-gray-700">{img.rtbLabel}</span>
-                                        </label>
-                                    ))}
+                            {/* Progress */}
+                            <div className="pt-4 border-t border-gray-100 mt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium text-gray-500">{tabs.filter(t => t.done).length} of {tabs.length} done</span>
+                                    <span className="text-xs font-semibold text-gray-700">{Math.round((tabs.filter(t => t.done).length / tabs.length) * 100)}%</span>
                                 </div>
+                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-500" style={{ width: `${Math.round((tabs.filter(t => t.done).length / tabs.length) * 100)}%` }} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* === MAIN CONTENT === */}
+                    <div className="flex-1 min-w-0">
+                        {/* Mobile tab bar */}
+                        <div className="md:hidden flex overflow-x-auto gap-1 mb-4 bg-white rounded-xl border border-gray-200 p-1.5">
+                            {tabs.map(tab => {
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => setFormTab(tab.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                                            formTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <Icon className="h-3.5 w-3.5" />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+
+                            {/* === BASICS === */}
+                            {formTab === 'basics' && (
+                                <div className="p-6 sm:p-8 space-y-5" data-tutorial="basic-info">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 mb-1.5">{config.entityName} Name <span className="text-red-400">*</span></label>
+                                            <input name="name" value={item.name} onChange={handleChange} placeholder={`What's your ${config.entityLabel} called?`} className={inputClass} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 mb-1.5">Subtitle</label>
+                                            <input name="subtitle" value={item.subtitle} onChange={handleChange} placeholder="A punchy one-liner" className={inputClass} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-tutorial="price-category">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 mb-1.5">Price <span className="text-red-400">*</span></label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+                                                <input name="price" value={item.price} onChange={handleChange} type="number" step="0.01" placeholder="0.00" className={`${inputClass} pl-8`} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-600 mb-1.5">Category</label>
+                                            <input name="category" value={item.category} onChange={handleChange} placeholder="e.g. Electronics, Fashion" className={inputClass} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* === STORY === */}
+                            {formTab === 'story' && (
+                                <div className="p-6 sm:p-8 space-y-6" data-tutorial="descriptions">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-600 mb-2">Short Description</label>
+                                        <RichTextEditor value={item.shortDescription} onChange={(content) => setItem(prev => ({ ...prev, shortDescription: content }))} placeholder={`Enter a brief ${config.entityLabel} description...`} minHeight={180} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-600 mb-2">Detailed Description</label>
+                                        <RichTextEditor value={item.longDescription} onChange={(content) => setItem(prev => ({ ...prev, longDescription: content }))} placeholder={`Enter detailed ${config.entityLabel} information...`} minHeight={250} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* === HIGHLIGHTS === */}
+                            {formTab === 'highlights' && (
+                                <div className="p-6 sm:p-8 space-y-3" data-tutorial="highlights">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-sm text-gray-500">Feature cards on your detail page.</p>
+                                        <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{highlights.filter(h => h.title || h.text).length}/6</span>
+                                    </div>
+                                    {highlights.map((h, i) => (
+                                        <div key={i} className="flex items-center gap-2 group">
+                                            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0">{i + 1}</div>
+                                            <input value={h.title} onChange={(e) => handleHighlightChange(i, 'title', e.target.value)} placeholder="Bold title" className="px-3 py-2.5 border border-gray-200 rounded-xl w-1/3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-300 text-sm" />
+                                            <input value={h.text} onChange={(e) => handleHighlightChange(i, 'text', e.target.value)} placeholder="Supporting detail" className="px-3 py-2.5 border border-gray-200 rounded-xl flex-grow focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:border-gray-300 text-sm" />
+                                            <button type="button" onClick={() => removeHighlight(i)} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors opacity-0 group-hover:opacity-100"><X size={16} /></button>
+                                        </div>
+                                    ))}
+                                    {highlights.length < 6 && (
+                                        <button type="button" onClick={addHighlight} className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-700 cursor-pointer mt-1 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                            <PlusCircle className="h-4 w-4" /> Add highlight
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* === TAGS === */}
+                            {formTab === 'tags' && (
+                                <div className="p-6 sm:p-8" data-tutorial="tags">
+                                    <TagManager triggerTags={triggerTags} setTriggerTags={setTriggerTags} solutionTags={solutionTags} setSolutionTags={setSolutionTags} displayTriggerTags={displayTriggerTags} setDisplayTriggerTags={setDisplayTriggerTags} displaySolutionTags={displaySolutionTags} setDisplaySolutionTags={setDisplaySolutionTags} entityLabel={config.entityLabel} />
+                                </div>
+                            )}
+
+                            {/* === PHOTOS === */}
+                            {formTab === 'photos' && (
+                                <div className="p-6 sm:p-8 space-y-6" data-tutorial="media">
+                                    <RTBImageUploader rtbImages={rtbImages} setRtbImages={setRtbImages} videoUrls={videoUrls} setVideoUrls={setVideoUrls} onUploadImage={handleUploadImage} onUploadVideo={handleUploadVideo} onRemoveImage={handleRemoveImage} onRemoveVideo={handleRemoveVideo} isUploading={isUploading} uploadingSlot={uploadingSlot} error={error} setError={setError} featuredImageId={featuredImageId} setFeaturedImageId={setFeaturedImageId} rtbLabels={config.rtbLabels} imagesSectionTitle={config.imagesSectionTitle} videoSectionTitle={config.videoSectionTitle} videoLabels={config.videoLabels} />
+
+                                    {/* Photo download permissions */}
+                                    {rtbImages.some(img => img.url) && (
+                                        <div className="border border-gray-200 rounded-xl p-5 bg-gradient-to-b from-gray-50 to-white">
+                                            <div className="flex items-center gap-2 mb-3"><Download className="h-4 w-4 text-gray-500" /><h4 className="text-sm font-semibold text-gray-900">Photo Download Permissions</h4></div>
+                                            <p className="text-xs text-gray-500 mb-3">Select which photos viewers can download.</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {rtbImages.filter(img => img.url).map(img => (
+                                                    <label key={img.rtbId} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 cursor-pointer transition-colors">
+                                                        <input type="checkbox" checked={downloadableImages.includes(img.rtbId)} onChange={(e) => { if (e.target.checked) { setDownloadableImages(prev => [...prev, img.rtbId]); } else { setDownloadableImages(prev => prev.filter(id => id !== img.rtbId)); } }} className="h-4 w-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                                                        <img src={img.url} alt={img.rtbLabel} className="h-8 w-8 object-cover rounded-md" />
+                                                        <span className="text-sm text-gray-700 truncate">{img.rtbLabel}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* === VIDEOS === */}
+                            {formTab === 'videos' && (
+                                <div className="p-6 sm:p-8 space-y-6" data-tutorial="videos">
+                                    <VideoUploadSection videoUrls={videoUrls} onUpload={handleUploadVideo} onRemove={handleRemoveVideo} onReplace={handleReplaceVideo} isUploading={isUploading} sectionTitle={config.videoSectionTitle} videoLabels={config.videoLabels} />
+
+                                    {/* Video download permissions */}
+                                    {videoUrls.length > 0 && (
+                                        <div className="border border-gray-200 rounded-xl p-5 bg-gradient-to-b from-gray-50 to-white">
+                                            <div className="flex items-center gap-2 mb-3"><Download className="h-4 w-4 text-gray-500" /><h4 className="text-sm font-semibold text-gray-900">Video Download Permissions</h4></div>
+                                            <p className="text-xs text-gray-500 mb-3">Select which videos viewers can download.</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {videoUrls.map((url, index) => (
+                                                    <label key={index} className="flex items-center gap-3 p-2.5 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 cursor-pointer transition-colors">
+                                                        <input type="checkbox" checked={downloadableVideos.includes(index)} onChange={(e) => { if (e.target.checked) { setDownloadableVideos(prev => [...prev, index]); } else { setDownloadableVideos(prev => prev.filter(i => i !== index)); } }} className="h-4 w-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                                                        <Video className="h-4 w-4 text-gray-400" />
+                                                        <span className="text-sm text-gray-700 truncate">{config.videoLabels && index < config.videoLabels.length ? config.videoLabels[index] : config.videoLabels ? (() => { try { const path = decodeURIComponent(new URL(url).pathname); return path.split('/').pop().replace(/^\d+_/, ''); } catch { return `Video ${index + 1}`; } })() : `Video ${index + 1}`}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Bottom nav inside card */}
+                            <div className="border-t border-gray-100 px-6 sm:px-8 py-4 flex items-center justify-between">
+                                {prevTab ? (
+                                    <button type="button" onClick={() => setFormTab(prevTab.id)} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 cursor-pointer px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <ArrowLeft className="h-4 w-4" /> {prevTab.label}
+                                    </button>
+                                ) : <div />}
+                                {nextTab ? (
+                                    <button type="button" onClick={() => setFormTab(nextTab.id)} className="flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 cursor-pointer px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors">
+                                        {nextTab.label} <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                ) : (
+                                    <button type="submit" disabled={isUploading} className="flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-lg transition-colors cursor-pointer disabled:bg-blue-400 md:hidden">
+                                        {isUploading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>Uploading...</> : `Save ${config.entityName}`}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Error / Success below card */}
+                        {error && (
+                            <div className="mt-4 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl text-sm">
+                                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                                <div><p className="font-medium">Something went wrong</p><p className="text-red-600 mt-0.5">{error}</p></div>
+                            </div>
+                        )}
+                        {success && (
+                            <div className="mt-4 flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 px-5 py-4 rounded-2xl text-sm">
+                                <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                                <div><p className="font-medium">Success!</p><p className="text-green-600 mt-0.5">{success}</p></div>
                             </div>
                         )}
 
-                        {videoUrls.length > 0 && (
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Videos</p>
-                                <div className="space-y-2">
-                                    {videoUrls.map((url, index) => (
-                                        <label key={index} className="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={downloadableVideos.includes(index)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setDownloadableVideos(prev => [...prev, index]);
-                                                    } else {
-                                                        setDownloadableVideos(prev => prev.filter(i => i !== index));
-                                                    }
-                                                }}
-                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 cursor-pointer"
-                                            />
-                                            <Video className="h-5 w-5 text-gray-500" />
-                                            <span className="text-sm text-gray-700">{config.videoLabels && index < config.videoLabels.length ? config.videoLabels[index] : config.videoLabels ? (() => { try { const path = decodeURIComponent(new URL(url).pathname); return path.split('/').pop().replace(/^\d+_/, ''); } catch { return `Video ${index + 1}`; } })() : `Video ${index + 1}`}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
-                )}
-
-                {/* Error/Success Messages */}
-                {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-                {success && <p className="text-sm text-green-500 text-center">{success}</p>}
-
-                {/* Form Actions */}
-                <div className="flex justify-end space-x-4">
-                    <button type="button" onClick={() => setVendorView('dashboard')} className="px-6 py-2 border rounded-full cursor-pointer">
-                        Cancel
-                    </button>
-                    <button type="submit" disabled={isUploading} className="px-6 py-2 bg-blue-600 text-white rounded-full cursor-pointer disabled:bg-blue-300">
-                        {isUploading ? 'Uploading...' : `Save ${config.entityName}`}
-                    </button>
                 </div>
             </form>
+
+            {/* Sticky bottom save bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-lg border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" data-tutorial="form-actions">
+                <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+                    <button type="button" onClick={() => setVendorView('dashboard')} className="px-5 py-2.5 text-gray-500 hover:text-gray-700 font-medium transition-colors cursor-pointer rounded-xl hover:bg-gray-100 text-sm">
+                        Cancel
+                    </button>
+                    <div className="flex items-center gap-3">
+                        <span className="hidden sm:block text-xs text-gray-400">{tabs.filter(t => t.done).length}/{tabs.length} sections complete</span>
+                        <button type="button" onClick={(e) => { e.preventDefault(); document.querySelector('form')?.requestSubmit(); }} disabled={isUploading} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all cursor-pointer disabled:bg-blue-400 font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/20 text-sm">
+                            {isUploading ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>Uploading...</> : `Save ${config.entityName}`}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <SpotlightTutorial
+                steps={mode === 'talent' ? TALENT_TUTORIAL_STEPS : PRODUCT_TUTORIAL_STEPS}
+                isOpen={showTutorial}
+                onClose={() => setShowTutorial(false)}
+                storageKey={mode === 'talent' ? 'shopnext_talent_tutorial_seen' : 'shopnext_product_tutorial_seen'}
+                onSwitchTab={setFormTab}
+            />
         </div>
     );
 };
@@ -1326,46 +1541,70 @@ const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
     const handleDeleteTalent = async (talent) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "avatars", talent.id)); (talent.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (talent.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting talent: ", error); } }};
 
     return (<div>
+        <div className="mb-8 flex items-start justify-between">
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900">My Dashboard</h2>
+                <p className="text-sm text-gray-500 mt-1">Manage your content and track performance.</p>
+            </div>
+            <a href="/settings" className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                School Settings
+            </a>
+        </div>
         {/* Dashboard tabs */}
         {hasAvatarAccess && (
-            <div className="flex border-b border-gray-200 mb-6">
-                <button onClick={() => setDashTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${dashTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Products</button>
-                <button onClick={() => setDashTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${dashTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Hirable Talent</button>
+            <div className="flex gap-1 border-b border-gray-200 mb-6">
+                <button onClick={() => setDashTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${dashTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Products</button>
+                <button onClick={() => setDashTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${dashTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Hirable Talent</button>
             </div>
         )}
 
         {dashTab === 'products' && (
             <div>
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">My Products ({vendorProducts.length})</h2>
-                        <p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Class: {user?.customClaims.class})</p>
+                        <h3 className="text-xl font-bold text-gray-900">My Products <span className="text-gray-400 font-normal text-base">({vendorProducts.length})</span></h3>
+                        <p className="text-sm text-gray-500 mt-0.5">Class: {user?.customClaims.class}</p>
                     </div>
-                    <button onClick={() => { onEditProduct(null); setView({ page: 'create_product' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4 cursor-pointer"><PlusCircle className="h-5 w-5 mr-2" />Add New Product</button>
+                    <button onClick={() => { onEditProduct(null); setView({ page: 'create_product' });}} className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition-colors cursor-pointer text-sm"><PlusCircle className="h-4 w-4" />Add Product</button>
                 </div>
-                <div className="bg-white rounded-lg shadow-md border overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
-                        <tbody className="bg-white divide-y divide-gray-200">{vendorProducts.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/e2e8f0/4a5568?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditProduct(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteProduct(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody>
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-100">
+                        <thead><tr className="bg-gray-50/50"><th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rating</th><th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th></tr></thead>
+                        <tbody className="divide-y divide-gray-50">{vendorProducts.map(p => (<tr key={p.id} className="hover:bg-gray-50/50 transition-colors group"><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-lg object-cover mr-3" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/f1f5f9/94a3b8?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-sm text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex justify-end gap-1"><button onClick={() => onEditProduct(p)} className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg cursor-pointer transition-colors"><Edit className="h-4 w-4" /></button><button onClick={() => handleDeleteProduct(p)} className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg cursor-pointer transition-colors"><Trash2 className="h-4 w-4" /></button></div></td></tr>))}</tbody>
                     </table>
+                    {vendorProducts.length === 0 && (
+                        <div className="text-center py-12">
+                            <Store className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                            <p className="text-gray-500 font-medium">No products yet</p>
+                            <p className="text-sm text-gray-400 mt-1">Click &quot;Add Product&quot; to create your first one.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         )}
 
         {dashTab === 'talents' && hasAvatarAccess && (
             <div>
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-800">My Hirable Talent ({vendorTalents.length})</h2>
-                        <p className="text-sm text-gray-500">Logged in as: {user?.displayName} (Avatar Class: {user?.customClaims.avatarClass})</p>
+                        <h3 className="text-xl font-bold text-gray-900">My Talent <span className="text-gray-400 font-normal text-base">({vendorTalents.length})</span></h3>
+                        <p className="text-sm text-gray-500 mt-0.5">Avatar Class: {user?.customClaims.avatarClass}</p>
                     </div>
-                    <button onClick={() => { onEditTalent(null); setView({ page: 'create_talent' });}} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors mr-4 cursor-pointer"><PlusCircle className="h-5 w-5 mr-2" />Add New Hirable Talent</button>
+                    <button onClick={() => { onEditTalent(null); setView({ page: 'create_talent' });}} className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-blue-700 transition-colors cursor-pointer text-sm"><PlusCircle className="h-4 w-4" />Add Talent</button>
                 </div>
-                <div className="bg-white rounded-lg shadow-md border overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Talent</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
-                        <tbody className="bg-white divide-y divide-gray-200">{vendorTalents.map(p => (<tr key={p.id}><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-md object-cover mr-4" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/e2e8f0/4a5568?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex space-x-4"><button onClick={() => onEditTalent(p)} className="text-blue-600 hover:text-blue-800 cursor-pointer"><Edit className="h-5 w-5" /></button><button onClick={() => handleDeleteTalent(p)} className="text-red-600 hover:text-red-800 cursor-pointer"><Trash2 className="h-5 w-5" /></button></div></td></tr>))}</tbody>
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-100">
+                        <thead><tr className="bg-gray-50/50"><th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Talent</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Rating</th><th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th></tr></thead>
+                        <tbody className="divide-y divide-gray-50">{vendorTalents.map(p => (<tr key={p.id} className="hover:bg-gray-50/50 transition-colors group"><td className="px-6 py-4"><div className="flex items-center"><img className="h-10 w-10 rounded-lg object-cover mr-3" src={p.imageUrl || p.imageUrls?.[0] || 'https://placehold.co/100x100/f1f5f9/94a3b8?text=Img'} alt={p.name} /><span className="font-medium text-gray-900">{p.name}</span></div></td><td className="px-6 py-4 text-sm text-gray-600">${parseFloat(p.price).toFixed(2)}</td><td className="px-6 py-4"><StarRating rating={p.rating} reviewCount={p.reviewCount} /></td><td className="px-6 py-4"><div className="flex justify-end gap-1"><button onClick={() => onEditTalent(p)} className="text-gray-400 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg cursor-pointer transition-colors"><Edit className="h-4 w-4" /></button><button onClick={() => handleDeleteTalent(p)} className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg cursor-pointer transition-colors"><Trash2 className="h-4 w-4" /></button></div></td></tr>))}</tbody>
                     </table>
+                    {vendorTalents.length === 0 && (
+                        <div className="text-center py-12">
+                            <Users className="h-10 w-10 text-gray-200 mx-auto mb-3" />
+                            <p className="text-gray-500 font-medium">No talent profiles yet</p>
+                            <p className="text-sm text-gray-400 mt-1">Click &quot;Add Talent&quot; to create your first one.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         )}
@@ -1376,11 +1615,11 @@ const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={onClose}>
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-between items-center p-6 border-b">
-                    <h3 className="text-xl font-bold text-gray-800">{title}</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer"><X className="h-6 w-6" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-[fadeIn_0.15s_ease-in]" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
+                    <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer p-1 hover:bg-gray-100 rounded-lg transition-colors"><X className="h-5 w-5" /></button>
                 </div>
                 <div className="p-6">{children}</div>
             </div>
@@ -1821,12 +2060,15 @@ const SuperAdminDashboard = ({ user, onEditProduct, onEditTalent }) => {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Super Admin Dashboard</h2>
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">Super Admin Dashboard</h2>
+                <p className="text-sm text-gray-500 mt-1">Manage classes, vendors, and platform content.</p>
+            </div>
 
             {/* Admin tab switcher */}
-            <div className="flex border-b border-gray-200 mb-6">
-                <button onClick={() => setAdminTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${adminTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Products</button>
-                <button onClick={() => setAdminTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${adminTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Hirable Talent</button>
+            <div className="flex gap-1 border-b border-gray-200 mb-6">
+                <button onClick={() => setAdminTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${adminTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Products</button>
+                <button onClick={() => setAdminTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${adminTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Hirable Talent</button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1951,17 +2193,17 @@ const SuperAdminDashboard = ({ user, onEditProduct, onEditTalent }) => {
 };
 
 const AdminClassSelector = ({ classes, adminViewingClass, setAdminViewingClass }) => (
-    <div className="container mx-auto px-4 pt-6 pb-2 bg-blue-50 border-b border-blue-200">
-        <div className="flex items-center space-x-3 bg-white p-4 rounded-lg shadow-sm border border-blue-200">
-            <Eye className="h-6 w-6 text-blue-600" />
-            <label htmlFor="admin-class-select" className="font-bold text-gray-700">Admin View:</label>
+    <div className="container mx-auto px-4 pt-4 pb-2">
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 p-3 px-4 rounded-xl">
+            <Eye className="h-5 w-5 text-blue-600 flex-shrink-0" />
+            <label htmlFor="admin-class-select" className="font-medium text-gray-700 text-sm whitespace-nowrap">Viewing Class:</label>
             <select
                 id="admin-class-select"
                 value={adminViewingClass}
                 onChange={(e) => setAdminViewingClass(e.target.value)}
-                className="p-2 border rounded-md w-full max-w-xs"
+                className="px-3 py-2 border border-blue-200 rounded-lg w-full max-w-xs text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             >
-                <option value="">-- Select a Class to View --</option>
+                <option value="">Select a class...</option>
                 {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
         </div>
@@ -1971,6 +2213,7 @@ const AdminClassSelector = ({ classes, adminViewingClass, setAdminViewingClass }
 
 // --- MAIN APP COMPONENT ---
 export default function App() {
+  const { schoolConfig } = useSchoolConfig();
   const [view, setView] = useState({ page: 'home', id: null });
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([]);
@@ -2189,7 +2432,7 @@ export default function App() {
   }, [talents, searchQuery, avatarSortOrder]);
 
   const renderView = () => {
-    if (loading) { return <div className="min-h-screen flex items-center justify-center text-lg">Loading Application...</div> }
+    if (loading) { return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><Store className="h-12 w-12 text-blue-600 mx-auto animate-pulse" /><p className="mt-4 text-gray-500 font-medium">Loading ShopNext...</p></div></div> }
     if (!user) { return <LoginScreen/> }
 
     const isSuperAdmin = (user.customClaims && user.customClaims.superAdmin === true) || user.uid === SUPER_ADMIN_UID;
@@ -2253,9 +2496,9 @@ export default function App() {
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
-        <Header setView={setView} user={user} onSignOut={handleSignOut} searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeTab={activeTab} />
+        <Header setView={setView} user={user} onSignOut={handleSignOut} searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeTab={activeTab} schoolConfig={schoolConfig} />
         {renderView()}
-        <Footer />
+        <Footer schoolConfig={schoolConfig} />
     </div>
   );
 }
