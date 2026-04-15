@@ -970,7 +970,12 @@ const CreateItemForm = ({ setVendorView, user, editingItem, mode }) => {
 
             // Handle both old and new image formats
             if (editingItem.rtbImages && editingItem.rtbImages.length > 0) {
-                setRtbImages(editingItem.rtbImages);
+                // Merge saved images (which only contain slots with URLs) back into the full set of slots
+                const mergedImages = config.rtbLabels.map(rtb => {
+                    const saved = editingItem.rtbImages.find(img => img.rtbId === rtb.id);
+                    return saved ? { ...saved, rtbLabel: rtb.name } : { rtbId: rtb.id, rtbLabel: rtb.name, url: '' };
+                });
+                setRtbImages(mergedImages);
                 // Set featured image ID if it exists, otherwise default to first image with URL
                 if (editingItem.featuredImageId) {
                     setFeaturedImageId(editingItem.featuredImageId);
