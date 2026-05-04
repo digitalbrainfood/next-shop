@@ -17,6 +17,7 @@ export function DualAccessDrawer({ open, onClose, onResolved }) {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
     const [splitResult, setSplitResult] = useState(null); // { username, password } after a Split
+    const [successMessage, setSuccessMessage] = useState(null);
 
     useEffect(() => { if (open) { setIndex(0); setError(null); setSplitResult(null); refresh(); } }, [open]);
 
@@ -32,16 +33,18 @@ export function DualAccessDrawer({ open, onClose, onResolved }) {
         try {
             if (choice === 'keep-class') {
                 const fn = httpsCallable(functions, 'convertStudentRole');
-                await fn({ uid: current.uid, keepRole: 'class' });
+                const res = await fn({ uid: current.uid, keepRole: 'class' });
                 await logEvent({ type: 'student.role_converted', message: `${current.displayName || current.email}: kept Products, dropped Talent.`, school: current.class, target: { uid: current.uid } });
                 onResolved?.();
-                advance();
+                setSuccessMessage(res.data?.message || 'Student converted. They must sign out and sign back in for the change to take effect.');
+                setTimeout(() => { setSuccessMessage(null); advance(); }, 2200);
             } else if (choice === 'keep-avatarClass') {
                 const fn = httpsCallable(functions, 'convertStudentRole');
-                await fn({ uid: current.uid, keepRole: 'avatarClass' });
+                const res = await fn({ uid: current.uid, keepRole: 'avatarClass' });
                 await logEvent({ type: 'student.role_converted', message: `${current.displayName || current.email}: kept Talent, dropped Products.`, school: current.avatarClass, target: { uid: current.uid } });
                 onResolved?.();
-                advance();
+                setSuccessMessage(res.data?.message || 'Student converted. They must sign out and sign back in for the change to take effect.');
+                setTimeout(() => { setSuccessMessage(null); advance(); }, 2200);
             } else if (choice === 'split') {
                 const conv = httpsCallable(functions, 'convertStudentRole');
                 await conv({ uid: current.uid, keepRole: 'class' });
@@ -88,6 +91,13 @@ export function DualAccessDrawer({ open, onClose, onResolved }) {
                             <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-3" />
                             <p className="font-semibold text-gray-900">All clean</p>
                             <p className="text-sm text-gray-500 mt-1">No students with dual access remain.</p>
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="mb-4 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                            <span>{successMessage}</span>
                         </div>
                     )}
 
