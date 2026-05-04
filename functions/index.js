@@ -515,3 +515,40 @@ exports.listDualAccessStudents = onCall(
     return { success: true, users: dual };
   }
 );
+
+/**
+ * Resets a student's password to a server-supplied value.
+ * Super admin only. Returns success but never echoes the new password back —
+ * the caller passes the password in.
+ */
+exports.resetStudentPassword = onCall(
+  { timeoutSeconds: 60, memory: "256MiB", minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const { auth, data } = request;
+
+    if (!auth) {
+      throw new HttpsError("unauthenticated", "You must be logged in.");
+    }
+
+    const isSuperAdmin = auth.token?.superAdmin === true || auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
+    if (!isSuperAdmin) {
+      throw new HttpsError("permission-denied", "You do not have permission to reset passwords.");
+    }
+
+    const { uid, newPassword } = data || {};
+    if (!uid || !newPassword || newPassword.length < 6) {
+      throw new HttpsError("invalid-argument", "Provide uid and newPassword (6+ chars).");
+    }
+
+    try {
+      const authService = getAuth();
+      await authService.updateUser(uid, { password: newPassword });
+      return { success: true, uid };
+    } catch (error) {
+      if (error.code === 'auth/user-not-found') {
+        throw new HttpsError("not-found", "Student not found.");
+      }
+      throw new HttpsError("internal", error.message);
+    }
+  }
+);

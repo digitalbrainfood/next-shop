@@ -6,6 +6,7 @@ const mockSetCustomUserClaims = jest.fn();
 const mockGetUser = jest.fn();
 const mockListUsers = jest.fn();
 const mockDeleteUser = jest.fn();
+const mockUpdateUser = jest.fn();
 
 jest.mock('firebase-admin/auth', () => ({
     getAuth: () => ({
@@ -15,6 +16,7 @@ jest.mock('firebase-admin/auth', () => ({
         getUser: mockGetUser,
         listUsers: mockListUsers,
         deleteUser: mockDeleteUser,
+        updateUser: mockUpdateUser,
     }),
 }));
 
@@ -256,5 +258,35 @@ describe('listDualAccessStudents', () => {
         });
         // Teacher's scope is `morning`; passing scope=`evening` must NOT reveal evening students.
         expect(result.users.map(u => u.uid)).toEqual([]);
+    });
+});
+
+describe('resetStudentPassword', () => {
+    test('super admin updates password', async () => {
+        mockUpdateUser.mockResolvedValue();
+        const wrapped = ftest.wrap(myFunctions.resetStudentPassword);
+        const result = await wrapped({
+            data: { uid: 'student-uid', newPassword: 'pw1234' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        });
+        expect(result.success).toBe(true);
+        expect(mockUpdateUser).toHaveBeenCalledWith('student-uid', { password: 'pw1234' });
+    });
+
+    test('rejects non-super-admin', async () => {
+        const wrapped = ftest.wrap(myFunctions.resetStudentPassword);
+        await expect(wrapped({
+            data: { uid: 'student-uid', newPassword: 'pw1234' },
+            auth: { uid: 'teacher-uid', token: { class: 'morning' } },
+        })).rejects.toThrow(/permission/i);
+        expect(mockUpdateUser).not.toHaveBeenCalled();
+    });
+
+    test('rejects short password', async () => {
+        const wrapped = ftest.wrap(myFunctions.resetStudentPassword);
+        await expect(wrapped({
+            data: { uid: 'student-uid', newPassword: 'pw' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        })).rejects.toThrow(/6\+ chars/i);
     });
 });
