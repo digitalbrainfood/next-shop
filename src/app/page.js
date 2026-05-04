@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { Store, UserCircle, Star, ArrowLeft, PlusCircle, Video, Trash2, Edit, LogOut, ShieldCheck, GripVertical, ChevronDown, ChevronUp, X, Eye, Search, UserMinus, Users, FolderPlus, EyeOff, RefreshCw, Download, Type, FileText, Sparkles, Tag, ImageIcon, CheckCircle2, ChevronRight, AlertTriangle } from 'lucide-react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -68,10 +69,17 @@ const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery, activeT
                             </span>
                         )}
                         {!isViewerUser && (
-                            <button onClick={() => setView({ page: 'dashboard' })} className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
-                                {isSuperAdmin ? <ShieldCheck className="h-4 w-4" /> : <UserCircle className="h-4 w-4" />}
-                                <span className="hidden sm:inline">Dashboard</span>
-                            </button>
+                            isSuperAdmin ? (
+                                <Link href="/admin" className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                                    <ShieldCheck className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Admin</span>
+                                </Link>
+                            ) : (
+                                <button onClick={() => setView({ page: 'dashboard' })} className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                                    <UserCircle className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Dashboard</span>
+                                </button>
+                            )
                         )}
                         <button onClick={onSignOut} title="Sign Out" className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer p-2 rounded-lg hover:bg-red-50"><LogOut className="h-5 w-5" /></button>
                     </div>
