@@ -59,31 +59,42 @@ exports.createNewVendor = onCall(
     }
 
     try {
-      // 4. Create the User in Firebase Authentication
       const authService = getAuth();
+      const email = `${username.trim()}@shopnext.dev`;
+
+      try {
+        const existing = await authService.getUserByEmail(email);
+        if (existing) {
+          throw new HttpsError(
+            "already-exists",
+            "A user with this username already exists. Pick a different username, or use Convert Role on the existing student."
+          );
+        }
+      } catch (lookupErr) {
+        if (lookupErr instanceof HttpsError) throw lookupErr;
+        if (lookupErr.code !== 'auth/user-not-found') throw lookupErr;
+      }
+
       const userRecord = await authService.createUser({
-        email: `${username.trim()}@shopnext.dev`,
+        email,
         password: password,
         displayName: username.trim(),
       });
 
-      // 5. Set Custom Claims for the new user. This gives them their 'class' role.
       await authService.setCustomUserClaims(userRecord.uid, {
-        class: className.trim().toLowerCase(),  // Add .toLowerCase()
+        class: className.trim().toLowerCase(),
       });
 
       console.log("Successfully created new vendor:", userRecord.uid);
 
-      // 6. Return a success message.
       return {
         success: true,
         result: `Successfully created user ${username} in class ${className}.`,
-        uid: userRecord.uid
+        uid: userRecord.uid,
       };
     } catch (error) {
       console.error("Error creating new user:", error);
-      
-      // Handle specific Firebase Auth errors
+      if (error instanceof HttpsError) throw error;
       if (error.code === 'auth/email-already-exists') {
         throw new HttpsError("already-exists", "A user with this username already exists.");
       } else if (error.code === 'auth/invalid-email') {
@@ -91,8 +102,6 @@ exports.createNewVendor = onCall(
       } else if (error.code === 'auth/weak-password') {
         throw new HttpsError("invalid-argument", "Password is too weak.");
       }
-      
-      // Handle potential errors, like if the email already exists.
       throw new HttpsError("internal", error.message);
     }
   }
