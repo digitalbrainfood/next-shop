@@ -13,44 +13,78 @@ function ClassesSection({ kind, title, classes, students, collectionName, school
     const [name, setName] = useState('');
     const [editingId, setEditingId] = useState(null);
     const [editingName, setEditingName] = useState('');
+    const [error, setError] = useState(null);
+    const [busy, setBusy] = useState(false);
 
     const studentCount = (classId) => students.filter(s =>
         kind === 'product' ? s.class === classId : s.avatarClass === classId
     ).length;
 
+    const friendlyError = (err) => {
+        const msg = err?.message || String(err);
+        if (/permission|denied|insufficient/i.test(msg)) {
+            return 'Permission denied. Your account needs the super-admin claim to manage classes.';
+        }
+        return msg;
+    };
+
     const addClass = async () => {
         const id = name.trim().toLowerCase();
         if (id.length < 2) return;
-        const display = id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ');
-        await setDoc(doc(db, collectionName, id), { name: display });
-        await logEvent({
-            type: 'class.created',
-            message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" created.`,
-            school,
-        });
-        setName(''); setAdding(false);
+        setBusy(true);
+        setError(null);
+        try {
+            const display = id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ');
+            await setDoc(doc(db, collectionName, id), { name: display });
+            await logEvent({
+                type: 'class.created',
+                message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" created.`,
+                school,
+            });
+            setName(''); setAdding(false);
+        } catch (err) {
+            setError(friendlyError(err));
+        } finally {
+            setBusy(false);
+        }
     };
 
     const renameClass = async (id) => {
         const newName = editingName.trim();
         if (newName.length < 1) return;
-        await updateDoc(doc(db, collectionName, id), { name: newName });
-        await logEvent({
-            type: 'class.renamed',
-            message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" renamed to "${newName}".`,
-            school,
-        });
-        setEditingId(null);
+        setBusy(true);
+        setError(null);
+        try {
+            await updateDoc(doc(db, collectionName, id), { name: newName });
+            await logEvent({
+                type: 'class.renamed',
+                message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" renamed to "${newName}".`,
+                school,
+            });
+            setEditingId(null);
+        } catch (err) {
+            setError(friendlyError(err));
+        } finally {
+            setBusy(false);
+        }
     };
 
     const deleteClass = async (id) => {
         if (!window.confirm(`Delete class "${id}"? Existing students/content keep their class assignment, but this class won't appear in dropdowns.`)) return;
-        await deleteDoc(doc(db, collectionName, id));
-        await logEvent({
-            type: 'class.deleted',
-            message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" deleted.`,
-            school,
-        });
+        setBusy(true);
+        setError(null);
+        try {
+            await deleteDoc(doc(db, collectionName, id));
+            await logEvent({
+                type: 'class.deleted',
+                message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" deleted.`,
+                school,
+            });
+        } catch (err) {
+            setError(friendlyError(err));
+        } finally {
+            setBusy(false);
+        }
     };
 
     return (
@@ -66,8 +100,15 @@ function ClassesSection({ kind, title, classes, students, collectionName, school
                 <div className="flex gap-2 mb-3">
                     <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. morning-class" autoFocus
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-                    <button onClick={addClass} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 cursor-pointer">Add</button>
-                    <button onClick={() => { setAdding(false); setName(''); }} className="text-sm text-gray-500 hover:text-gray-700 px-2 cursor-pointer">Cancel</button>
+                    <button onClick={addClass} disabled={busy} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:bg-blue-300 cursor-pointer">{busy ? 'Adding...' : 'Add'}</button>
+                    <button onClick={() => { setAdding(false); setName(''); setError(null); }} className="text-sm text-gray-500 hover:text-gray-700 px-2 cursor-pointer">Cancel</button>
+                </div>
+            )}
+
+            {error && (
+                <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start justify-between gap-2">
+                    <span>{error}</span>
+                    <button onClick={() => setError(null)} className="text-red-700 hover:text-red-900 cursor-pointer text-xs underline shrink-0">dismiss</button>
                 </div>
             )}
 

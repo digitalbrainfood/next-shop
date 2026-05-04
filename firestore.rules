@@ -3,9 +3,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: check if user is a super admin
+    // Helper: check if user is a super admin.
+    // Accepts either the `superAdmin: true` custom claim OR the hardcoded
+    // initial-admin UID. Mirrors the dual check in functions/index.js so
+    // rules and callable functions stay consistent.
     function isSuperAdmin() {
-      return request.auth != null && request.auth.token.superAdmin == true;
+      return request.auth != null
+        && (request.auth.token.superAdmin == true
+            || request.auth.uid == "RnBej9HSStVJXA0rtIB02W0R1yv2");
     }
 
     // Helper: check if user is a viewer
