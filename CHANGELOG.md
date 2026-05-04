@@ -13,3 +13,9 @@
 - Dual-access cleanup drawer wired up; one-click resolution per student.
 - `src/app/page.js` shrunk substantially (admin tab and 2 modals removed).
 - Cloud function tests: 17 passing in `functions/test/cloud-functions.test.js`.
+
+## 2026-05-04 — Phase 8 fix-ups (post-review)
+
+- `/dashboard` now requires `superAdmin` claim (matches the production model where each professor is provisioned as super admin).
+- `firestore.rules` `students/{uid}` create/update tightened: caller must own the matching `class`/`avatarClass` of the doc payload.
+- `dashboardRouteFor` simplified — it now only returns `/admin` for super admins.
