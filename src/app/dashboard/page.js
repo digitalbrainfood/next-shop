@@ -5,7 +5,7 @@ import { StatCard } from '../../components/admin/StatCard';
 import { NeedsAttention } from '../../components/admin/NeedsAttention';
 import { RecentStudentsTable } from '../../components/admin/RecentStudentsTable';
 import { ClassBreakdown } from '../../components/admin/ClassBreakdown';
-// TODO Phase 6: import { DualAccessDrawer } from '../../components/admin/cleanup/DualAccessDrawer';
+import { DualAccessDrawer } from '../../components/admin/cleanup/DualAccessDrawer';
 import { useStudents } from '../../lib/admin/useStudents';
 import { useClasses } from '../../lib/admin/useClasses';
 import { useDualAccessStudents } from '../../lib/admin/useDualAccessStudents';
@@ -27,8 +27,7 @@ export default function DashboardOverview() {
         attention.push({
             message: `${dual.users.length} student${dual.users.length !== 1 ? 's' : ''} have access to both Products and Talent.`,
             cta: 'Resolve',
-            // TODO Phase 6: re-enable DualAccessDrawer
-            onResolve: () => {},
+            onResolve: () => setDrawerOpen(true),
         });
     }
 
@@ -57,12 +56,11 @@ export default function DashboardOverview() {
                 </div>
             </div>
 
-            {/* TODO Phase 6: re-enable DualAccessDrawer
             <DualAccessDrawer
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 onResolved={() => dual.refresh()}
-            /> */}
+            />
         </div>
     );
 }
