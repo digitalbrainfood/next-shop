@@ -7,6 +7,7 @@ import {
 import { db } from '../../lib/firebase';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { StatCard } from '../../components/admin/StatCard';
+import { useDualAccessStudents } from '../../lib/admin/useDualAccessStudents';
 
 const STATUS_CONFIG = {
     active: { label: 'Active', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
@@ -128,6 +129,8 @@ export default function AdminDashboardPage() {
         return () => unsubscribe();
     }, []);
 
+    const dualAccess = useDualAccessStudents();
+
     const filtered = schools.filter(c => {
         const matchesSearch = !searchQuery ||
             (c.schoolName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -153,7 +156,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <StatCard
                     icon={Users}
                     label="Total Customers"
@@ -177,6 +180,13 @@ export default function AdminDashboardPage() {
                     label="Active Instances"
                     value={`${activeCount}/${schools.length}`}
                     subtext={expiringCount > 0 ? `${expiringCount} expiring soon` : undefined}
+                    color="bg-amber-100 text-amber-600"
+                />
+                <StatCard
+                    icon={AlertTriangle}
+                    label="Dual-access students"
+                    value={dualAccess.users.length}
+                    subtext={dualAccess.users.length > 0 ? 'Across all schools' : undefined}
                     color="bg-amber-100 text-amber-600"
                 />
             </div>
