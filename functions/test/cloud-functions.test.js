@@ -143,6 +143,57 @@ describe('convertStudentRole', () => {
             data: { uid: 'target-uid', keepRole: 'class' },
         })).rejects.toThrow(/logged in/i);
     });
+
+    test('teacher with class=morning can keep class for their student', async () => {
+        mockGetUser.mockResolvedValue({
+            uid: 'target-uid',
+            customClaims: { class: 'morning', avatarClass: 'morning' },
+        });
+        mockSetCustomUserClaims.mockResolvedValue();
+
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        const result = await wrapped({
+            data: { uid: 'target-uid', keepRole: 'class' },
+            auth: { uid: 'teacher-uid', token: { class: 'morning' } },
+        });
+        expect(result.success).toBe(true);
+        expect(mockSetCustomUserClaims).toHaveBeenCalledWith('target-uid', { class: 'morning' });
+    });
+
+    test('teacher with class=morning CANNOT strip their own class via keepRole=avatarClass', async () => {
+        mockGetUser.mockResolvedValue({
+            uid: 'target-uid',
+            customClaims: { class: 'morning', avatarClass: 'evening' },
+        });
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        await expect(wrapped({
+            data: { uid: 'target-uid', keepRole: 'avatarClass' },
+            auth: { uid: 'teacher-uid', token: { class: 'morning' } },
+        })).rejects.toThrow(/permission/i);
+        expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+    });
+
+    test('viewer caller is rejected before getUser is called', async () => {
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        await expect(wrapped({
+            data: { uid: 'target-uid', keepRole: 'class' },
+            auth: { uid: 'viewer-uid', token: { viewer: true } },
+        })).rejects.toThrow(/permission/i);
+        expect(mockGetUser).not.toHaveBeenCalled();
+    });
+
+    test('keepRole=class with missing class on target throws failed-precondition', async () => {
+        mockGetUser.mockResolvedValue({
+            uid: 'target-uid',
+            customClaims: { avatarClass: 'morning' }, // no class
+        });
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        await expect(wrapped({
+            data: { uid: 'target-uid', keepRole: 'class' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        })).rejects.toThrow(/no `class` claim/);
+        expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+    });
 });
 
 describe('listDualAccessStudents', () => {
@@ -189,5 +240,21 @@ describe('listDualAccessStudents', () => {
     test('rejects unauthenticated', async () => {
         const wrapped = ftest.wrap(myFunctions.listDualAccessStudents);
         await expect(wrapped({ data: {} })).rejects.toThrow(/logged in/i);
+    });
+
+    test('teacher cannot widen their view by passing a scope outside their classes', async () => {
+        mockListUsers.mockResolvedValue({
+            users: [
+                { uid: 'a', email: 'a@x', displayName: 'a', customClaims: { class: 'morning', avatarClass: 'morning' } },
+                { uid: 'd', email: 'd@x', displayName: 'd', customClaims: { class: 'evening', avatarClass: 'evening' } },
+            ],
+        });
+        const wrapped = ftest.wrap(myFunctions.listDualAccessStudents);
+        const result = await wrapped({
+            data: { scope: 'evening' },
+            auth: { uid: 'teacher-uid', token: { class: 'morning' } },
+        });
+        // Teacher's scope is `morning`; passing scope=`evening` must NOT reveal evening students.
+        expect(result.users.map(u => u.uid)).toEqual([]);
     });
 });

@@ -428,16 +428,29 @@ exports.convertStudentRole = onCall(
       throw new HttpsError("invalid-argument", "Provide uid and keepRole ('class' or 'avatarClass').");
     }
 
+    const isSuperAdmin = auth.token?.superAdmin === true;
+    const isInitialAdmin = auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
+    if (!isSuperAdmin && !isInitialAdmin && !auth.token?.class && !auth.token?.avatarClass) {
+      throw new HttpsError("permission-denied", "You do not have permission to convert this student.");
+    }
+
     const authService = getAuth();
     const target = await authService.getUser(uid);
     const existing = target.customClaims || {};
 
-    const isSuperAdmin = auth.token?.superAdmin === true;
-    const isInitialAdmin = auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
-    const callerOwnsClass = auth.token?.class && auth.token.class === existing.class;
-    const callerOwnsAvatar = auth.token?.avatarClass && auth.token.avatarClass === existing.avatarClass;
+    if (keepRole === 'class' && !existing.class) {
+      throw new HttpsError("failed-precondition", "Target student has no `class` claim to keep.");
+    }
+    if (keepRole === 'avatarClass' && !existing.avatarClass) {
+      throw new HttpsError("failed-precondition", "Target student has no `avatarClass` claim to keep.");
+    }
 
-    if (!isSuperAdmin && !isInitialAdmin && !callerOwnsClass && !callerOwnsAvatar) {
+    const ownsKeptRoleClass = keepRole === 'class'
+        && auth.token?.class && auth.token.class === existing.class;
+    const ownsKeptRoleAvatar = keepRole === 'avatarClass'
+        && auth.token?.avatarClass && auth.token.avatarClass === existing.avatarClass;
+
+    if (!isSuperAdmin && !isInitialAdmin && !ownsKeptRoleClass && !ownsKeptRoleAvatar) {
       throw new HttpsError("permission-denied", "You do not have permission to convert this student.");
     }
 
@@ -478,15 +491,18 @@ exports.listDualAccessStudents = onCall(
     const authService = getAuth();
     const { users } = await authService.listUsers();
 
-    const dual = users.filter(u => {
-      const c = u.customClaims || {};
-      if (!(c.class && c.avatarClass)) return false;
-      if (scope) {
-        return c.class === scope || c.avatarClass === scope;
-      }
+    const inTeacherScope = (c) => {
       if (isSuperAdmin) return true;
       return (teacherClass && (c.class === teacherClass || c.avatarClass === teacherClass)) ||
              (teacherAvatarClass && (c.class === teacherAvatarClass || c.avatarClass === teacherAvatarClass));
+    };
+
+    const dual = users.filter(u => {
+      const c = u.customClaims || {};
+      if (!(c.class && c.avatarClass)) return false;
+      if (!inTeacherScope(c)) return false;
+      if (scope && c.class !== scope && c.avatarClass !== scope) return false;
+      return true;
     }).map(u => ({
       uid: u.uid,
       email: u.email,
