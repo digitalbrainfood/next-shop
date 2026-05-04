@@ -93,5 +93,27 @@ service cloud.firestore {
         allow write: if false;
       }
     }
+
+    // Per-student teacher notes & metadata (additive — no migration of existing data)
+    match /students/{uid} {
+      function isOwnRecord() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+      function teacherOwnsThisStudent() {
+        return request.auth != null
+          && (
+            (request.auth.token.class != null
+              && resource.data.class == request.auth.token.class)
+            || (request.auth.token.avatarClass != null
+              && resource.data.avatarClass == request.auth.token.avatarClass)
+          );
+      }
+
+      allow read:   if isSuperAdmin() || isOwnRecord() || teacherOwnsThisStudent();
+      allow create, update: if isSuperAdmin()
+        || (request.auth != null
+            && (request.auth.token.class != null || request.auth.token.avatarClass != null));
+      allow delete: if isSuperAdmin();
+    }
   }
 }
