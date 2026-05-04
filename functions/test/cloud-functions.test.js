@@ -95,3 +95,52 @@ describe('createAvatarVendor', () => {
         expect(mockSetCustomUserClaims).toHaveBeenCalledWith('new-uid', { avatarClass: 'evening' });
     });
 });
+
+describe('convertStudentRole', () => {
+    test('keepRole=class strips avatarClass', async () => {
+        mockGetUser.mockResolvedValue({
+            uid: 'target-uid',
+            customClaims: { class: 'morning', avatarClass: 'morning' },
+        });
+        mockSetCustomUserClaims.mockResolvedValue();
+
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        const result = await wrapped({
+            data: { uid: 'target-uid', keepRole: 'class' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        });
+
+        expect(result.success).toBe(true);
+        expect(mockSetCustomUserClaims).toHaveBeenCalledWith('target-uid', { class: 'morning' });
+    });
+
+    test('keepRole=avatarClass strips class', async () => {
+        mockGetUser.mockResolvedValue({
+            uid: 'target-uid',
+            customClaims: { class: 'morning', avatarClass: 'morning' },
+        });
+        mockSetCustomUserClaims.mockResolvedValue();
+
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        await wrapped({
+            data: { uid: 'target-uid', keepRole: 'avatarClass' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        });
+        expect(mockSetCustomUserClaims).toHaveBeenCalledWith('target-uid', { avatarClass: 'morning' });
+    });
+
+    test('rejects invalid keepRole', async () => {
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        await expect(wrapped({
+            data: { uid: 'target-uid', keepRole: 'banana' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        })).rejects.toThrow(/keepRole/i);
+    });
+
+    test('rejects unauthenticated caller', async () => {
+        const wrapped = ftest.wrap(myFunctions.convertStudentRole);
+        await expect(wrapped({
+            data: { uid: 'target-uid', keepRole: 'class' },
+        })).rejects.toThrow(/logged in/i);
+    });
+});

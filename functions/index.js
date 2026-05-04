@@ -413,3 +413,46 @@ exports.deleteUser = onCall(
     }
   }
 );
+
+exports.convertStudentRole = onCall(
+  { timeoutSeconds: 60, memory: "256MiB", minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const { auth, data } = request;
+
+    if (!auth) {
+      throw new HttpsError("unauthenticated", "You must be logged in to convert a student.");
+    }
+
+    const { uid, keepRole } = data || {};
+    if (!uid || (keepRole !== 'class' && keepRole !== 'avatarClass')) {
+      throw new HttpsError("invalid-argument", "Provide uid and keepRole ('class' or 'avatarClass').");
+    }
+
+    const authService = getAuth();
+    const target = await authService.getUser(uid);
+    const existing = target.customClaims || {};
+
+    const isSuperAdmin = auth.token?.superAdmin === true;
+    const isInitialAdmin = auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
+    const callerOwnsClass = auth.token?.class && auth.token.class === existing.class;
+    const callerOwnsAvatar = auth.token?.avatarClass && auth.token.avatarClass === existing.avatarClass;
+
+    if (!isSuperAdmin && !isInitialAdmin && !callerOwnsClass && !callerOwnsAvatar) {
+      throw new HttpsError("permission-denied", "You do not have permission to convert this student.");
+    }
+
+    const next = {};
+    if (keepRole === 'class' && existing.class) next.class = existing.class;
+    if (keepRole === 'avatarClass' && existing.avatarClass) next.avatarClass = existing.avatarClass;
+    if (existing.viewer) next.viewer = existing.viewer;
+
+    await authService.setCustomUserClaims(uid, next);
+
+    return {
+      success: true,
+      uid,
+      claims: next,
+      message: "Student converted. They must sign out and sign back in for the change to take effect.",
+    };
+  }
+);
