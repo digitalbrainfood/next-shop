@@ -21,3 +21,6 @@ npm-debug.log*
 
 # superpowers brainstorming
 .superpowers/
+
+# local data backups (contain PII / hashed passwords)
+backups/
