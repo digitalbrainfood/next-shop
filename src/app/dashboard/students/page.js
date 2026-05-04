@@ -9,6 +9,21 @@ import { generateFriendlyPassword } from '../../../components/admin/wizard/passw
 import { logEvent } from '../../../lib/admin/logEvent';
 import { useSchoolConfig } from '../../../lib/useSchoolConfig';
 
+function relTime(value) {
+    if (!value) return 'Never';
+    const t = new Date(value).getTime();
+    if (isNaN(t)) return '—';
+    const seconds = Math.floor((Date.now() - t) / 1000);
+    if (seconds < 60) return 'just now';
+    const m = Math.floor(seconds / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return new Date(value).toLocaleDateString();
+}
+
 export default function StudentsPage() {
     const { students, loading, refresh } = useStudents();
     const [q, setQ] = useState('');
@@ -106,6 +121,7 @@ export default function StudentsPage() {
                                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
                                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">Class</th>
                                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">Last active</th>
                                 <th className="px-5 py-3"></th>
                             </tr>
                         </thead>
@@ -120,6 +136,7 @@ export default function StudentsPage() {
                                         <td className="px-5 py-3"><RolePill role={role} size="xs" /></td>
                                         <td className="px-5 py-3 text-sm text-gray-600">{s.class || s.avatarClass || '—'}</td>
                                         <td className="px-5 py-3 text-sm text-gray-500">{s.email}</td>
+                                        <td className="px-5 py-3 text-sm text-gray-500">{relTime(s.lastSignInTime)}</td>
                                         <td className="px-5 py-3">
                                             <div className="relative inline-block">
                                                 <button
