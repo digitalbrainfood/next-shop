@@ -120,5 +120,26 @@ service cloud.firestore {
             ));
       allow delete: if isSuperAdmin();
     }
+
+    // Activity events — append-only audit log of teacher actions
+    match /events/{eventId} {
+      // Read: super admin always; teachers only see events from their school scope
+      allow read: if isSuperAdmin()
+        || (request.auth != null
+            && (
+              (request.auth.token.class != null
+                && resource.data.school == request.auth.token.class)
+              || (request.auth.token.avatarClass != null
+                && resource.data.school == request.auth.token.avatarClass)
+            ));
+
+      // Create: any signed-in admin or teacher; the actor field must match the caller
+      allow create: if request.auth != null
+        && request.resource.data.actor == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+
+      // Events are append-only — no updates or deletes
+      allow update, delete: if false;
+    }
   }
 }
