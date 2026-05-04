@@ -149,43 +149,41 @@ exports.createAvatarVendor = onCall(
 
     try {
       const authService = getAuth();
+      const email = `${username.trim()}@shopnext.dev`;
 
-      // Check if user already exists (may already have a product vendor account)
-      let userRecord;
       try {
-        userRecord = await authService.getUserByEmail(`${username.trim()}@shopnext.dev`);
-        // User exists — merge avatarClass into their existing claims
-        const existingClaims = userRecord.customClaims || {};
-        await authService.setCustomUserClaims(userRecord.uid, {
-          ...existingClaims,
-          avatarClass: avatarClass.trim().toLowerCase(),
-        });
-      } catch (lookupError) {
-        if (lookupError.code === 'auth/user-not-found') {
-          // User doesn't exist — create new
-          userRecord = await authService.createUser({
-            email: `${username.trim()}@shopnext.dev`,
-            password: password,
-            displayName: username.trim(),
-          });
-          await authService.setCustomUserClaims(userRecord.uid, {
-            avatarClass: avatarClass.trim().toLowerCase(),
-          });
-        } else {
-          throw lookupError;
+        const existing = await authService.getUserByEmail(email);
+        if (existing) {
+          throw new HttpsError(
+            "already-exists",
+            "A user with this username already exists. Pick a different username, or use Convert Role on the existing student."
+          );
         }
+      } catch (lookupErr) {
+        if (lookupErr instanceof HttpsError) throw lookupErr;
+        if (lookupErr.code !== 'auth/user-not-found') throw lookupErr;
       }
 
-      console.log("Successfully created/updated avatar vendor:", userRecord.uid);
+      const userRecord = await authService.createUser({
+        email,
+        password: password,
+        displayName: username.trim(),
+      });
+
+      await authService.setCustomUserClaims(userRecord.uid, {
+        avatarClass: avatarClass.trim().toLowerCase(),
+      });
+
+      console.log("Successfully created avatar vendor:", userRecord.uid);
 
       return {
         success: true,
-        result: `Successfully set up ${username} in avatar class ${avatarClass}.`,
-        uid: userRecord.uid
+        result: `Successfully created ${username} in avatar class ${avatarClass}.`,
+        uid: userRecord.uid,
       };
     } catch (error) {
       console.error("Error creating avatar vendor:", error);
-
+      if (error instanceof HttpsError) throw error;
       if (error.code === 'auth/email-already-exists') {
         throw new HttpsError("already-exists", "A user with this username already exists.");
       } else if (error.code === 'auth/invalid-email') {
@@ -193,7 +191,6 @@ exports.createAvatarVendor = onCall(
       } else if (error.code === 'auth/weak-password') {
         throw new HttpsError("invalid-argument", "Password is too weak.");
       }
-
       throw new HttpsError("internal", error.message);
     }
   }

@@ -61,3 +61,37 @@ describe('createNewVendor', () => {
         expect(mockSetCustomUserClaims).toHaveBeenCalledWith('new-uid', { class: 'morning' });
     });
 });
+
+describe('createAvatarVendor', () => {
+    test('rejects when email already exists (no claim merging)', async () => {
+        mockGetUserByEmail.mockResolvedValue({
+            uid: 'existing-uid',
+            customClaims: { class: 'morning' },
+        });
+        const wrapped = ftest.wrap(myFunctions.createAvatarVendor);
+
+        await expect(wrapped({
+            data: { username: 'alex', password: 'pw1234', avatarClass: 'morning' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        })).rejects.toThrow(/already exists/i);
+
+        expect(mockCreateUser).not.toHaveBeenCalled();
+        expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+    });
+
+    test('creates talent user when email is free', async () => {
+        const notFound = Object.assign(new Error('not found'), { code: 'auth/user-not-found' });
+        mockGetUserByEmail.mockRejectedValue(notFound);
+        mockCreateUser.mockResolvedValue({ uid: 'new-uid' });
+        mockSetCustomUserClaims.mockResolvedValue();
+
+        const wrapped = ftest.wrap(myFunctions.createAvatarVendor);
+        const result = await wrapped({
+            data: { username: 'theo', password: 'pw1234', avatarClass: 'evening' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        });
+
+        expect(result.success).toBe(true);
+        expect(mockSetCustomUserClaims).toHaveBeenCalledWith('new-uid', { avatarClass: 'evening' });
+    });
+});
