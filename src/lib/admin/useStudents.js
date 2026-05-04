@@ -25,6 +25,8 @@ export function useStudents() {
                         class: u.customClaims?.class || null,
                         avatarClass: u.customClaims?.avatarClass || null,
                         viewer: u.customClaims?.viewer === true,
+                        creationTime: u.creationTime || null,
+                        lastSignInTime: u.lastSignInTime || null,
                     }));
                 setStudents(list);
                 setLoading(false);
