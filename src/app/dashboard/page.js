@@ -25,6 +25,12 @@ export default function DashboardOverview() {
     const totalStudents = students.length;
     const classCount = productClasses.classes.length + talentClasses.classes.length;
 
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const studentsThisWeek = students.filter(s => {
+        if (!s.creationTime) return false;
+        return new Date(s.creationTime).getTime() >= oneWeekAgo;
+    }).length;
+
     const attention = [];
     if (dual.users.length > 0) {
         attention.push({
@@ -38,7 +44,7 @@ export default function DashboardOverview() {
         <div className="space-y-6 max-w-6xl">
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard icon={Users} label="Students" value={totalStudents} color="bg-blue-100 text-blue-600" />
+                <StatCard icon={Users} label="Students" value={totalStudents} subtext={studentsThisWeek > 0 ? `+${studentsThisWeek} this week` : undefined} color="bg-blue-100 text-blue-600" />
                 <StatCard icon={BookOpen} label="Classes" value={classCount} color="bg-amber-100 text-amber-600" />
                 <StatCard icon={ShoppingBag} label="Product students" value={productCount} color="bg-blue-100 text-blue-600" />
                 <StatCard icon={User} label="Talent students" value={talentCount} color="bg-purple-100 text-purple-600" />
