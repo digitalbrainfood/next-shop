@@ -239,6 +239,8 @@ exports.listAllUsers = onCall(
         email: user.email,
         displayName: user.displayName,
         customClaims: user.customClaims || {},
+        creationTime: user.metadata?.creationTime || null,
+        lastSignInTime: user.metadata?.lastSignInTime || null,
       }));
 
       return {
