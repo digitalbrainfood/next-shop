@@ -12,6 +12,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Tailwind v4 changed the default border color from gray-200 to currentColor.
+   Restore the v3 behavior so bare `border` / `border-t` / `border-b` declarations
+   render as soft gray-200 hairlines instead of near-black lines. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+}
 
 body {
   background: var(--background);

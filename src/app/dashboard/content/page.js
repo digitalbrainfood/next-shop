@@ -88,7 +88,7 @@ export default function ContentPage() {
                         onDragStart={() => onDragStart(i)}
                         onDragOver={(e) => onDragOver(e, i)}
                         onDragEnd={onDragEnd}
-                        className="flex items-center justify-between p-3 border-b last:border-b-0 cursor-move">
+                        className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 cursor-move">
                         <div className="flex items-center gap-3">
                             <GripVertical className="h-4 w-4 text-gray-400" />
                             <img src={it.imageUrl || it.imageUrls?.[0]} alt={it.name}
