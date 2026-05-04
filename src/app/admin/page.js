@@ -1,14 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import {
-    GraduationCap, Users, DollarSign, Globe, TrendingUp, ChevronDown, ChevronUp,
-    Search, Eye, CheckCircle2, XCircle, Clock, MoreVertical, ArrowUpRight,
-    BarChart3, Activity, CreditCard, Calendar, Mail, ExternalLink, ShieldCheck,
-    AlertTriangle, RefreshCw, Loader2
+    Users, DollarSign, GraduationCap, TrendingUp, ChevronDown, ChevronUp,
+    Search, CheckCircle2, XCircle, Clock, Activity, Mail, ExternalLink, AlertTriangle
 } from 'lucide-react';
-import { auth, db, SUPER_ADMIN_UID } from '../../lib/firebase';
-import { onIdTokenChanged } from 'firebase/auth';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { StatCard } from '../../components/admin/StatCard';
 
 const STATUS_CONFIG = {
     active: { label: 'Active', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
@@ -16,19 +14,6 @@ const STATUS_CONFIG = {
     expired: { label: 'Expired', color: 'bg-red-100 text-red-700', icon: XCircle },
     pending: { label: 'Pending Setup', color: 'bg-blue-100 text-blue-700', icon: Clock },
 };
-
-const StatCard = ({ icon: Icon, label, value, subtext, color }) => (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
-                <Icon className="h-5 w-5" />
-            </div>
-        </div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        <p className="text-sm text-gray-500">{label}</p>
-        {subtext && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" />{subtext}</p>}
-    </div>
-);
 
 const CustomerRow = ({ customer, isExpanded, onToggle }) => {
     const status = STATUS_CONFIG[customer.status] || STATUS_CONFIG.pending;
@@ -129,64 +114,19 @@ const CustomerRow = ({ customer, isExpanded, onToggle }) => {
     );
 };
 
-export default function AdminDashboard() {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+export default function AdminDashboardPage() {
     const [schools, setSchools] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [expandedRow, setExpandedRow] = useState(null);
 
-    // Auth check
     useEffect(() => {
-        const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                const tokenResult = await currentUser.getIdTokenResult();
-                currentUser.customClaims = tokenResult.claims;
-                const isSuperAdmin = tokenResult.claims.superAdmin === true || currentUser.uid === SUPER_ADMIN_UID;
-                if (isSuperAdmin) {
-                    setUser(currentUser);
-                } else {
-                    setUser(null);
-                }
-            } else {
-                setUser(null);
-            }
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
-
-    // Schools subscription
-    useEffect(() => {
-        if (!user) return;
         const q = query(collection(db, 'schools'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setSchools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
         return () => unsubscribe();
-    }, [user]);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-                <div className="text-center">
-                    <ShieldCheck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
-                    <p className="text-gray-500 mb-4">You must be a super admin to view this page.</p>
-                    <a href="/" className="text-blue-600 hover:text-blue-700 font-medium">Go to main site</a>
-                </div>
-            </div>
-        );
-    }
+    }, []);
 
     const filtered = schools.filter(c => {
         const matchesSearch = !searchQuery ||
@@ -206,146 +146,120 @@ export default function AdminDashboard() {
     const expiringCount = schools.filter(c => c.status === 'expiring').length;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-100 shadow-sm">
-                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-                            <GraduationCap className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="text-xl font-bold text-gray-900">ShopNext <span className="text-blue-600">Admin</span></span>
-                        <span className="hidden sm:inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full font-medium">
-                            <ShieldCheck className="h-3 w-3" /> Super Admin
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <a href="/register" className="text-sm text-gray-500 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">Registration</a>
-                        <a href="/" className="text-sm text-gray-500 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">Main Site</a>
-                    </div>
-                </div>
-            </header>
+        <div className="space-y-6 max-w-6xl">
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900">Customers</h2>
+                <p className="text-gray-500 mt-1">Manage all customer instances and subscriptions.</p>
+            </div>
 
-            <main className="container mx-auto px-4 py-8">
-                {/* Page Title */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Platform Dashboard</h1>
-                    <p className="text-gray-500 mt-1">Manage all customer instances and subscriptions.</p>
-                </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    icon={Users}
+                    label="Total Customers"
+                    value={schools.length}
+                    color="bg-blue-100 text-blue-600"
+                />
+                <StatCard
+                    icon={DollarSign}
+                    label="Monthly Revenue"
+                    value={`$${totalRevenue.toLocaleString()}`}
+                    color="bg-green-100 text-green-600"
+                />
+                <StatCard
+                    icon={GraduationCap}
+                    label="Student Reach"
+                    value={totalStudents > 0 ? totalStudents.toLocaleString() : '—'}
+                    color="bg-purple-100 text-purple-600"
+                />
+                <StatCard
+                    icon={Activity}
+                    label="Active Instances"
+                    value={`${activeCount}/${schools.length}`}
+                    subtext={expiringCount > 0 ? `${expiringCount} expiring soon` : undefined}
+                    color="bg-amber-100 text-amber-600"
+                />
+            </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <StatCard
-                        icon={Users}
-                        label="Total Customers"
-                        value={schools.length}
-                        color="bg-blue-100 text-blue-600"
-                    />
-                    <StatCard
-                        icon={DollarSign}
-                        label="Monthly Revenue"
-                        value={`$${totalRevenue.toLocaleString()}`}
-                        color="bg-green-100 text-green-600"
-                    />
-                    <StatCard
-                        icon={GraduationCap}
-                        label="Student Reach"
-                        value={totalStudents > 0 ? totalStudents.toLocaleString() : '—'}
-                        color="bg-purple-100 text-purple-600"
-                    />
-                    <StatCard
-                        icon={Activity}
-                        label="Active Instances"
-                        value={`${activeCount}/${schools.length}`}
-                        subtext={expiringCount > 0 ? `${expiringCount} expiring soon` : undefined}
-                        color="bg-amber-100 text-amber-600"
-                    />
-                </div>
-
-                {/* Customer Table */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                    <div className="p-5 border-b border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <h2 className="text-lg font-semibold text-gray-900">Customers</h2>
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                    <input
-                                        type="search"
-                                        placeholder="Search customers..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-64"
-                                    />
-                                </div>
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="expiring">Expiring</option>
-                                    <option value="expired">Expired</option>
-                                    <option value="pending">Pending</option>
-                                </select>
+            {/* Customer Table */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-5 border-b border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h2 className="text-lg font-semibold text-gray-900">Customers</h2>
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="search"
+                                    placeholder="Search customers..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-64"
+                                />
                             </div>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="expiring">Expiring</option>
+                                <option value="expired">Expired</option>
+                                <option value="pending">Pending</option>
+                            </select>
                         </div>
                     </div>
+                </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-gray-200 bg-gray-50">
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Students</th>
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
-                                    <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platforms</th>
-                                    <th className="px-5 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {filtered.map((customer) => (
-                                    <CustomerRow
-                                        key={customer.id}
-                                        customer={customer}
-                                        isExpanded={expandedRow === customer.id}
-                                        onToggle={() => setExpandedRow(expandedRow === customer.id ? null : customer.id)}
-                                    />
-                                ))}
-                            </tbody>
-                        </table>
-                        {filtered.length === 0 && (
-                            <div className="text-center py-16 text-gray-400">
-                                {schools.length === 0 ? (
-                                    <>
-                                        <GraduationCap className="h-10 w-10 mx-auto mb-3 text-gray-300" />
-                                        <p className="font-medium text-gray-500">No schools registered yet</p>
-                                        <p className="text-sm mt-1">Schools will appear here after they complete registration at <a href="/register" className="text-blue-600 hover:underline">/register</a></p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Search className="h-8 w-8 mx-auto mb-2" />
-                                        <p>No customers match your search.</p>
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {schools.length > 0 && (
-                        <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400 flex justify-between items-center">
-                            <span>Showing {filtered.length} of {schools.length} customers</span>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-gray-200 bg-gray-50">
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Students</th>
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenue</th>
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platforms</th>
+                                <th className="px-5 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {filtered.map((customer) => (
+                                <CustomerRow
+                                    key={customer.id}
+                                    customer={customer}
+                                    isExpanded={expandedRow === customer.id}
+                                    onToggle={() => setExpandedRow(expandedRow === customer.id ? null : customer.id)}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                    {filtered.length === 0 && (
+                        <div className="text-center py-16 text-gray-400">
+                            {schools.length === 0 ? (
+                                <>
+                                    <GraduationCap className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                                    <p className="font-medium text-gray-500">No schools registered yet</p>
+                                    <p className="text-sm mt-1">Schools will appear here after they complete registration at <a href="/register" className="text-blue-600 hover:underline">/register</a></p>
+                                </>
+                            ) : (
+                                <>
+                                    <Search className="h-8 w-8 mx-auto mb-2" />
+                                    <p>No customers match your search.</p>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
-            </main>
 
-            <footer className="container mx-auto px-4 py-8 text-center text-xs text-gray-400">
-                <p>&copy; 2026 ShopNext. Super Admin Dashboard. All rights reserved.</p>
-            </footer>
+                {schools.length > 0 && (
+                    <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400 flex justify-between items-center">
+                        <span>Showing {filtered.length} of {schools.length} customers</span>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
