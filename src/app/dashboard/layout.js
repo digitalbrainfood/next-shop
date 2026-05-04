@@ -16,7 +16,7 @@ const DASHBOARD_ITEMS = [
 ];
 
 export default function DashboardLayout({ children }) {
-    const auth = useAdminAuth('teacher');
+    const auth = useAdminAuth('superAdmin');
     const schoolConfig = useSchoolConfig();
     const [wizardOpen, setWizardOpen] = useState(false);
 
@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }) {
     return (
         <>
             <AdminShell
-                requirement="teacher"
+                requirement="superAdmin"
                 auth={auth}
                 sidebarItems={DASHBOARD_ITEMS}
                 schoolName={schoolConfig?.displayName || 'My School'}

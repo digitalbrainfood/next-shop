@@ -112,7 +112,12 @@ service cloud.firestore {
       allow read:   if isSuperAdmin() || isOwnRecord() || teacherOwnsThisStudent();
       allow create, update: if isSuperAdmin()
         || (request.auth != null
-            && (request.auth.token.class != null || request.auth.token.avatarClass != null));
+            && (
+                (request.auth.token.class != null
+                  && request.resource.data.class == request.auth.token.class)
+                || (request.auth.token.avatarClass != null
+                  && request.resource.data.avatarClass == request.auth.token.avatarClass)
+            ));
       allow delete: if isSuperAdmin();
     }
   }
