@@ -25,6 +25,7 @@ export function StepCredentialHandoff({ schoolName, role, username, password, lo
     );
 
     const all = `Username: ${username}\nPassword: ${password}\nLogin: ${loginUrl}`;
+    const safeBody = `Credentials for ${username} are in the attached PDF (download it from the wizard and attach before sending).\n\nLogin: ${loginUrl}`;
 
     return (
         <div>
@@ -49,7 +50,7 @@ export function StepCredentialHandoff({ schoolName, role, username, password, lo
                     className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 cursor-pointer">
                     <Download className="h-4 w-4" /> Download PDF handout
                 </button>
-                <a href={`mailto:?subject=Your%20${role}%20account&body=${encodeURIComponent(all)}`}
+                <a href={`mailto:?subject=Your%20${role}%20account&body=${encodeURIComponent(safeBody)}`}
                     className="flex items-center gap-1.5 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 cursor-pointer">
                     <Mail className="h-4 w-4" /> Email to me
                 </a>
