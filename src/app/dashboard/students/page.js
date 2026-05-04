@@ -1,10 +1,11 @@
 "use client";
 import { useState } from 'react';
 import { httpsCallable } from 'firebase/functions';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Search, MoreVertical } from 'lucide-react';
 import { useStudents } from '../../../lib/admin/useStudents';
 import { RolePill } from '../../../components/admin/RolePill';
-import { functions } from '../../../lib/firebase';
+import { functions, db } from '../../../lib/firebase';
 import { generateFriendlyPassword } from '../../../components/admin/wizard/passwordGenerator';
 import { logEvent } from '../../../lib/admin/logEvent';
 import { useSchoolConfig } from '../../../lib/useSchoolConfig';
@@ -31,7 +32,34 @@ export default function StudentsPage() {
     const [menuOpenFor, setMenuOpenFor] = useState(null); // uid of the row whose menu is open
     const [busyUid, setBusyUid] = useState(null);
     const [feedback, setFeedback] = useState(null); // { uid, type, text }
+    const [notesEditFor, setNotesEditFor] = useState(null); // { uid, displayName }
+    const [notesValue, setNotesValue] = useState('');
+    const [notesBusy, setNotesBusy] = useState(false);
     const { schoolConfig } = useSchoolConfig();
+
+    const openNotesEditor = async (uid, displayName) => {
+        try {
+            const snap = await getDoc(doc(db, 'students', uid));
+            setNotesValue(snap.exists() ? (snap.data().notes || '') : '');
+        } catch {
+            setNotesValue('');
+        }
+        setNotesEditFor({ uid, displayName });
+        setMenuOpenFor(null);
+    };
+
+    const saveNotes = async () => {
+        if (!notesEditFor) return;
+        setNotesBusy(true);
+        try {
+            await setDoc(doc(db, 'students', notesEditFor.uid), { notes: notesValue }, { merge: true });
+            setFeedback({ uid: notesEditFor.uid, type: 'success', text: 'Notes saved.' });
+            setNotesEditFor(null);
+        } catch (e) {
+            setFeedback({ uid: notesEditFor.uid, type: 'error', text: e.message || 'Failed to save.' });
+        }
+        setNotesBusy(false);
+    };
 
     const handleResetPassword = async (uid, displayName) => {
         const newPassword = generateFriendlyPassword();
@@ -156,6 +184,12 @@ export default function StudentsPage() {
                                                             Reset password
                                                         </button>
                                                         <button
+                                                            onClick={() => openNotesEditor(s.uid, s.displayName || s.email)}
+                                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                                                        >
+                                                            Edit notes
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleDeleteStudent(s.uid, s.displayName || s.email)}
                                                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
                                                         >
@@ -180,6 +214,32 @@ export default function StudentsPage() {
                     </table>
                 )}
             </div>
+
+            {notesEditFor && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setNotesEditFor(null)}>
+                    <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="px-5 py-3 border-b border-gray-100">
+                            <h3 className="text-base font-semibold text-gray-900">Notes for {notesEditFor.displayName}</h3>
+                        </div>
+                        <div className="px-5 py-4">
+                            <textarea
+                                value={notesValue}
+                                onChange={(e) => setNotesValue(e.target.value)}
+                                rows={5}
+                                placeholder="Real name, group, accommodations, anything you want to remember about this student."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                                autoFocus
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2 px-5 py-3 border-t border-gray-100 bg-gray-50">
+                            <button onClick={() => setNotesEditFor(null)} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 cursor-pointer">Cancel</button>
+                            <button onClick={saveNotes} disabled={notesBusy} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:bg-blue-300 cursor-pointer">
+                                {notesBusy ? 'Saving...' : 'Save'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
