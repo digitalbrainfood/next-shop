@@ -6,9 +6,11 @@ import { NeedsAttention } from '../../components/admin/NeedsAttention';
 import { RecentStudentsTable } from '../../components/admin/RecentStudentsTable';
 import { ClassBreakdown } from '../../components/admin/ClassBreakdown';
 import { DualAccessDrawer } from '../../components/admin/cleanup/DualAccessDrawer';
+import { ActivityFeed } from '../../components/admin/ActivityFeed';
 import { useStudents } from '../../lib/admin/useStudents';
 import { useClasses } from '../../lib/admin/useClasses';
 import { useDualAccessStudents } from '../../lib/admin/useDualAccessStudents';
+import { useSchoolConfig } from '../../lib/useSchoolConfig';
 
 export default function DashboardOverview() {
     const { students } = useStudents();
@@ -16,6 +18,7 @@ export default function DashboardOverview() {
     const talentClasses = useClasses('talent');
     const dual = useDualAccessStudents();
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const schoolConfig = useSchoolConfig();
 
     const productCount = students.filter(s => s.class && !s.avatarClass).length;
     const talentCount = students.filter(s => s.avatarClass && !s.class).length;
@@ -55,6 +58,8 @@ export default function DashboardOverview() {
                     />
                 </div>
             </div>
+
+            <ActivityFeed school={schoolConfig?.subdomain} />
 
             <DualAccessDrawer
                 open={drawerOpen}
