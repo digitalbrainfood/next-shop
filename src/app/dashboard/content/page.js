@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, where, writeBatch } from 'firebase/firestore';
 import { ref as storageRef, deleteObject } from 'firebase/storage';
 import { Edit, GripVertical, Trash2 } from 'lucide-react';
@@ -98,9 +99,13 @@ export default function ContentPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button disabled className="p-2 text-gray-300 cursor-not-allowed" title="Students edit their own content. From here you can reorder or delete only.">
+                            <Link
+                                href={`/dashboard/content/edit/${tab === 'talent' ? 'talent' : 'product'}/${it.id}`}
+                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
+                                title="Edit"
+                            >
                                 <Edit className="h-4 w-4" />
-                            </button>
+                            </Link>
                             <button onClick={() => onDelete(it)}
                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer">
                                 <Trash2 className="h-4 w-4" />
