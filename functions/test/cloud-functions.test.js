@@ -144,3 +144,50 @@ describe('convertStudentRole', () => {
         })).rejects.toThrow(/logged in/i);
     });
 });
+
+describe('listDualAccessStudents', () => {
+    const buildUsers = () => ({
+        users: [
+            { uid: 'a', email: 'a@x', displayName: 'a', customClaims: { class: 'morning', avatarClass: 'morning' } },
+            { uid: 'b', email: 'b@x', displayName: 'b', customClaims: { class: 'morning' } },
+            { uid: 'c', email: 'c@x', displayName: 'c', customClaims: { avatarClass: 'evening' } },
+            { uid: 'd', email: 'd@x', displayName: 'd', customClaims: { class: 'evening', avatarClass: 'evening' } },
+            { uid: 'e', email: 'e@x', displayName: 'e', customClaims: {} },
+        ],
+    });
+
+    test('super admin sees all dual-access students', async () => {
+        mockListUsers.mockResolvedValue(buildUsers());
+        const wrapped = ftest.wrap(myFunctions.listDualAccessStudents);
+        const result = await wrapped({
+            data: {},
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        });
+        expect(result.users.map(u => u.uid).sort()).toEqual(['a', 'd']);
+    });
+
+    test('scope filter restricts to one class', async () => {
+        mockListUsers.mockResolvedValue(buildUsers());
+        const wrapped = ftest.wrap(myFunctions.listDualAccessStudents);
+        const result = await wrapped({
+            data: { scope: 'morning' },
+            auth: { uid: SUPER_ADMIN_UID, token: { superAdmin: true } },
+        });
+        expect(result.users.map(u => u.uid)).toEqual(['a']);
+    });
+
+    test('teacher sees only students in their class scope', async () => {
+        mockListUsers.mockResolvedValue(buildUsers());
+        const wrapped = ftest.wrap(myFunctions.listDualAccessStudents);
+        const result = await wrapped({
+            data: {},
+            auth: { uid: 'teacher-uid', token: { class: 'evening' } },
+        });
+        expect(result.users.map(u => u.uid)).toEqual(['d']);
+    });
+
+    test('rejects unauthenticated', async () => {
+        const wrapped = ftest.wrap(myFunctions.listDualAccessStudents);
+        await expect(wrapped({ data: {} })).rejects.toThrow(/logged in/i);
+    });
+});

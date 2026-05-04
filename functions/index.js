@@ -456,3 +456,46 @@ exports.convertStudentRole = onCall(
     };
   }
 );
+
+exports.listDualAccessStudents = onCall(
+  { timeoutSeconds: 60, memory: "256MiB", minInstances: 0, maxInstances: 10 },
+  async (request) => {
+    const { auth, data } = request;
+
+    if (!auth) {
+      throw new HttpsError("unauthenticated", "You must be logged in.");
+    }
+
+    const isSuperAdmin = auth.token?.superAdmin === true || auth.uid === "RnBej9HSStVJXA0rtIB02W0R1yv2";
+    const teacherClass = auth.token?.class;
+    const teacherAvatarClass = auth.token?.avatarClass;
+    const scope = (data && data.scope) ? String(data.scope).toLowerCase() : null;
+
+    if (!isSuperAdmin && !teacherClass && !teacherAvatarClass) {
+      throw new HttpsError("permission-denied", "Caller has no class scope.");
+    }
+
+    const authService = getAuth();
+    const { users } = await authService.listUsers();
+
+    const dual = users.filter(u => {
+      const c = u.customClaims || {};
+      if (!(c.class && c.avatarClass)) return false;
+      if (scope) {
+        return c.class === scope || c.avatarClass === scope;
+      }
+      if (isSuperAdmin) return true;
+      return (teacherClass && (c.class === teacherClass || c.avatarClass === teacherClass)) ||
+             (teacherAvatarClass && (c.class === teacherAvatarClass || c.avatarClass === teacherAvatarClass));
+    }).map(u => ({
+      uid: u.uid,
+      email: u.email,
+      displayName: u.displayName,
+      class: u.customClaims?.class || null,
+      avatarClass: u.customClaims?.avatarClass || null,
+      createdAt: u.metadata?.creationTime || null,
+    }));
+
+    return { success: true, users: dual };
+  }
+);
