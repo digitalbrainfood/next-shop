@@ -4,6 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 import { CheckCircle2, X } from 'lucide-react';
 import { functions } from '../../../lib/firebase';
 import { useDualAccessStudents } from '../../../lib/admin/useDualAccessStudents';
+import { logEvent } from '../../../lib/admin/logEvent';
 import { ResolveOptions } from './ResolveOptions';
 import { generateFriendlyPassword } from '../wizard/passwordGenerator';
 import { StepCredentialHandoff } from '../wizard/StepCredentialHandoff';
@@ -32,11 +33,13 @@ export function DualAccessDrawer({ open, onClose, onResolved }) {
             if (choice === 'keep-class') {
                 const fn = httpsCallable(functions, 'convertStudentRole');
                 await fn({ uid: current.uid, keepRole: 'class' });
+                await logEvent({ type: 'student.role_converted', message: `${current.displayName || current.email}: kept Products, dropped Talent.`, school: current.class, target: { uid: current.uid } });
                 onResolved?.();
                 advance();
             } else if (choice === 'keep-avatarClass') {
                 const fn = httpsCallable(functions, 'convertStudentRole');
                 await fn({ uid: current.uid, keepRole: 'avatarClass' });
+                await logEvent({ type: 'student.role_converted', message: `${current.displayName || current.email}: kept Talent, dropped Products.`, school: current.avatarClass, target: { uid: current.uid } });
                 onResolved?.();
                 advance();
             } else if (choice === 'split') {
@@ -45,6 +48,7 @@ export function DualAccessDrawer({ open, onClose, onResolved }) {
                 const password = generateFriendlyPassword();
                 const create = httpsCallable(functions, 'createAvatarVendor');
                 await create({ username: splitUsername, password, avatarClass: current.avatarClass });
+                await logEvent({ type: 'student.split', message: `${current.displayName || current.email} split: kept as Products; new Talent account "${splitUsername}" created.`, school: current.class, target: { uid: current.uid } });
                 setSplitResult({ username: splitUsername, password });
                 onResolved?.();
             }

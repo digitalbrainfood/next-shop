@@ -6,6 +6,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { functions, db } from '../../../lib/firebase';
 import { useClasses } from '../../../lib/admin/useClasses';
 import { useStudents } from '../../../lib/admin/useStudents';
+import { logEvent } from '../../../lib/admin/logEvent';
 import { generateFriendlyPassword } from './passwordGenerator';
 import { StepRolePicker } from './StepRolePicker';
 import { StepClassAndCreds } from './StepClassAndCreds';
@@ -81,6 +82,12 @@ export function AddStudentWizard({ open, onClose, schoolName, schoolSubdomain, o
             }
 
             onCreated?.({ uid, ...form, role });
+            await logEvent({
+                type: 'student.created',
+                message: `${role === 'talent' ? 'Talent' : 'Product'} student "${form.username}" added to class "${form.class}".`,
+                school: form.class,
+                target: { uid },
+            });
             setStep(3);
         } catch (e) {
             setError(e.message || 'Failed to create student.');

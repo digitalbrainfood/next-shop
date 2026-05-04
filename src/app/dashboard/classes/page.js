@@ -5,8 +5,10 @@ import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { db } from '../../../lib/firebase';
 import { useClasses } from '../../../lib/admin/useClasses';
 import { useStudents } from '../../../lib/admin/useStudents';
+import { logEvent } from '../../../lib/admin/logEvent';
+import { useSchoolConfig } from '../../../lib/useSchoolConfig';
 
-function ClassesSection({ kind, title, classes, students, collectionName }) {
+function ClassesSection({ kind, title, classes, students, collectionName, school }) {
     const [adding, setAdding] = useState(false);
     const [name, setName] = useState('');
     const [editingId, setEditingId] = useState(null);
@@ -21,6 +23,11 @@ function ClassesSection({ kind, title, classes, students, collectionName }) {
         if (id.length < 2) return;
         const display = id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ');
         await setDoc(doc(db, collectionName, id), { name: display });
+        await logEvent({
+            type: 'class.created',
+            message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" created.`,
+            school,
+        });
         setName(''); setAdding(false);
     };
 
@@ -28,12 +35,22 @@ function ClassesSection({ kind, title, classes, students, collectionName }) {
         const newName = editingName.trim();
         if (newName.length < 1) return;
         await updateDoc(doc(db, collectionName, id), { name: newName });
+        await logEvent({
+            type: 'class.renamed',
+            message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" renamed to "${newName}".`,
+            school,
+        });
         setEditingId(null);
     };
 
     const deleteClass = async (id) => {
         if (!window.confirm(`Delete class "${id}"? Existing students/content keep their class assignment, but this class won't appear in dropdowns.`)) return;
         await deleteDoc(doc(db, collectionName, id));
+        await logEvent({
+            type: 'class.deleted',
+            message: `${kind === 'talent' ? 'Talent' : 'Product'} class "${id}" deleted.`,
+            school,
+        });
     };
 
     return (
@@ -90,11 +107,12 @@ export default function ClassesPage() {
     const product = useClasses('product');
     const talent = useClasses('talent');
     const { students } = useStudents();
+    const schoolConfig = useSchoolConfig();
 
     return (
         <div className="space-y-5 max-w-4xl">
-            <ClassesSection kind="product" title="Product Classes" classes={product.classes} students={students} collectionName="classes" />
-            <ClassesSection kind="talent"  title="Talent Classes"  classes={talent.classes}  students={students} collectionName="avatar-classes" />
+            <ClassesSection kind="product" title="Product Classes" classes={product.classes} students={students} collectionName="classes" school={schoolConfig?.subdomain} />
+            <ClassesSection kind="talent"  title="Talent Classes"  classes={talent.classes}  students={students} collectionName="avatar-classes" school={schoolConfig?.subdomain} />
         </div>
     );
 }

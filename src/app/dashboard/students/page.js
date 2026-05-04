@@ -6,6 +6,8 @@ import { useStudents } from '../../../lib/admin/useStudents';
 import { RolePill } from '../../../components/admin/RolePill';
 import { functions } from '../../../lib/firebase';
 import { generateFriendlyPassword } from '../../../components/admin/wizard/passwordGenerator';
+import { logEvent } from '../../../lib/admin/logEvent';
+import { useSchoolConfig } from '../../../lib/useSchoolConfig';
 
 export default function StudentsPage() {
     const { students, loading, refresh } = useStudents();
@@ -14,6 +16,7 @@ export default function StudentsPage() {
     const [menuOpenFor, setMenuOpenFor] = useState(null); // uid of the row whose menu is open
     const [busyUid, setBusyUid] = useState(null);
     const [feedback, setFeedback] = useState(null); // { uid, type, text }
+    const schoolConfig = useSchoolConfig();
 
     const handleResetPassword = async (uid, displayName) => {
         const newPassword = generateFriendlyPassword();
@@ -23,6 +26,12 @@ export default function StudentsPage() {
             const fn = httpsCallable(functions, 'resetStudentPassword');
             await fn({ uid, newPassword });
             setFeedback({ uid, type: 'success', text: `New password: ${newPassword}` });
+            await logEvent({
+                type: 'student.password_reset',
+                message: `Password reset for "${displayName}".`,
+                school: schoolConfig?.subdomain,
+                target: { uid },
+            });
         } catch (e) {
             setFeedback({ uid, type: 'error', text: e.message || 'Failed to reset password.' });
         }
@@ -37,6 +46,12 @@ export default function StudentsPage() {
             const fn = httpsCallable(functions, 'deleteUser');
             await fn({ uid });
             setFeedback({ uid, type: 'success', text: 'Student deleted.' });
+            await logEvent({
+                type: 'student.deleted',
+                message: `Student "${displayName}" deleted.`,
+                school: schoolConfig?.subdomain,
+                target: { uid },
+            });
         } catch (e) {
             setFeedback({ uid, type: 'error', text: e.message || 'Failed to delete.' });
         }
