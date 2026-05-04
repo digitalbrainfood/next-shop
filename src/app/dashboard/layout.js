@@ -17,7 +17,7 @@ const DASHBOARD_ITEMS = [
 
 export default function DashboardLayout({ children }) {
     const auth = useAdminAuth('superAdmin');
-    const schoolConfig = useSchoolConfig();
+    const { schoolConfig } = useSchoolConfig();
     const [wizardOpen, setWizardOpen] = useState(false);
 
     const action = useMemo(() => (

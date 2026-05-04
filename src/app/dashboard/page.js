@@ -18,7 +18,7 @@ export default function DashboardOverview() {
     const talentClasses = useClasses('talent');
     const dual = useDualAccessStudents();
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const schoolConfig = useSchoolConfig();
+    const { schoolConfig } = useSchoolConfig();
 
     const productCount = students.filter(s => s.class && !s.avatarClass).length;
     const talentCount = students.filter(s => s.avatarClass && !s.class).length;

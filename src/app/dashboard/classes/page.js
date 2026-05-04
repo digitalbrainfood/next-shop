@@ -107,7 +107,7 @@ export default function ClassesPage() {
     const product = useClasses('product');
     const talent = useClasses('talent');
     const { students } = useStudents();
-    const schoolConfig = useSchoolConfig();
+    const { schoolConfig } = useSchoolConfig();
 
     return (
         <div className="space-y-5 max-w-4xl">

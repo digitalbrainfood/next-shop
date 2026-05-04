@@ -8,7 +8,7 @@ import { useClasses } from '../../../lib/admin/useClasses';
 import { useSchoolConfig } from '../../../lib/useSchoolConfig';
 
 export default function ContentPage() {
-    const schoolConfig = useSchoolConfig();
+    const { schoolConfig } = useSchoolConfig();
     const platformsArray = schoolConfig?.platforms || ['products', 'avatars'];
     const showTalent = platformsArray.includes('avatars');
     const [tab, setTab] = useState('products');

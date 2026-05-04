@@ -16,7 +16,7 @@ export default function StudentsPage() {
     const [menuOpenFor, setMenuOpenFor] = useState(null); // uid of the row whose menu is open
     const [busyUid, setBusyUid] = useState(null);
     const [feedback, setFeedback] = useState(null); // { uid, type, text }
-    const schoolConfig = useSchoolConfig();
+    const { schoolConfig } = useSchoolConfig();
 
     const handleResetPassword = async (uid, displayName) => {
         const newPassword = generateFriendlyPassword();

@@ -12,7 +12,7 @@ import { useSchoolConfig } from '../../../lib/useSchoolConfig';
 
 export function DualAccessDrawer({ open, onClose, onResolved }) {
     const { users, loading, refresh } = useDualAccessStudents();
-    const schoolConfig = useSchoolConfig();
+    const { schoolConfig } = useSchoolConfig();
     const [index, setIndex] = useState(0);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
