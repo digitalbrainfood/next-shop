@@ -98,7 +98,7 @@ export default function ContentPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
-                            <button disabled className="p-2 text-gray-300 cursor-not-allowed" title="Edit (use storefront for now)">
+                            <button disabled className="p-2 text-gray-300 cursor-not-allowed" title="Students edit their own content. From here you can reorder or delete only.">
                                 <Edit className="h-4 w-4" />
                             </button>
                             <button onClick={() => onDelete(it)}
