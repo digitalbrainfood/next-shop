@@ -6,6 +6,7 @@ import { NeedsAttention } from '../../components/admin/NeedsAttention';
 import { RecentStudentsTable } from '../../components/admin/RecentStudentsTable';
 import { ClassBreakdown } from '../../components/admin/ClassBreakdown';
 import { DualAccessDrawer } from '../../components/admin/cleanup/DualAccessDrawer';
+import { ResendCredentialsDrawer } from '../../components/admin/cleanup/ResendCredentialsDrawer';
 import { ActivityFeed } from '../../components/admin/ActivityFeed';
 import { useStudents } from '../../lib/admin/useStudents';
 import { useClasses } from '../../lib/admin/useClasses';
@@ -18,6 +19,7 @@ export default function DashboardOverview() {
     const talentClasses = useClasses('talent');
     const dual = useDualAccessStudents();
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [resendDrawerOpen, setResendDrawerOpen] = useState(false);
     const { schoolConfig } = useSchoolConfig();
 
     const productCount = students.filter(s => s.class && !s.avatarClass).length;
@@ -31,12 +33,25 @@ export default function DashboardOverview() {
         return new Date(s.creationTime).getTime() >= oneWeekAgo;
     }).length;
 
+    const dayMs = 24 * 60 * 60 * 1000;
+    const stagnantStudents = students.filter(s => {
+        if (!s.creationTime || s.lastSignInTime) return false;
+        return Date.now() - new Date(s.creationTime).getTime() > dayMs;
+    });
+
     const attention = [];
     if (dual.users.length > 0) {
         attention.push({
             message: `${dual.users.length} student${dual.users.length !== 1 ? 's' : ''} have access to both Products and Talent.`,
             cta: 'Resolve',
             onResolve: () => setDrawerOpen(true),
+        });
+    }
+    if (stagnantStudents.length > 0) {
+        attention.push({
+            message: `${stagnantStudents.length} student${stagnantStudents.length !== 1 ? 's haven’t' : ' hasn’t'} logged in since you created them.`,
+            cta: 'Resend credentials',
+            onResolve: () => setResendDrawerOpen(true),
         });
     }
 
@@ -71,6 +86,15 @@ export default function DashboardOverview() {
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 onResolved={() => dual.refresh()}
+            />
+
+            <ResendCredentialsDrawer
+                open={resendDrawerOpen}
+                onClose={() => setResendDrawerOpen(false)}
+                students={stagnantStudents}
+                schoolName={schoolConfig?.displayName || 'My School'}
+                schoolSubdomain={schoolConfig?.subdomain}
+                onResolved={() => students.refresh && students.refresh()}
             />
         </div>
     );
