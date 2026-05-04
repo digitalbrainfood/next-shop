@@ -10,6 +10,7 @@ import RTBImageUploader, { VideoUploadSection } from '../components/RTBImageUplo
 import SpotlightTutorial, { TutorialButton, PRODUCT_TUTORIAL_STEPS, TALENT_TUTORIAL_STEPS } from '../components/SpotlightTutorial';
 import { CreateItemForm } from '../components/CreateItemForm';
 import { useSchoolConfig } from '../lib/useSchoolConfig';
+import { useConfirmDialog } from '../lib/admin/useConfirmDialog';
 import { RTB_LABELS, AVATAR_RTB_LABELS, TAG_CONFIG, TAG_CATEGORIES, isViewer as checkIsViewer, isSuperAdmin as checkIsSuperAdmin } from '../lib/constants';
 import { auth, db, storage, SUPER_ADMIN_UID } from '../lib/firebase';
 import { onIdTokenChanged, signOut, signInWithEmailAndPassword } from "firebase/auth";
@@ -901,6 +902,7 @@ const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
     const [dashTab, setDashTab] = useState('products');
     const [vendorProducts, setVendorProducts] = useState([]);
     const [vendorTalents, setVendorTalents] = useState([]);
+    const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
     const isSuperAdmin = (user && user.customClaims && user.customClaims.superAdmin === true) || (user && user.uid === SUPER_ADMIN_UID);
     const hasAvatarAccess = isSuperAdmin || !!user?.customClaims?.avatarClass;
@@ -909,9 +911,39 @@ const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
 
     useEffect(() => { if (user && hasAvatarAccess) { const q = query(collection(db, "avatars"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorTalents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user, hasAvatarAccess]);
 
-    const handleDeleteProduct = async (product) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "products", product.id)); (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting product: ", error); } }};
+    const handleDeleteProduct = async (product) => {
+        const ok = await confirm({
+            title: `Delete “${product.name}”?`,
+            message: 'This permanently removes the product, including all uploaded images and videos.',
+            confirmLabel: 'Delete permanently',
+            variant: 'destructive',
+        });
+        if (!ok) return;
+        try {
+            await deleteDoc(doc(db, "products", product.id));
+            (product.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url)));
+            (product.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url)));
+        } catch (error) {
+            console.error("Error deleting product: ", error);
+        }
+    };
 
-    const handleDeleteTalent = async (talent) => { if(window.confirm("Are you sure?")) { try { await deleteDoc(doc(db, "avatars", talent.id)); (talent.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url))); (talent.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url))); } catch (error) { console.error("Error deleting talent: ", error); } }};
+    const handleDeleteTalent = async (talent) => {
+        const ok = await confirm({
+            title: `Delete “${talent.name}”?`,
+            message: 'This permanently removes the talent profile, including all uploaded images and videos.',
+            confirmLabel: 'Delete permanently',
+            variant: 'destructive',
+        });
+        if (!ok) return;
+        try {
+            await deleteDoc(doc(db, "avatars", talent.id));
+            (talent.imageUrls || []).forEach(url => deleteObject(storageRef(storage, url)));
+            (talent.videoUrls || []).forEach(url => deleteObject(storageRef(storage, url)));
+        } catch (error) {
+            console.error("Error deleting talent: ", error);
+        }
+    };
 
     return (<div>
         <div className="mb-8 flex items-start justify-between">
@@ -981,6 +1013,7 @@ const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
                 </div>
             </div>
         )}
+        {confirmDialog}
     </div>);
 };
 

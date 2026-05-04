@@ -9,8 +9,10 @@ import { RTB_LABELS, AVATAR_RTB_LABELS, TAG_CONFIG } from '../lib/constants';
 import { db, storage } from '../lib/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { useConfirmDialog } from '../lib/admin/useConfirmDialog';
 
 export function CreateItemForm({ setVendorView, user, editingItem, mode }) {
+    const { confirm, dialog: confirmDialog } = useConfirmDialog();
     const config = mode === 'talent' ? {
         collectionName: 'avatars',
         storagePath: 'avatars',
@@ -234,17 +236,22 @@ export function CreateItemForm({ setVendorView, user, editingItem, mode }) {
         const imageData = rtbImages.find(img => img.rtbId === rtbId);
         if (!imageData?.url) return;
 
-        if (window.confirm("Are you sure you want to remove this image?")) {
-            try {
-                const fileRef = storageRef(storage, imageData.url);
-                await deleteObject(fileRef);
-            } catch (err) {
-                console.error("Failed to delete from storage:", err);
-            }
-            setRtbImages(prev => prev.map(img =>
-                img.rtbId === rtbId ? { ...img, url: '' } : img
-            ));
+        const ok = await confirm({
+            title: 'Remove this image?',
+            message: 'The image will be deleted from storage. This cannot be undone.',
+            confirmLabel: 'Remove image',
+            variant: 'destructive',
+        });
+        if (!ok) return;
+        try {
+            const fileRef = storageRef(storage, imageData.url);
+            await deleteObject(fileRef);
+        } catch (err) {
+            console.error("Failed to delete from storage:", err);
         }
+        setRtbImages(prev => prev.map(img =>
+            img.rtbId === rtbId ? { ...img, url: '' } : img
+        ));
     };
 
     // Remove video handler
@@ -252,15 +259,20 @@ export function CreateItemForm({ setVendorView, user, editingItem, mode }) {
         const url = videoUrls[index];
         if (!url) return;
 
-        if (window.confirm("Are you sure you want to remove this video?")) {
-            try {
-                const fileRef = storageRef(storage, url);
-                await deleteObject(fileRef);
-            } catch (err) {
-                console.error("Failed to delete video from storage:", err);
-            }
-            setVideoUrls(prev => prev.filter((_, i) => i !== index));
+        const ok = await confirm({
+            title: 'Remove this video?',
+            message: 'The video will be deleted from storage. This cannot be undone.',
+            confirmLabel: 'Remove video',
+            variant: 'destructive',
+        });
+        if (!ok) return;
+        try {
+            const fileRef = storageRef(storage, url);
+            await deleteObject(fileRef);
+        } catch (err) {
+            console.error("Failed to delete video from storage:", err);
         }
+        setVideoUrls(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleChange = (e) => {
@@ -647,6 +659,7 @@ export function CreateItemForm({ setVendorView, user, editingItem, mode }) {
                 storageKey={mode === 'talent' ? 'shopnext_talent_tutorial_seen' : 'shopnext_product_tutorial_seen'}
                 onSwitchTab={setFormTab}
             />
+            {confirmDialog}
         </div>
     );
 }

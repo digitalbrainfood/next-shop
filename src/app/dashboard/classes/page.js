@@ -7,6 +7,7 @@ import { useClasses } from '../../../lib/admin/useClasses';
 import { useStudents } from '../../../lib/admin/useStudents';
 import { logEvent } from '../../../lib/admin/logEvent';
 import { useSchoolConfig } from '../../../lib/useSchoolConfig';
+import { useConfirmDialog } from '../../../lib/admin/useConfirmDialog';
 
 function ClassesSection({ kind, title, classes, students, collectionName, school }) {
     const [adding, setAdding] = useState(false);
@@ -15,6 +16,7 @@ function ClassesSection({ kind, title, classes, students, collectionName, school
     const [editingName, setEditingName] = useState('');
     const [error, setError] = useState(null);
     const [busy, setBusy] = useState(false);
+    const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
     const studentCount = (classId) => students.filter(s =>
         kind === 'product' ? s.class === classId : s.avatarClass === classId
@@ -70,7 +72,14 @@ function ClassesSection({ kind, title, classes, students, collectionName, school
     };
 
     const deleteClass = async (id) => {
-        if (!window.confirm(`Delete class "${id}"? Existing students/content keep their class assignment, but this class won't appear in dropdowns.`)) return;
+        const ok = await confirm({
+            title: `Delete class “${id}”?`,
+            message: `Existing students and content keep their class assignment, but this class won’t appear in dropdowns anymore.`,
+            confirmLabel: 'Delete class',
+            cancelLabel: 'Cancel',
+            variant: 'destructive',
+        });
+        if (!ok) return;
         setBusy(true);
         setError(null);
         try {
@@ -140,6 +149,7 @@ function ClassesSection({ kind, title, classes, students, collectionName, school
                     </li>
                 ))}
             </ul>
+            {confirmDialog}
         </section>
     );
 }

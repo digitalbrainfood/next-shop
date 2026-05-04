@@ -7,6 +7,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import DOMPurify from 'dompurify';
 import { Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, AlignJustify, Link as LinkIcon, Heading1, Heading2, Heading3, Undo, Redo } from 'lucide-react';
+import { usePromptDialog } from '../lib/admin/usePromptDialog';
 
 const MenuButton = ({ onClick, isActive, disabled, children, title }) => (
     <button
@@ -21,13 +22,20 @@ const MenuButton = ({ onClick, isActive, disabled, children, title }) => (
 );
 
 const EditorToolbar = ({ editor }) => {
+    const { prompt, dialog: promptDialog } = usePromptDialog();
     if (!editor) return null;
 
-    const setLink = () => {
+    const setLink = async () => {
         const previousUrl = editor.getAttributes('link').href;
-        const url = window.prompt('Enter URL:', previousUrl);
+        const url = await prompt({
+            title: previousUrl ? 'Edit link' : 'Add link',
+            label: 'URL',
+            placeholder: 'https://example.com',
+            initialValue: previousUrl || '',
+            confirmLabel: previousUrl ? 'Update' : 'Add link',
+        });
 
-        if (url === null) return;
+        if (url === null) return; // cancelled
 
         if (url === '') {
             editor.chain().focus().extendMarkRange('link').unsetLink().run();
@@ -165,6 +173,7 @@ const EditorToolbar = ({ editor }) => {
             >
                 <LinkIcon className="h-4 w-4" />
             </MenuButton>
+            {promptDialog}
         </div>
     );
 };

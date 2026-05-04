@@ -7,6 +7,7 @@ import { Edit, GripVertical, Trash2 } from 'lucide-react';
 import { db, storage } from '../../../lib/firebase';
 import { useClasses } from '../../../lib/admin/useClasses';
 import { useSchoolConfig } from '../../../lib/useSchoolConfig';
+import { useConfirmDialog } from '../../../lib/admin/useConfirmDialog';
 
 export default function ContentPage() {
     const { schoolConfig } = useSchoolConfig();
@@ -22,6 +23,7 @@ export default function ContentPage() {
     const [selectedClass, setSelectedClass] = useState('');
     const [items, setItems] = useState([]);
     const [dragged, setDragged] = useState(null);
+    const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
     useEffect(() => {
         if (classes.length && !selectedClass) setSelectedClass(classes[0].id);
@@ -50,7 +52,14 @@ export default function ContentPage() {
         await batch.commit();
     };
     const onDelete = async (item) => {
-        if (!window.confirm(`Delete "${item.name}"? This will remove it permanently.`)) return;
+        const ok = await confirm({
+            title: `Delete “${item.name}”?`,
+            message: `This will remove the ${tab === 'talent' ? 'talent' : 'product'} permanently, including all uploaded images and videos.`,
+            confirmLabel: 'Delete permanently',
+            cancelLabel: 'Cancel',
+            variant: 'destructive',
+        });
+        if (!ok) return;
         await deleteDoc(doc(db, collectionName, item.id));
         (item.imageUrls || []).forEach(u => deleteObject(storageRef(storage, u)).catch(() => {}));
         (item.videoUrls || []).forEach(u => deleteObject(storageRef(storage, u)).catch(() => {}));
@@ -114,6 +123,7 @@ export default function ContentPage() {
                     </div>
                 ))}
             </div>
+            {confirmDialog}
         </div>
     );
 }

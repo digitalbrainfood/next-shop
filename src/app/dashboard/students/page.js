@@ -9,6 +9,7 @@ import { functions, db } from '../../../lib/firebase';
 import { generateFriendlyPassword } from '../../../components/admin/wizard/passwordGenerator';
 import { logEvent } from '../../../lib/admin/logEvent';
 import { useSchoolConfig } from '../../../lib/useSchoolConfig';
+import { useConfirmDialog } from '../../../lib/admin/useConfirmDialog';
 
 function relTime(value) {
     if (!value) return 'Never';
@@ -36,6 +37,7 @@ export default function StudentsPage() {
     const [notesValue, setNotesValue] = useState('');
     const [notesBusy, setNotesBusy] = useState(false);
     const { schoolConfig } = useSchoolConfig();
+    const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
     const openNotesEditor = async (uid, displayName) => {
         try {
@@ -63,7 +65,13 @@ export default function StudentsPage() {
 
     const handleResetPassword = async (uid, displayName) => {
         const newPassword = generateFriendlyPassword();
-        if (!window.confirm(`Reset password for "${displayName}" to "${newPassword}"?\n\nThe student must sign in with the new password and you should share it with them now.`)) return;
+        const ok = await confirm({
+            title: `Reset password for ${displayName}?`,
+            message: `The new password will be:\n\n${newPassword}\n\nThe student must sign in with this new password — make sure to share it with them now. The current password will stop working immediately.`,
+            confirmLabel: 'Reset password',
+            cancelLabel: 'Cancel',
+        });
+        if (!ok) return;
         setBusyUid(uid);
         try {
             const fn = httpsCallable(functions, 'resetStudentPassword');
@@ -83,7 +91,14 @@ export default function StudentsPage() {
     };
 
     const handleDeleteStudent = async (uid, displayName) => {
-        if (!window.confirm(`Permanently delete "${displayName}"? Their content (products/avatars) is NOT deleted automatically; remove it separately if needed.`)) return;
+        const ok = await confirm({
+            title: `Delete ${displayName}?`,
+            message: `This permanently removes the student account and they won't be able to sign in anymore.\n\nTheir content (products / talent profiles) is NOT deleted automatically — remove it separately from the Content page if needed.`,
+            confirmLabel: 'Delete student',
+            cancelLabel: 'Cancel',
+            variant: 'destructive',
+        });
+        if (!ok) return;
         setBusyUid(uid);
         try {
             const fn = httpsCallable(functions, 'deleteUser');
@@ -240,6 +255,7 @@ export default function StudentsPage() {
                     </div>
                 </div>
             )}
+            {confirmDialog}
         </div>
     );
 }
