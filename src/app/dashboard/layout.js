@@ -11,6 +11,7 @@ const DASHBOARD_ITEMS = [
     { href: '/dashboard/students', label: 'Students',  icon: 'Users' },
     { href: '/dashboard/classes',  label: 'Classes',   icon: 'BookOpen' },
     { href: '/dashboard/content',  label: 'Content',   icon: 'ShoppingBag' },
+    { href: '/admin',              label: 'Customers', icon: 'ShieldCheck' },
     { href: '/settings',           label: 'Settings',  icon: 'Settings' },
     { href: '/',                   label: 'View storefront', icon: 'ExternalLink', external: true },
 ];

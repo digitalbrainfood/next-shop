@@ -70,9 +70,9 @@ const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery, activeT
                         )}
                         {!isViewerUser && (
                             isSuperAdmin ? (
-                                <Link href="/admin" className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                                <Link href="/dashboard" className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
                                     <ShieldCheck className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Admin</span>
+                                    <span className="hidden sm:inline">Dashboard</span>
                                 </Link>
                             ) : (
                                 <button onClick={() => setView({ page: 'dashboard' })} className="flex items-center gap-2 text-white px-4 py-2 rounded-xl transition-colors bg-blue-600 hover:bg-blue-700 cursor-pointer text-sm font-medium">
@@ -1263,7 +1263,7 @@ export default function App() {
             return <div className="text-center py-10">Viewers do not have dashboard access.</div>;
           }
           if (isSuperAdmin) {
-            return <div className="text-center py-10">Super admins manage the platform from <a href="/admin" className="text-blue-600 hover:underline">/admin</a>.</div>;
+            return <div className="text-center py-10">Super admins manage the school from <a href="/dashboard" className="text-blue-600 hover:underline">/dashboard</a>.</div>;
           }
           return <main className="container mx-auto px-4 py-8"><VendorDashboard user={user} setView={setView} onEditProduct={(p) => setView({ page: 'create_product', product: p })} onEditTalent={(p) => setView({ page: 'create_talent', talent: p })} /></main>;
       case 'create_product':

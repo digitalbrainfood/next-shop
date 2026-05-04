@@ -3,9 +3,10 @@ import { AdminShell } from '../../components/admin/AdminShell';
 import { useAdminAuth } from '../../lib/auth/useAdminAuth';
 
 const ADMIN_ITEMS = [
-    { href: '/admin',    label: 'Customers', icon: 'Users' },
-    { href: '/register', label: 'Registration', icon: 'BookOpen' },
-    { href: '/',         label: 'Storefront', icon: 'ExternalLink', external: true },
+    { href: '/admin',     label: 'Customers',     icon: 'Users' },
+    { href: '/dashboard', label: 'Manage school', icon: 'GraduationCap' },
+    { href: '/register',  label: 'Registration',  icon: 'BookOpen' },
+    { href: '/',          label: 'Storefront',    icon: 'ExternalLink', external: true },
 ];
 
 export default function AdminLayout({ children }) {
