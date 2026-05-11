@@ -106,10 +106,10 @@ const Header = ({ setView, user, onSignOut, searchQuery, setSearchQuery, activeT
     );
 };
 
-const TabBar = ({ activeTab, setActiveTab, showAvatarTab }) => (
+const TabBar = ({ activeTab, setActiveTab, showAvatarTab, showProductTab = true }) => (
     <div className="container mx-auto px-4 pt-4">
         <div className="flex gap-1 border-b border-gray-200">
-            <button onClick={() => setActiveTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${activeTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Products</button>
+            {showProductTab && (<button onClick={() => setActiveTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${activeTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Products</button>)}
             {showAvatarTab && (<button onClick={() => setActiveTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${activeTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Hirable Talent</button>)}
         </div>
     </div>
@@ -1095,6 +1095,20 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [view]);
 
+  // Force students with only talent access onto the talents tab.
+  useEffect(() => {
+    if (!user) return;
+    const isSuperAdmin = (user.customClaims && user.customClaims.superAdmin === true) || user.uid === SUPER_ADMIN_UID;
+    const isViewerUser = checkIsViewer(user);
+    const hasProductAccess = isSuperAdmin || isViewerUser || !!user.customClaims?.class;
+    const hasAvatarAccess = isSuperAdmin || isViewerUser || !!user.customClaims?.avatarClass;
+    if (!hasProductAccess && hasAvatarAccess) {
+      setActiveTab('talents');
+    } else if (!hasAvatarAccess && hasProductAccess) {
+      setActiveTab('products');
+    }
+  }, [user]);
+
   // Product classes subscription
   useEffect(() => {
     if (!user) { setClasses([]); return; }
@@ -1279,9 +1293,13 @@ export default function App() {
     const isSuperAdmin = (user.customClaims && user.customClaims.superAdmin === true) || user.uid === SUPER_ADMIN_UID;
     const isViewerUser = checkIsViewer(user);
     const hasAvatarAccess = isSuperAdmin || isViewerUser || !!user.customClaims?.avatarClass;
+    const hasProductAccess = isSuperAdmin || isViewerUser || !!user.customClaims?.class;
 
     switch (view.page) {
       case 'product':
+        if (!hasProductAccess) {
+            return <div className="text-center py-10">You do not have access to view products.</div>;
+        }
         const product = products.find(p => p.id === view.id);
         return product ? <ProductPage product={product} setView={setView} user={user} /> : <div className="text-center py-10">Product not found.</div>;
       case 'talent':
@@ -1304,6 +1322,9 @@ export default function App() {
           if (isViewerUser) {
             return <div className="text-center py-10">Viewers cannot create or edit products.</div>;
           }
+          if (!hasProductAccess) {
+            return <div className="text-center py-10">You do not have access to create products.</div>;
+          }
           return <main className="container mx-auto px-4 py-8"><CreateItemForm setVendorView={() => setView({ page: 'dashboard' })} user={user} editingItem={view.product} mode="product" /></main>;
       case 'create_talent':
           // Viewers cannot create/edit talent
@@ -1318,8 +1339,8 @@ export default function App() {
       default:
         return (
             <>
-                <TabBar activeTab={activeTab} setActiveTab={setActiveTab} showAvatarTab={hasAvatarAccess} />
-                {activeTab === 'products' && (
+                <TabBar activeTab={activeTab} setActiveTab={setActiveTab} showAvatarTab={hasAvatarAccess} showProductTab={hasProductAccess} />
+                {activeTab === 'products' && hasProductAccess && (
                     <>
                         {(isSuperAdmin || isViewerUser) && <AdminClassSelector classes={classes} adminViewingClass={adminViewingClass} setAdminViewingClass={setAdminViewingClass} />}
                         <ProductGrid products={displayedProducts} setView={setView} sortOrder={sortOrder} setSortOrder={setSortOrder} />
