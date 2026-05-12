@@ -1081,6 +1081,12 @@ export default function App() {
           if (currentUser) {
               const tokenResult = await currentUser.getIdTokenResult();
               currentUser.customClaims = tokenResult.claims;
+              // TEMP DEBUG: surface uid + claims so we can diagnose tab/permission issues.
+              // Remove once the talent-only student bugs are resolved.
+              if (typeof window !== 'undefined') {
+                  console.log('[debug auth] uid=', currentUser.uid, 'claims=', tokenResult.claims);
+                  window.__auth = auth;
+              }
               setUser(currentUser);
           } else {
               setUser(null);

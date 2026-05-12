@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminTopbar } from './AdminTopbar';
@@ -15,8 +17,15 @@ export function AdminShell({
     children,
 }) {
     const { user, claims, loading, allowed, isSuperAdmin } = authState;
+    const router = useRouter();
 
-    if (loading) {
+    // When the user signs out while inside an admin route, send them to the
+    // storefront instead of flashing the Access Denied screen.
+    useEffect(() => {
+        if (!loading && !user) router.replace('/');
+    }, [loading, user, router]);
+
+    if (loading || (!user && !allowed)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
