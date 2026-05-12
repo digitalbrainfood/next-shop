@@ -1086,6 +1086,8 @@ export default function App() {
               if (typeof window !== 'undefined') {
                   console.log('[debug auth] uid=', currentUser.uid, 'claims=', tokenResult.claims);
                   window.__auth = auth;
+                  window.__db = db;
+                  window.__fs = { addDoc, collection };
               }
               setUser(currentUser);
           } else {
