@@ -1,5 +1,6 @@
 rules_version = '2';
 
+// Last touched: 2026-05-12 (force redeploy to flush avatars rule)
 service cloud.firestore {
   match /databases/{database}/documents {
 
