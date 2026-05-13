@@ -31,6 +31,7 @@ export default function StudentsPage() {
     const [q, setQ] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [menuOpenFor, setMenuOpenFor] = useState(null); // uid of the row whose menu is open
+    const [menuPos, setMenuPos] = useState(null); // { top, left } in viewport coords
     const [busyUid, setBusyUid] = useState(null);
     const [feedback, setFeedback] = useState(null); // { uid, type, text }
     const [notesEditFor, setNotesEditFor] = useState(null); // { uid, displayName }
@@ -183,15 +184,33 @@ export default function StudentsPage() {
                                         <td className="px-5 py-3">
                                             <div className="relative inline-block">
                                                 <button
-                                                    onClick={() => setMenuOpenFor(menuOpenFor === s.uid ? null : s.uid)}
+                                                    onClick={(e) => {
+                                                        if (menuOpenFor === s.uid) {
+                                                            setMenuOpenFor(null);
+                                                            return;
+                                                        }
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        const menuWidth = 192;
+                                                        const menuHeight = 150;
+                                                        const spaceBelow = window.innerHeight - rect.bottom;
+                                                        const openUp = spaceBelow < menuHeight + 8 && rect.top > menuHeight + 8;
+                                                        setMenuPos({
+                                                            top: openUp ? rect.top - menuHeight - 4 : rect.bottom + 4,
+                                                            left: Math.max(8, rect.right - menuWidth),
+                                                        });
+                                                        setMenuOpenFor(s.uid);
+                                                    }}
                                                     disabled={busyUid === s.uid}
                                                     className="text-gray-400 hover:text-gray-700 p-1.5 rounded hover:bg-gray-100 cursor-pointer disabled:opacity-50"
                                                     title="Actions"
                                                 >
                                                     <MoreVertical className="h-4 w-4" />
                                                 </button>
-                                                {menuOpenFor === s.uid && (
-                                                    <div className="absolute right-0 top-8 z-10 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1">
+                                                {menuOpenFor === s.uid && menuPos && (
+                                                    <div
+                                                        style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
+                                                        className="z-50 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
+                                                    >
                                                         <button
                                                             onClick={() => handleResetPassword(s.uid, s.displayName || s.email)}
                                                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
