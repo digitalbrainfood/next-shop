@@ -899,15 +899,22 @@ const LoginScreen = () => {
 
 
 const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
-    const [dashTab, setDashTab] = useState('products');
+    const isSuperAdmin = (user && user.customClaims && user.customClaims.superAdmin === true) || (user && user.uid === SUPER_ADMIN_UID);
+    const hasProductAccess = isSuperAdmin || !!user?.customClaims?.class;
+    const hasAvatarAccess = isSuperAdmin || !!user?.customClaims?.avatarClass;
+    // Default tab: prefer products if the user can access it, otherwise talents.
+    const [dashTab, setDashTab] = useState(hasProductAccess ? 'products' : 'talents');
     const [vendorProducts, setVendorProducts] = useState([]);
     const [vendorTalents, setVendorTalents] = useState([]);
     const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
-    const isSuperAdmin = (user && user.customClaims && user.customClaims.superAdmin === true) || (user && user.uid === SUPER_ADMIN_UID);
-    const hasAvatarAccess = isSuperAdmin || !!user?.customClaims?.avatarClass;
+    // If the user's access shape changes (e.g. claim refresh), keep dashTab valid.
+    useEffect(() => {
+        if (!hasProductAccess && dashTab === 'products') setDashTab('talents');
+        else if (!hasAvatarAccess && dashTab === 'talents') setDashTab('products');
+    }, [hasProductAccess, hasAvatarAccess, dashTab]);
 
-    useEffect(() => { if (user) { const q = query(collection(db, "products"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user]);
+    useEffect(() => { if (user && hasProductAccess) { const q = query(collection(db, "products"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user, hasProductAccess]);
 
     useEffect(() => { if (user && hasAvatarAccess) { const q = query(collection(db, "avatars"), where("vendorId", "==", user.uid)); const unsubscribe = onSnapshot(q, (snapshot) => { setVendorTalents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))); }); return () => unsubscribe(); } }, [user, hasAvatarAccess]);
 
@@ -956,15 +963,15 @@ const VendorDashboard = ({ user, setView, onEditProduct, onEditTalent }) => {
                 School Settings
             </a>
         </div>
-        {/* Dashboard tabs */}
-        {hasAvatarAccess && (
+        {/* Dashboard tabs — only show when the user has access to BOTH areas. */}
+        {hasProductAccess && hasAvatarAccess && (
             <div className="flex gap-1 border-b border-gray-200 mb-6">
                 <button onClick={() => setDashTab('products')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${dashTab === 'products' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Products</button>
                 <button onClick={() => setDashTab('talents')} className={`px-6 py-3 font-semibold text-sm border-b-2 transition-all cursor-pointer ${dashTab === 'talents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'}`}>Hirable Talent</button>
             </div>
         )}
 
-        {dashTab === 'products' && (
+        {dashTab === 'products' && hasProductAccess && (
             <div>
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                     <div>

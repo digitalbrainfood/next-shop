@@ -1,4 +1,4 @@
-import { ShoppingBag, User } from 'lucide-react';
+import { ShoppingBag, User, Eye } from 'lucide-react';
 
 const ACCENTS = {
     blue: {
@@ -12,6 +12,12 @@ const ACCENTS = {
         iconBg: 'bg-purple-50',
         iconFg: 'text-purple-600',
         accessText: 'text-purple-700',
+    },
+    slate: {
+        ring: 'border-slate-500 ring-2 ring-slate-100',
+        iconBg: 'bg-slate-50',
+        iconFg: 'text-slate-600',
+        accessText: 'text-slate-700',
     },
 };
 
@@ -39,14 +45,14 @@ export function StepRolePicker({ value, onChange }) {
 
     return (
         <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">What kind of student?</h3>
-            <p className="text-sm text-gray-500 mb-5">Each student account is locked to one of these. You can&rsquo;t change it later, only convert.</p>
-            <div className="flex gap-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">What kind of account?</h3>
+            <p className="text-sm text-gray-500 mb-5">Each account is locked to one of these. You can&rsquo;t change it later, only convert.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Card
                     role="products"
                     icon={ShoppingBag}
                     title="Product Vendor"
-                    description="Student creates product marketing campaigns."
+                    description="Creates product marketing campaigns."
                     accessLine="Access: Products"
                     accentKey="blue"
                 />
@@ -54,9 +60,17 @@ export function StepRolePicker({ value, onChange }) {
                     role="talent"
                     icon={User}
                     title="Talent Vendor"
-                    description="Student creates hirable avatar profiles."
+                    description="Creates hirable avatar profiles."
                     accessLine="Access: Talent"
                     accentKey="purple"
+                />
+                <Card
+                    role="viewer"
+                    icon={Eye}
+                    title="Viewer Only"
+                    description="Read-only access across all classes — no editing."
+                    accessLine="Access: View everything"
+                    accentKey="slate"
                 />
             </div>
         </div>

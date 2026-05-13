@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { AlertCircle, CheckCircle2, Dices, Plus } from 'lucide-react';
 import { generateFriendlyPassword } from './passwordGenerator';
 
-export function StepClassAndCreds({ classes, classKind, value, onChange, existingUsernames }) {
+export function StepClassAndCreds({ classes, classKind, value, onChange, existingUsernames, isViewer = false }) {
     const [creatingClass, setCreatingClass] = useState(false);
     const [newClassName, setNewClassName] = useState('');
 
@@ -36,14 +36,15 @@ export function StepClassAndCreds({ classes, classKind, value, onChange, existin
     return (
         <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-5">
-                Class &amp; credentials
+                {isViewer ? 'Viewer credentials' : 'Class & credentials'}
                 <span className="ml-2 text-xs font-normal text-gray-400">
-                    ({classKind === 'talent' ? 'Talent' : 'Products'})
+                    ({isViewer ? 'Read-only' : classKind === 'talent' ? 'Talent' : 'Products'})
                 </span>
             </h3>
 
             <div className="space-y-4">
-                {/* Class */}
+                {/* Class — skipped entirely for viewer accounts (they see everything) */}
+                {!isViewer && (
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Class</label>
                     {!creatingClass ? (
@@ -77,6 +78,7 @@ export function StepClassAndCreds({ classes, classKind, value, onChange, existin
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Username */}
                 <div>

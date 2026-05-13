@@ -14,13 +14,14 @@ import { StepCredentialHandoff } from './StepCredentialHandoff';
 
 export function AddStudentWizard({ open, onClose, schoolName, schoolSubdomain, onCreated }) {
     const [step, setStep] = useState(1); // 1: role, 2: class+creds, 3: handoff
-    const [role, setRole] = useState(null); // 'products' | 'talent'
+    const [role, setRole] = useState(null); // 'products' | 'talent' | 'viewer'
     const [form, setForm] = useState({ class: '', username: '', password: generateFriendlyPassword(), notes: '', _isNewClass: false });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
     const productClasses = useClasses('product');
     const talentClasses = useClasses('talent');
+    const isViewerRole = role === 'viewer';
     const classes = role === 'talent' ? talentClasses.classes : productClasses.classes;
     const classKind = role === 'talent' ? 'talent' : 'product';
 
@@ -50,12 +51,36 @@ export function AddStudentWizard({ open, onClose, schoolName, schoolSubdomain, o
     const canContinue1 = !!role;
     const trimmedUser = form.username.trim().toLowerCase();
     const usernameTaken = trimmedUser.length >= 3 && existingUsernames.has(trimmedUser);
-    const canContinue2 = form.class && trimmedUser.length >= 3 && !usernameTaken && form.password.length >= 6;
+    const canContinue2 = (isViewerRole || form.class) && trimmedUser.length >= 3 && !usernameTaken && form.password.length >= 6;
 
     const submit = async () => {
         setSubmitting(true);
         setError(null);
         try {
+            if (isViewerRole) {
+                const callable = httpsCallable(functions, 'createNewViewer');
+                const result = await callable({ username: form.username, password: form.password });
+                const uid = result.data.uid;
+                if (form.notes && uid) {
+                    try {
+                        await setDoc(doc(db, 'students', uid), {
+                            notes: form.notes,
+                            viewer: true,
+                            createdAt: new Date().toISOString(),
+                        });
+                    } catch { /* swallow */ }
+                }
+                onCreated?.({ uid, ...form, role });
+                await logEvent({
+                    type: 'student.created',
+                    message: `Viewer "${form.username}" added.`,
+                    school: null,
+                    target: { uid },
+                });
+                setStep(3);
+                return;
+            }
+
             const collectionName = classKind === 'talent' ? 'avatar-classes' : 'classes';
             if (form._isNewClass) {
                 const display = form.class.charAt(0).toUpperCase() + form.class.slice(1).replace(/-/g, ' ');
@@ -118,12 +143,13 @@ export function AddStudentWizard({ open, onClose, schoolName, schoolSubdomain, o
                             value={form}
                             onChange={setForm}
                             existingUsernames={existingUsernames}
+                            isViewer={isViewerRole}
                         />
                     )}
                     {step === 3 && (
                         <StepCredentialHandoff
                             schoolName={schoolName}
-                            role={role === 'talent' ? 'Talent' : 'Products'}
+                            role={isViewerRole ? 'Viewer' : role === 'talent' ? 'Talent' : 'Products'}
                             username={form.username}
                             password={form.password}
                             loginUrl={schoolSubdomain ? `https://${schoolSubdomain}.shopnext.app` : window.location.origin}
