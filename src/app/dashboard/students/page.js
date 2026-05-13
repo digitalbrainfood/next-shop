@@ -191,11 +191,12 @@ export default function StudentsPage() {
                                                         }
                                                         const rect = e.currentTarget.getBoundingClientRect();
                                                         const menuWidth = 192;
-                                                        const menuHeight = 150;
+                                                        const menuHeight = 120;
                                                         const spaceBelow = window.innerHeight - rect.bottom;
                                                         const openUp = spaceBelow < menuHeight + 8 && rect.top > menuHeight + 8;
                                                         setMenuPos({
-                                                            top: openUp ? rect.top - menuHeight - 4 : rect.bottom + 4,
+                                                            top: openUp ? null : rect.bottom + 4,
+                                                            bottom: openUp ? window.innerHeight - rect.top + 4 : null,
                                                             left: Math.max(8, rect.right - menuWidth),
                                                         });
                                                         setMenuOpenFor(s.uid);
@@ -208,7 +209,12 @@ export default function StudentsPage() {
                                                 </button>
                                                 {menuOpenFor === s.uid && menuPos && (
                                                     <div
-                                                        style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
+                                                        style={{
+                                                            position: 'fixed',
+                                                            top: menuPos.top ?? undefined,
+                                                            bottom: menuPos.bottom ?? undefined,
+                                                            left: menuPos.left,
+                                                        }}
                                                         className="z-50 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1"
                                                     >
                                                         <button
