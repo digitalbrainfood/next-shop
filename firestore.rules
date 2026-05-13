@@ -24,15 +24,6 @@ service cloud.firestore {
       return request.auth != null && resource.data.vendorId == request.auth.uid;
     }
 
-    // Helper: check if user belongs to the document's class
-    function isInProductClass() {
-      return request.auth != null && request.auth.token.class == resource.data.class;
-    }
-
-    function isInAvatarClass() {
-      return request.auth != null && request.auth.token.avatarClass == resource.data.class;
-    }
-
     // Products
     match /products/{productId} {
       // Any authenticated user can read products in their class; admins and viewers can read all
@@ -66,15 +57,21 @@ service cloud.firestore {
     match /avatars/{avatarId} {
       allow read: if request.auth != null;
 
+      // Any authenticated non-viewer can create their own talent profile.
+      // The vendorId on the document must equal the caller's uid.
       allow create: if request.auth != null
-                    && !isViewer()
+                    && request.auth.token.viewer != true
                     && request.resource.data.vendorId == request.auth.uid;
-      allow update: if isOwner() || isSuperAdmin();
-      allow delete: if isOwner() || isSuperAdmin();
+
+      // Owner can edit/delete their own talent. Super admin can manage any.
+      allow update: if request.auth != null
+                    && (resource.data.vendorId == request.auth.uid || isSuperAdmin());
+      allow delete: if request.auth != null
+                    && (resource.data.vendorId == request.auth.uid || isSuperAdmin());
 
       match /reviews/{reviewId} {
         allow read: if request.auth != null;
-        allow create: if request.auth != null && !isViewer();
+        allow create: if request.auth != null && request.auth.token.viewer != true;
         allow update, delete: if request.auth != null
                               && (resource.data.userId == request.auth.uid || isSuperAdmin());
       }
